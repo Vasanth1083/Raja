@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Weld Cleaners Customer Details</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; padding: 20px; background-color: Green; color: #333; }
+        .container { max-width: 1000px; margin: 20px auto; background: PaleGoldenRod; padding: 30px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; position: relative; }
+
+        .home-btn { 
+            position: absolute; top: 20px; left: 20px; 
+            background: #2c3e50; color: white; padding: 8px 15px; 
+            text-decoration: none; border-radius: 8px; font-weight: bold; 
+            font-size: 14px; transition: 0.3s; 
+        }
+        .home-btn:hover { background: #34495e; transform: scale(1.05); }
+
+        .brand-summary { 
+            background: white; padding: 15px; border-radius: 15px; margin-bottom: 25px; 
+            border: 3px solid #27ae60; display: inline-block; min-width: 320px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .brand-summary h3 { margin: 0; color: #27ae60; font-size: 1.1em; text-transform: uppercase; }
+        .brand-summary .total-amt { font-size: 2em; font-weight: bold; color: #2c3e50; margin-top: 5px; }
+
+        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 2.2em; }
+        .button-group { display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 10px; }
+        .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; font-family: 'Times New Roman'; }
+        
+        #delSelectedBtn { background-color: #e74c3c; color: white; }
+        #delSelectedBtn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        #undoBtn { background-color: #f39c12; color: white; }
+
+        .input-section { display: flex; gap: 10px; margin-bottom: 25px; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; outline: none; font-size: 17px; font-family: 'Times New Roman'; }
+        .add-btn { background-color: #2ecc71; color: white; width: 100px; font-size: 16px; }
+
+        ul { list-style: none; padding: 0; }
+        li { 
+            margin-bottom: 12px; border-radius: 12px; padding: 15px; 
+            display: flex; align-items: center; background: #fff; border: 1px solid #ddd; 
+            justify-content: space-between; transition: 0.2s;
+        }
+        li:hover { transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .left-side { display: flex; align-items: center; flex-grow: 1; }
+        input[type="checkbox"] { margin-right: 15px; width: 22px; height: 22px; cursor: pointer; }
+        .cust-link { text-decoration: none; color: black; font-weight: bold; font-size: 20px; text-align: left; }
+        
+        .cust-total { 
+            background: #eafaf1; color: #27ae60; padding: 6px 18px; border-radius: 50px; 
+            font-weight: bold; font-size: 18px; border: 1.5px solid #27ae60; min-width: 120px; text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="home-btn">🏠 Home Hub</a>
+
+    <h2>Capital Weld Cleaners Customer Details</h2>
+
+    <div class="brand-summary">
+        <h3>Brand Achieved Value</h3>
+        <div class="total-amt" id="brandGrandTotal">€ 0.00</div>
+    </div>
+    
+    <div class="button-group">
+        <button id="delSelectedBtn" class="btn" onclick="deleteSelected()" disabled>🗑 Delete Selected</button>
+    </div>
+
+    <div class="input-section">
+        <input type="text" id="custName" placeholder="Type Customer Name here..." onkeypress="if(event.key==='Enter') addCustomer()">
+        <button class="btn add-btn" onclick="addCustomer()">+ Add</button>
+    </div>
+
+    <ul id="customerList"></ul>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+    const BRAND = "Capital Weld Cleaners";
+const storageKey = BRAND + "_customers";
+let isSyncing = false;
+let syncTimer = null;
+const G_SHEET_URL = "https://script.google.com/macros/s/AKfycbxt9YfMYA8PKNlC0Vb_DIDVRsMWZnCUPMRGsCoQSnLDXWYorh57KU0NRFzrAmsY8ySRXA/exec?apiKey=VIMAG";
+window.onload = function() {
+    // 1. Modhalla memory-la irukuradha udane kaatuvom (No Blank Screen)
+    displayCustomers();
+
+    // 2. ⚡ FIREBASE LIVE SYNC: Background-la silent-ah sync aagum
+    db.ref(`vimag/brands/${BRAND}`).on('value', (snapshot) => {
+        if (isSyncing) return; 
+        
+        const brandData = snapshot.val();
+        let customerNames = [];
+        if (brandData) {
+            // Folder kulla lock row irundhaalum name theriyaum
+            customerNames = Object.keys(brandData);
+            
+            // Ovvoru customer data-vaiyum background-la memory-la pack panrom (Speed fix)
+            customerNames.forEach(name => {
+                const custData = brandData[name];
+                localStorage.setItem(BRAND + '_data_' + name, JSON.stringify(Object.values(custData)));
+            });
+        }
+        
+        localStorage.setItem(storageKey, JSON.stringify(customerNames));
+        displayCustomers();
+        console.log("Details Page: Cloud Sync Success! ⚡");
+    });
+};
+function addCustomer() {
+    const input = document.getElementById('custName');
+    const name = input.value.trim();
+    if (!name) return alert("Please enter a name!");
+
+    let customers = JSON.parse(localStorage.getItem(BRAND + '_customers') || "[]");
+
+    // Duplicate Check
+    if (customers.some(c => c.toLowerCase() === name.toLowerCase())) {
+        alert(`⚠️ Customer "${name}" already exists!`);
+        return;
+    }
+
+    // 🚀 STEP 1: Add and display locally (Instant View)
+    customers.push(name);
+    localStorage.setItem(BRAND + '_customers', JSON.stringify(customers));
+    displayCustomers();
+
+    // 🚀 STEP 2: Send to both Cloud (Firebase + Sheet)
+    sendCustomerToCloud(name);
+
+    input.value = "";
+    input.focus();
+}
+function saveData() {
+    isSyncing = true; 
+    const d = new Date();
+    let data = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const formattedDate = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+
+    const item = {
+        brand: BRAND,
+        customerName: customerName,
+        id: editIdx !== null ? String(data[editIdx].id) : "VIMAG-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        artNo: document.getElementById('inArtNo').value,
+        name: document.getElementById('inName').value,
+        currency: document.getElementById('inCurrency').value,
+        price: document.getElementById('inPrice').value || 0,
+        qty: document.getElementById('inQty').value || 0,
+        monthQty: document.getElementById('inMonthQty').value || 0,
+        handledBy: document.getElementById('inHandledBy').value,
+        remarks: document.getElementById('inRemarks').value,
+        date: formattedDate,
+        month: editIdx !== null ? (data[editIdx].month !== undefined ? data[editIdx].month : d.getMonth()) : d.getMonth(),
+        year: editIdx !== null ? (data[editIdx].year !== undefined ? data[editIdx].year : d.getFullYear()) : d.getFullYear(),
+        apiKey: "VIMAG"
+    };
+
+    // 🚀 DUAL CLOUD UPLOAD (FIREBASE + SHEET)
+    // Inga dhaan change pannanum - sendToSheet thookitu idhai podunga
+    sendToCloud(item);
+
+    // 💾 LOCAL UPDATE
+    if (editIdx !== null) {
+        data[editIdx] = item;
+    } else {
+        data.push(item);
+    }
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    renderTable();
+
+    // 🎯 IPO IPO POPUP AUTO-VA CLOSE AAGUM
+    document.getElementById('inputModal').style.display = "none";
+    editIdx = null;
+
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => { isSyncing = false; }, 1000);
+    alert("Data Saved Successfully! 🚀");
+}
+
+// 🚀 1. Master Sync Function (Product Details-kaga)
+async function sendToCloud(payload) {
+    // A. FIREBASE UPLOAD (Instant Speed ⚡)
+    // payload.action 'delete'-ah irundha remove pannanum, illana set pannanum
+    const fbPath = `vimag/brands/${BRAND}/${payload.customerName}/${payload.id}`;
+    
+    if (payload.action === 'delete') {
+        db.ref(fbPath).remove()
+            .then(() => console.log("Firebase: Item Deleted! 🗑️"))
+            .catch(e => console.error("Firebase Delete Error:", e));
+    } else {
+        db.ref(fbPath).set(payload)
+            .then(() => console.log("Firebase: Sync Success! ✅"))
+            .catch(e => console.error("Firebase Error:", e));
+    }
+
+    // B. GOOGLE SHEET BACKUP (Safety Backup ☁️)
+    const sheetPayload = { ...payload, action: payload.action || 'save', sheetName: BRAND };
+    const params = new URLSearchParams(sheetPayload).toString();
+    
+    fetch(G_SHEET_URL + "&" + params, { mode: 'no-cors' })
+        .catch(err => console.error("Sheet Backup Error:", err));
+}
+
+// 🚀 2. Customer List Sync Function (List Page-kaga)
+function sendCustomerToCloud(name) {
+    isSyncing = true;
+    const customerId = "CUST-" + Date.now();
+    localStorage.setItem(BRAND + '_id_' + name, customerId);
+
+    // 🔒 FOLDER IDENTITY LOCK: 
+    // Idhu thaan folder-ah cloud-la permanent-ah vachirukkum. 
+    // Status table-ah empty pannaalum indha identity irukkara nala name maraiyaadhu.
+    db.ref(`vimag/brands/${BRAND}/${name}/_id_lock`).set({ 
+        id: "_id_lock", 
+        artNo: "SYSTEM",
+        customerName: name 
+    });
+
+    const payload = {
+        action: 'save',
+        sheetName: BRAND.replace(/\s+/g, '') + "Customers",
+        customerName: name,
+        id: customerId,
+        brand: BRAND,
+        apiKey: "VIMAG",
+        date: new Date().toLocaleDateString()
+    };
+
+    // Firebase Upload (Customer Entry)
+    db.ref(`vimag/brands/${BRAND}/${name}/${customerId}`).set(payload);
+
+    // Sheet Backup
+    fetch(G_SHEET_URL + "&" + new URLSearchParams(payload).toString(), { mode: 'no-cors' });
+
+    // 🎯 SPEED TIMER: 1 second delay blinking thadukka
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+        isSyncing = false;
+        console.log("Cloud Sync: Done! ⚡");
+    }, 1000);
+}
+function displayCustomers() {
+    // 1. BRAND name check (e.g., "Capital Weld Cleaners")
+    const brandName = typeof BRAND !== 'undefined' ? BRAND : "Capital Weld Cleaners"; 
+    const customers = JSON.parse(localStorage.getItem(brandName + '_customers') || "[]");
+    const listContainer = document.getElementById('customerList');
+    
+    if (!listContainer) return;
+
+    let listHtml = "";
+    let grandTotal = 0;
+
+    // A-Z sorting
+    const sortedCustomers = [...customers].sort((a, b) => a.localeCompare(b));
+
+    sortedCustomers.forEach((name) => {
+        // Identity/Lock rows-ah ignore panrom
+        if (!name || name === "_id_lock" || name === "_identity" || name === "SYSTEM") return;
+
+        // 2. ✨ CORRECT KEY FETCH (Brand_data_Name)
+        const storageKey = brandName + '_data_' + name;
+        const rawData = localStorage.getItem(storageKey);
+        const data = JSON.parse(rawData || "[]");
+        
+        let custTotal = 0;
+        data.forEach(item => {
+            // Price and monthQty calculation
+            if (item && item.artNo && item.artNo !== "SYSTEM") {
+                let p = parseFloat(item.price || 0);
+                let q = parseInt(item.monthQty || 0);
+                custTotal += (p * q);
+            }
+        });
+
+        grandTotal += custTotal;
+
+        const statusUrl = `${brandName} Customer Status.html?name=${encodeURIComponent(name)}`;
+        const custId = localStorage.getItem(brandName + '_id_' + name) || "";
+
+        listHtml += `
+            <li>
+                <div class="left-side">
+                    <input type="checkbox" class="cust-checkbox" data-id="${custId}" data-name="${name}" onchange="checkSelection()">
+                    <a href="${statusUrl}" class="cust-link" style="font-weight:bold; color:#2c3e50;">${name}</a>
+                </div>
+                <div class="cust-total" style="font-weight:bold; color:#2980b9;">
+                    € ${custTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                </div>
+            </li>`;
+    });
+
+    listContainer.innerHTML = listHtml || "<li style='padding:20px; color:gray;'>No Customers Found. Click Sync Cloud... ☁️</li>";
+    
+    // 3. 💰 UPDATE GRAND TOTAL CARD
+    const disp = document.getElementById('brandGrandTotal');
+    if (disp) {
+        disp.innerText = "€ " + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+}
+   
+   
+function checkSelection() {
+    const checkboxes = document.querySelectorAll('.cust-checkbox:checked');
+    const delBtn = document.getElementById('delSelectedBtn');
+    if (delBtn) delBtn.disabled = (checkboxes.length === 0);
+    }
+function deleteSelected() {
+    const checkboxes = document.querySelectorAll('.cust-checkbox:checked');
+    if (checkboxes.length === 0) return alert("Select anyone!");
+
+    if (confirm("Delete panna Firebase & Sheet backup-layum azhinjidum. OK-va?")) {
+        isSyncing = true; 
+        let customers = JSON.parse(localStorage.getItem(BRAND + '_customers') || "[]");
+        const currentUndoHistory = JSON.parse(localStorage.getItem(BRAND + '_FULL_UNDO') || "[]");
+        const batchToSave = [];
+
+        checkboxes.forEach(cb => {
+            const name = cb.getAttribute('data-name');
+            const savedId = localStorage.getItem(BRAND + '_id_' + name);
+            const data = localStorage.getItem(BRAND + '_data_' + name);
+
+            // 🛡️ Undo Backup
+            batchToSave.push({ name: name, data: data, id: savedId });
+
+            // 🚀 A. FIREBASE DELETE (Instant 🗑️)
+            db.ref(`vimag/brands/${BRAND}/${name}`).remove()
+                .then(() => console.log(`Firebase: ${name} Deleted! ✅`));
+
+            // ☁️ B. SHEET DELETE (Backup)
+            const sheetTabName = BRAND.replace(/\s+/g, '') + "Customers";
+            fetch(G_SHEET_URL + `&action=delete&sheetName=${sheetTabName}&id=${savedId}&apiKey=VIMAG`, { mode: 'no-cors' });
+
+            // 💾 LOCAL CLEANUP
+            localStorage.removeItem(BRAND + '_data_' + name);
+            localStorage.removeItem(BRAND + '_id_' + name);
+            customers = customers.filter(c => c !== name);
+        });
+
+        localStorage.setItem(BRAND + '_FULL_UNDO', JSON.stringify(currentUndoHistory.concat([batchToSave])));
+        localStorage.setItem(BRAND + '_customers', JSON.stringify(customers));
+        displayCustomers();
+
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => { isSyncing = false; }, 1000);
+        alert("Deleted Successfully! ✅");
+    }
+}
+
+</script>
+</body>
+</html>

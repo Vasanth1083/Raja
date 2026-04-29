@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voelkel Customer Status</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; padding: 20px; background-color: palegoldenrod; }
+        .header-box { border: 3px solid #27ae60; background: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; position: relative; }
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .right-tools { display: flex; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #27ae60; }
+        th { background-color: #27ae60; color: white; padding: 12px; text-transform: uppercase; font-size: 13px; border: 1px solid #219150; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 15px; color: black; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 12px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid #27ae60; }
+        .modal-content h2 { margin: 0 0 12px; color: #27ae60; font-size: 18px; text-align: center; }
+        .modal-content label { display: block; margin-top: 8px; font-weight: bold; color: #333; font-size: 12px; text-align: left; }
+        .modal-content input, .modal-content select { width: 100%; padding: 7px; margin-top: 3px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; box-sizing: border-box; font-size: 13px; }
+        .side-row { display: flex; gap: 8px; align-items: flex-end; }
+        .side-col { flex: 1; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 12px; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-undo { background: #f39c12; color: white; }
+        .btn-update { background: #2980b9; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        .modal-footer { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-save { background: #27ae60; color: white; flex: 1; }
+        .btn-discard { background: #ddd; color: #333; flex: 1; }
+        .total-val { color: #2980b9; font-weight: bold; }
+        .achieved-val { color: #27ae60; font-weight: bold; }
+        .balance-val { color: #e74c3c; font-weight: bold; }
+        .back-link { position: absolute; top: 20px; left: 20px; text-decoration: none; color: #27ae60; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="header-box">
+    <a href="Voelkel Customer Details.html" class="back-link">⬅ Back to List</a>
+    <h1 style="color: #27ae60; margin: 0; font-size: 2.2em;">Voelkel Customer Status</h1>
+    <h2 id="custNameHeader" style="color: #333; margin: 5px 0;">Customer Name</h2>
+    <p id="dateDisplay" style="font-weight: bold; font-size: 0.9em; color: #555; margin: 5px 0;"></p>
+    <div class="action-bar">
+        <button class="btn btn-add" onclick="openAddModal()">Add</button>
+        <div class="right-tools">
+            <button class="btn btn-update" onclick="prepareUpdate()">Update</button>
+            <button class="btn btn-delete" onclick="deleteItems()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="masterCheck" onclick="toggleAll()"></th>
+            <th>Art No</th>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Qty/Mo</th>
+            <th id="dynamicMonthHeader">MONTH QTY</th>
+            <th>Total Value</th>
+            <th>Achieved Value</th>
+            <th>Balance</th>
+            <th>Remarks</th>
+            <th>Handled By</th> 
+        </tr>
+    </thead>
+    <tbody id="productTableBody"></tbody>
+    <tfoot>
+        <tr style="background: #f8f9fa; font-weight: bold; font-family: 'Times New Roman';">
+            <td colspan="6" style="text-align: right; padding-right: 20px;">GRAND TOTAL:</td>
+            <td id="grandTotalDisplay" class="total-val">0.00</td>
+            <td id="grandAchievedDisplay" class="achieved-val">0.00</td>
+            <td id="grandBalanceDisplay" class="balance-val">0.00</td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+<div id="inputModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalHeader">Product Entry</h2>
+        <label>Article No:</label><input type="text" id="inArtNo">
+        <label>Product Name:</label><input type="text" id="inName">
+        <div class="side-row">
+            <div class="side-col">
+                <label>Currency:</label>
+                <select id="inCurrency"><option value="€">€</option><option value="$">$</option><option value="₹">₹</option></select>
+            </div>
+            <div class="side-col" style="flex: 1.5;"><label>Price:</label><input type="number" id="inPrice" step="0.01"></div>
+        </div>
+        <div class="side-row">
+            <div class="side-col"><label>Target Qty:</label><input type="number" id="inQty"></div>
+            <div class="side-col"><label>Actual Qty:</label><input type="number" id="inMonthQty"></div>
+        </div>
+        <label>Handled By:</label><input type="text" id="inHandledBy">
+        <label>Remarks:</label><input type="text" id="inRemarks">
+        <div class="modal-footer">
+            <button class="btn btn-save" onclick="saveData()">SAVE</button>
+            <button class="btn btn-discard" onclick="closeModal()">DISCARD</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let isSyncing = false;
+let syncTimer = null;
+const BRAND = "Voelkel";
+const G_SHEET_URL = "https://script.google.com/macros/s/AKfycbxt9YfMYA8PKNlC0Vb_DIDVRsMWZnCUPMRGsCoQSnLDXWYorh57KU0NRFzrAmsY8ySRXA/exec?apiKey=VIMAG";
+const params = new URLSearchParams(window.location.search);
+const customerName = params.get('name') || "Unknown Customer";
+const filterArt = params.get('art'); // Search-la irundhu vandha Article No
+const storageKey = BRAND + "_data_" + customerName;
+let editIdx = null;
+let lastDeletedItem = null;
+
+window.onload = function() {
+    // 1. Header-la customer name-ah set pannum
+    const header = document.getElementById('custNameHeader');
+    if (header) header.innerText = customerName;
+
+    // 2. Modhalla memory-la (LocalStorage) irukuradha odane kaatuvom (No Lag)
+    renderTable();
+
+    // 3. 🚀 THE JET ENGINE: Firebase Live Sync
+    // Indha specific BRAND and CUSTOMER data-va mattum listen panrom
+    const path = `vimag/brands/${BRAND}/${customerName}`;
+    
+    db.ref(path).on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        let dataArray = [];
+        if (cloudData) {
+            // Firebase Object-ah table-kaga array-va mathuroam
+            dataArray = Object.values(cloudData);
+        }
+        // Local memory-ah fresh data-va vechu update panni table-ah refresh panrom
+        localStorage.setItem(storageKey, JSON.stringify(dataArray));
+        renderTable();
+        console.log("Firebase Live Sync: Done! ⚡");
+    });
+};
+
+async function sendToCloud(payload) {
+    // Check if customerName exists, if not use global variable
+    const cName = payload.customerName || customerName;
+    const fbPath = `vimag/brands/${BRAND}/${cName}/${payload.id}`;
+    
+    if (payload.action === 'delete') {
+        db.ref(fbPath).remove();
+    } else {
+        db.ref(fbPath).set(payload);
+    }
+
+    // Google Sheet Backup
+    const sheetPayload = { ...payload, action: payload.action || 'save', sheetName: BRAND };
+    const params = new URLSearchParams(sheetPayload).toString();
+    fetch(G_SHEET_URL + "&" + params, { mode: 'no-cors' });
+}
+
+function saveData() {
+    isSyncing = true; 
+    let data = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const d = new Date();
+
+    const item = {
+        brand: BRAND,
+        customerName: customerName, // Global variable use panrom
+        id: editIdx !== null ? String(data[editIdx].id) : "VIMAG-" + Date.now(),
+        artNo: document.getElementById('inArtNo').value,
+        name: document.getElementById('inName').value,
+        currency: document.getElementById('inCurrency').value,
+        price: document.getElementById('inPrice').value || 0,
+        qty: document.getElementById('inQty').value || 0,
+        monthQty: document.getElementById('inMonthQty').value || 0,
+        handledBy: document.getElementById('inHandledBy').value,
+        remarks: document.getElementById('inRemarks').value,
+        date: d.toLocaleDateString()
+    };
+
+    // Cloud upload
+    sendToCloud(item);
+
+    // Local update
+    if (editIdx !== null) data[editIdx] = item;
+    else data.push(item);
+    
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    renderTable();
+
+    // Close Popup
+    document.getElementById('inputModal').style.display = "none";
+    editIdx = null;
+
+    setTimeout(() => { isSyncing = false; }, 1000);
+}
+
+function renderTable() {
+    // 📅 1. DYNAMIC MONTH LOGIC
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const currentMonthName = monthNames[new Date().getMonth()]; // e.g., "APR"
+    
+    const mHeader = document.getElementById('dynamicMonthHeader');
+    if(mHeader) mHeader.innerText = currentMonthName + " QTY";
+
+    const data = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const tbody = document.getElementById('productTableBody');
+    tbody.innerHTML = "";
+    
+    let gT = 0, gA = 0, gB = 0;
+    let sym = "€";
+
+    data.forEach((item, index) => {
+        if (!item || !item.artNo || item.id === "_id_lock" || item.artNo === "SYSTEM") return;
+
+        let p = parseFloat(item.price || 0), 
+            tq = parseInt(item.qty || 0), 
+            aq = parseInt(item.monthQty || 0);
+        
+        sym = item.currency || "€";
+        let tv = p * tq, av = p * aq, bal = tv - av;
+        
+        gT += tv; gA += av; gB += bal;
+
+        // ✨ TARGET ACHIEVED COLOR LOGIC
+        let statusColor = (aq >= tq) ? "#27ae60" : "#e74c3c"; 
+        let isSuccess = (aq >= tq);
+
+        tbody.innerHTML += `<tr>
+            <td><input type="checkbox" class="row-check" data-index="${index}"></td>
+            <td>${item.artNo}</td>
+            <td style="text-align:left;">${item.name}</td>
+            <td>${sym}${p.toFixed(2)}</td>
+            <td>${tq}</td>
+            
+            <!-- Dynamic Color for Achievement -->
+            <td style="font-weight:bold; color: ${statusColor};">
+                ${isSuccess ? '🏆 ' : ''}${aq}
+            </td>
+            
+            <td class="total-val">${sym}${tv.toFixed(2)}</td>
+            <td class="achieved-val" style="font-weight:bold; color: ${statusColor};">
+                ${sym}${av.toFixed(2)}
+            </td>
+            <td class="balance-val" style="font-weight:bold; color: ${statusColor};">
+                ${sym}${bal.toFixed(2)}
+            </td>
+            
+            <td>${item.remarks || '-'}</td>
+            <td>${item.handledBy || '-'}</td>
+        </tr>`;
+    });
+
+    // Grand Totals
+    document.getElementById('grandTotalDisplay').innerText = sym + gT.toFixed(2);
+    document.getElementById('grandAchievedDisplay').innerText = sym + gA.toFixed(2);
+    
+    const gBalEl = document.getElementById('grandBalanceDisplay');
+    if(gBalEl) {
+        gBalEl.innerText = sym + gB.toFixed(2);
+        gBalEl.style.color = (gA >= gT) ? "#27ae60" : "#e74c3c";
+    }
+}
+    function openAddModal() {
+        editIdx = null; document.getElementById('modalHeader').innerText = "Product Entry";
+        document.querySelectorAll('.modal-content input').forEach(i => i.value = "");
+        document.getElementById('inputModal').style.display = "block";
+    }
+
+    function closeModal() { if(confirm("Discard changes?")) document.getElementById('inputModal').style.display = "none"; }
+	
+  function prepareUpdate() {
+        const checked = document.querySelector('.row-check:checked');
+  
+      if (!checked) return alert("Select an item!");
+        editIdx = checked.dataset.index;
+        const data = JSON.parse(localStorage.getItem(storageKey))[editIdx];
+        document.getElementById('inArtNo').value = data.artNo;
+        document.getElementById('inName').value = data.name;
+        document.getElementById('inCurrency').value = data.currency || "€";
+        document.getElementById('inPrice').value = data.price;
+        document.getElementById('inQty').value = data.qty;
+        document.getElementById('inMonthQty').value = data.monthQty;
+        document.getElementById('inHandledBy').value = data.handledBy || "";
+        document.getElementById('inRemarks').value = data.remarks;
+        document.getElementById('modalHeader').innerText = "Update Product";
+        document.getElementById('inputModal').style.display = "block";
+    }
+
+function deleteItems() {
+    const checked = document.querySelectorAll('.row-check:checked');
+    if (checked.length === 0) return alert("Select anyone!");
+
+    if (confirm("Delete panna Firebase & Sheet backup-layum azhinjidum. OK-va?")) {
+        isSyncing = true; 
+        let data = JSON.parse(localStorage.getItem(storageKey));
+        const selectedIndices = Array.from(checked).map(c => parseInt(c.dataset.index));
+
+        selectedIndices.forEach(idx => {
+            const item = data[idx];
+            lastDeletedItem = item; 
+
+            if (item.id) {
+                // 🚀 DUAL CLOUD DELETE (Firebase + Sheet)
+                // Inga sendToSheet-ku badhila sendToCloud-ah call panrom
+                sendToCloud({ ...item, action: 'delete' });
+            }
+        });
+
+        // 💾 LOCAL UPDATE
+        const indices = selectedIndices.sort((a,b) => b-a);
+        indices.forEach(i => data.splice(i, 1));
+        localStorage.setItem(storageKey, JSON.stringify(data));
+        renderTable();
+
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => { isSyncing = false; }, 1000);
+        alert("Deleted Successfully! ✅");
+    }
+}
+// --- 3. TOGGLE ALL (NO CHANGE) ---
+function toggleAll() {
+    const m = document.getElementById('masterCheck');
+    document.querySelectorAll('.row-check').forEach(c => c.checked = m.checked);
+}
+
+    function toggleAll() {
+        const m = document.getElementById('masterCheck');
+        document.querySelectorAll('.row-check').forEach(c => c.checked = m.checked);
+    }
+</script>
+</body>
+</html>
+
+

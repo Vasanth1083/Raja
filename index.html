@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vimag - Master Hub</title>
+    <style>
+        @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+        .logo-item img { animation: float 4s ease-in-out infinite; transition: all 0.4s ease; }
+        body { font-family: 'Times New Roman', serif; background-color: Yellow; margin: 0; padding: 20px; text-align: center; }
+        .vimag-header { background: white; border: 2px solid Yellow; border-radius: 15px; padding: 25px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-width: 500px; cursor: pointer; }
+        .logo-showcase { display: flex; flex-wrap: wrap; gap: 40px; padding: 25px; justify-content: center; align-items: center; background: white; border-radius: 10px; margin-top: 20px; }
+        .logo-item img { width: 175px; transition: 0.2s; }
+        .report-view { display: none; max-width: 1200px; margin: 0 auto; position: relative; }
+        .card { background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 10px; }
+        th { background-color: #27ae60; color: white; padding: 15px; text-transform: uppercase; border: 1px solid #219150; font-size: 13px; }
+        td { border: 1px solid #ddd; padding: 12px; font-size: 14px; color: black; }
+        .top-right-btns { position: absolute; top: 10px; right: 20px; display: flex; gap: 10px; z-index: 100; }
+        .top-left-home { position: absolute; top: 10px; left: 20px; z-index: 100; }
+        .tool-btn { padding: 10px 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.3s; font-family: 'Times New Roman'; }
+        .b1 { background: #3498db; }
+        .home-btn { background: #2c3e50; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:15px; width:700px; text-align:left; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; font-family: 'Times New Roman'; box-sizing: border-box;}
+        #pieChartCanvas { width: 250px; height: 250px; border-radius: 50%; border: 5px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.1); margin: 20px auto; }
+        .legend-box { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
+        .legend-item { display: flex; align-items: center; font-size: 11px; font-weight: bold; }
+        .color-sq { width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; }
+        #artSearchContainer { position: absolute; top: 20px; right: 20px; background: white; padding: 15px; border-radius: 12px; border: 2px solid #27ae60; width: 220px; text-align: left; }
+  #loginOverlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #27ae60; z-index: 10000; display: flex;
+    justify-content: center; align-items: center;
+}
+.login-box {
+    background: white; padding: 30px; border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 300px;
+}
+.login-box input {
+    width: 100%; padding: 12px; margin: 15px 0;
+    border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+} @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+#modalBrandList li:hover {
+    background: #f1f8ff;
+    color: #007bff;
+}
+ </style>
+</head>
+<body>
+<div id="indexPage">
+    <div id="artSearchContainer">
+        <label style="font-weight: bold; color: #27ae60; font-size: 12px;">🔍 ARTICLE / NAME SEARCH</label>
+        <input type="text" id="topArtSearch" placeholder="No or Name..." style="width: 100%; padding: 5px; margin: 5px 0;">
+        <button class="tool-btn b1" style="width:100%;" onclick="topSearchByArticle()">SEARCH</button>
+        <div id="topArtResult" style="font-size: 11px; margin-top: 10px; max-height: 150px; overflow-y: auto;"></div>
+    </div>
+    <header onclick="openMasterReport()" style="cursor:pointer; z-index:1000;">
+    <div class="vimag-header">
+        <img src="Logo.jpeg" width="180">
+        <h1 style="color: #27ae60;">Vimag Brand Management</h1>
+    </div>
+</header>
+    <div class="logo-showcase"> 
+        <a href="Rhodius Customer Details.html" class="logo-item"><img src="Rhodius.png"></a> 
+        <a href="Laco Customer Details.html" class="logo-item"><img src="Laco.jpeg"></a> 
+        <a href="Lessmann Customer Details.html" class="logo-item"><img src="Lessmann.png"></a> 
+        <a href="Capital Weld Cleaners Customer Details.html" class="logo-item"><img src="capital weld cleaners.png"></a> 
+        <a href="Dedeco Customer Details.html" class="logo-item"><img src="dedeco.png"></a> 
+        <a href="Einhell Customer Details.html" class="logo-item"><img src="einhell.png"></a> 
+        <a href="Peddinghaus Customer Details.html" class="logo-item"><img src="peddinghaus.png"></a> 
+        <a href="Rexcut Customer Details.html" class="logo-item"><img src="rexcut.jpeg"></a> 
+        <a href="Shannon Customer Details.html" class="logo-item"><img src="shannon.jpeg"></a> 
+        <a href="Starrett Customer Details.html" class="logo-item"><img src="starrett.jpeg"></a> 
+        <a href="Voelkel Customer Details.html" class="logo-item"><img src="voelkel.png"></a>
+    </div>
+</div>
+<div id="masterReportPage" class="report-view">
+    <div style="padding: 40px; background: #00B140; min-height: 100vh;">
+        <div class="top-left-home"><button class="home-btn" onclick="showIndex()">🏠 HOME</button></div>
+        <div class="top-right-btns">
+            <button class="tool-btn" style="background:#e67e22;" onclick="drawPieChart()">📊 PIE CHART</button>
+            <button class="tool-btn" style="background:#9b59b6;" onclick="showBrandProgress()">📈 BRAND PROGRESS</button>
+            <select id="staffDropdown" class="tool-btn" style="background: #2c3e50; border: none;" onchange="generateStaffReport(this.value)"><option value="">👤 HANDLED BY</option></select>
+            <button class="tool-btn" style="background:#e67e22;" onclick="window.location.href='reports.html'">📊 VIEW REPORTS</button>
+            <button class="tool-btn" style="background:#8e44ad;" onclick="showDistPage()">🤝 DISTRIBUTORS</button>
+            <button class="tool-btn" style="background:#e67e22;" onclick="showSamplesPage()">📦 SAMPLES</button>
+        </div>
+        <div class="card" style="margin-top: 30px; border: 2px solid #27ae60;">
+            <img src="Logo.jpeg" width="100">
+            <h1 style="color: #27ae60;">Master Customer Database</h1>
+            <input type="text" id="sBox" placeholder="🔍 Search customers..." style="width:80%; padding:12px; border-radius:50px; border:1px solid #ddd;" onkeyup="filter()">
+        </div>
+        <div class="card"><table><thead><tr><th>S.No</th><th>Customer Name</th><th>Status</th></tr></thead><tbody id="tBody"></tbody></table></div>
+    </div>
+</div>
+<!-- Modern Brand List Modal -->
+<div id="brandModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index:1000; justify-content:center; align-items:center; transition: all 0.3s ease;">
+    <div style="background:white; padding:0; border-radius:16px; width:340px; text-align:center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow:hidden; animation: slideUp 0.3s ease-out;">
+        <!-- Header -->
+        <div style="background:#3498db; padding:20px; color:white;">
+            <h3 id="modalCustName" style="margin:0; font-size:18px; font-weight:600;">Customer Brands</h3>
+            <p style="margin:5px 0 0; font-size:12px; opacity:0.9;">Select a brand to view status</p>
+        </div>
+        
+        <!-- List Container -->
+        <ul id="modalBrandList" style="list-style:none; padding:10px 0; text-align:left; margin:0; max-height:250px; overflow-y:auto;">
+            <!-- Brands will appear here -->
+        </ul>
+        
+        <!-- Action Button -->
+        <div style="padding:15px; border-top:1px solid #eee;">
+            <button onclick="document.getElementById('brandModal').style.display='none'" style="background:#f8f9fa; color:#555; border:1px solid #ddd; padding:10px 0; border-radius:10px; cursor:pointer; font-weight:bold; width:100%; transition:0.3s;">Close</button>
+        </div>
+    </div>
+</div>
+<div id="samplesPage" class="report-view">
+    <div style="padding: 40px; background: #00B140; min-height: 100vh;">
+        <div class="top-left-home"><button class="home-btn" onclick="hideSamplesPage()">⬅ BACK</button></div>
+        <div class="card">
+            <h2 style="color: #27ae60;">SAMPLES REQUIREMENT</h2>
+            <button class="tool-btn b1" onclick="openSampleModal()">ADD</button>
+            <button class="tool-btn" style="background:#27ae60;" onclick="prepareSampleUpdate()">🔄 UPDATE</button>
+            <button class="tool-btn" style="background:red;" onclick="deleteSelectedSamples()">DELETE SELECTED</button>
+<button class="tool-btn" style="background:#8e44ad;" onclick="window.print()">🖨️ PRINT SAMPLES</button>
+            <table><thead><tr><th class="chk-col"><input type="checkbox" onclick="toggleAllSamples(this)"></th><th>Brand</th><th>Article No</th><th>Product Name</th><th>Company</th><th>Volume</th><th>Type</th><th>Details</th><th>Remarks</th><th>Requested By</th></tr></thead><tbody id="sampleTbody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div id="distPage" class="report-view">
+    <div style="padding: 40px; background: #00B140; min-height: 100vh;">
+        <div class="top-left-home"><button class="home-btn" onclick="hideDistPage()">⬅ BACK</button></div>
+        <div class="card">
+            <h2 style="color: #27ae60;">DISTRIBUTORS BUSINESS DETAILS</h2>
+            
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="tool-btn b1" onclick="openDistModal()">ADD</button>
+                <button class="tool-btn" style="background:#27ae60;" onclick="prepareDistUpdate()">🔄 UPDATE</button>
+                
+                <!-- FIX: SEARCH BOX -->
+                <input type="text" id="distSearchBox" placeholder="🔍 Search Brand (e.g. Rhodius, Laco...)" 
+       style="padding:10px; border-radius:5px; border:1px solid #ddd; min-width: 250px;" 
+       onkeyup="loadDist()">
+
+                <!-- FIX: DROPDOWN FILTER -->
+                <select id="distNameFilter" onchange="loadDist()" 
+                        style="padding:10px; border-radius:5px; border:1px solid #ddd; font-family:'Times New Roman';">
+                    <option value="">ALL DISTRIBUTORS</option>
+                </select>
+                
+                <button class="tool-btn" style="background:red;" onclick="deleteSelectedDist()">DELETE SELECTED</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th class="chk-col"><input type="checkbox" onclick="toggleAllDist(this)"></th>
+                        <th>Brand</th>
+                        <th>Distributor</th>
+                        <th> SOURCE <br>
+    <select id="distSourceFilter" onchange="loadDist()" style="font-size: 10px; padding: 2px; border-radius: 3px; border: none; font-family: serif;">
+        <option value="">ALL</option>
+        <option value="Import">Import</option>
+        <option value="Local Purchase">Local Purchase</option>
+    </select>
+</th>
+<th>Supplier</th>
+                        <th>Invoice Value</th>
+                        <th>Direct</th>
+                        <th>Other (Balance)</th>
+                    </tr>
+                </thead>
+                <tbody id="distTbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODALS -->
+<div id="pieModal" class="modal"><div class="modal-content" style="text-align:center;"><h2 style="color:#27ae60;">BRAND ACHIEVEMENT GRAPH</h2><div id="pieChartCanvas"></div><div id="pieLegend" class="legend-box"></div><button class="tool-btn" style="margin-top:20px; background:grey;" onclick="document.getElementById('pieModal').style.display='none'">CLOSE</button></div></div>
+<div id="progressModal" class="modal"><div class="modal-content"><h2 style="color:#27ae60; text-align:center;">BRAND PERFORMANCE</h2><table><thead><tr><th>Brand</th><th>Target</th><th>Achieved</th><th>%</th></tr></thead><tbody id="progressTbody"></tbody><tfoot id="progressTfoot"></tfoot></table><button class="tool-btn" style="width:100%; margin-top:15px; background:grey;" onclick="document.getElementById('progressModal').style.display='none'">CLOSE</button></div></div>
+<div id="sampleModal" class="modal"><div class="modal-content"><h3>Add Sample</h3><select id="sampBrand"></select><input type="text" id="sampArt" placeholder="Art No"><input type="text" id="sampProd" placeholder="Product"><input type="text" id="sampComp" placeholder="Company"><input type="number" id="sampVol" placeholder="Volume"><select id="sampType" onchange="handleSampleTypeChange()"><option value="New">New</option><option value="Existing">Existing</option></select><div id="extraSampleBox" style="display:none;"><input type="text" id="sampExtra" placeholder="Details"></div><label>Remarks:</label>
+<input type="text" id="sampRemarks" placeholder="Enter Remarks"><input type="text" id="sampReq" placeholder="By"><button class="tool-btn b1" style="width:100%;" onclick="saveSample()">SAVE</button><button type="button" class="tool-btn" style="flex:1; background:red;" onclick="this.closest('.modal').style.display='none'">DISCARD</button>
+</div></div>
+<div id="distModal" class="modal"><div class="modal-content"><h3>Add Distributor</h3><select id="distBrand"></select><input type="text" id="distName" placeholder="Name"><label>Source:</label>
+<select id="distSource" onchange="handleDistSourceChange()">
+    <option value="Import">Import</option>
+    <option value="Local Purchase">Local Purchase</option>
+</select>
+
+<!-- NEENGA KETA PUDHU BOX (Initial-ah hidden-ah irukkum) -->
+<div id="localSourceBox" style="display:none; margin-top: 10px;">
+    <label>Supplier Name:</label>
+    <input type="text" id="distSupplier" placeholder="Enter Supplier Name">
+</div><input type="number" id="distInvVal" placeholder="Invoice Value"><input type="number" id="distDirect" placeholder="Direct Value"><button class="tool-btn b1" style="width:100%;" onclick="saveDist()">SAVE</button><button type="button" class="tool-btn" style="flex:1; background:red;" onclick="this.closest('.modal').style.display='none'">DISCARD</button>
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+<script>
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+ const G_SHEET_URL = "https://script.google.com/macros/s/AKfycbxt9YfMYA8PKNlC0Vb_DIDVRsMWZnCUPMRGsCoQSnLDXWYorh57KU0NRFzrAmsY8ySRXA/exec?apiKey=VIMAG";
+const logoMap = { "Rhodius": "Rhodius.png", "Laco": "Laco.jpeg", "Lessmann": "Lessmann.png", "Capital Weld Cleaners": "capital weld cleaners.png", "Dedeco": "dedeco.png", "Einhell": "einhell.png", "Peddinghaus": "peddinghaus.png", "Rexcut": "rexcut.jpeg", "Shannon": "shannon.jpeg", "Starrett": "starrett.jpeg", "Voelkel": "voelkel.png" };
+const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#C9CBCF", "#27ae60", "#e67e22", "#e74c3c", "#34495e"];
+const brandColors = ["#e74c3c", "#3498db", "#2ecc71", "#f1c40f", "#9b59b6", "#1abc9c", "#e67e22", "#34495e", "#d35400", "#c0392b", "#16a085"];
+let sampleEditId = null, distEditId = null;
+
+async function sendToCloud(payload) {
+    // 🛡️ 1. REPEAT PREVENTER (Orey ID-ah rendu vaati anupaama thadukkum)
+    if (window.lastSentId === payload.id) return; 
+    window.lastSentId = payload.id;
+
+    payload.apiKey = "VIMAG";
+    let folder = "";
+    let sheetName = "";
+
+   if (payload.id.startsWith("S-") || payload.sampleBrand) {
+        folder = "samples";
+        sheetName = "Samples";
+    } 
+    else if (payload.id.startsWith("D-") || payload.distBrand) {
+        folder = "distributors";
+        sheetName = "Distributors";
+    } 
+    else {
+        // Mattha 11 Brands-kku indha path
+        folder = `brands/${payload.brand}/${payload.customerName}`;
+        sheetName = payload.brand;
+    }
+
+    const fbPath = `vimag/${folder}/${payload.id}`;
+
+    // 🔥 FIREBASE UPLOAD
+    db.ref(fbPath).set(payload)
+        .then(() => console.log("Firebase Sync: Done ✅"))
+        .catch(e => console.error("Firebase Error:", e));
+
+    // ☁️ SHEET BACKUP
+    const sheetPayload = { ...payload, action: 'save', sheetName: sheetName };
+    const params = new URLSearchParams(sheetPayload).toString();
+    const finalUrl = G_SHEET_URL.includes("?") ? `${G_SHEET_URL}&${params}` : `${G_SHEET_URL}?${params}`;
+
+    fetch(finalUrl, { mode: 'no-cors' })
+        .then(() => {
+            setTimeout(() => { window.lastSentId = null; }, 2000);
+        });
+}
+// --- LIVE SYNC FROM FIREBASE (No Page Reload Needed) ---
+
+function syncEverything() {
+    console.log("Starting Jet Speed Live Connection... ⚡");
+
+    // 1. Brands & Master Table Live Sync
+    db.ref('vimag/brands').on('value', (snapshot) => {
+        const brandsData = snapshot.val() || {}; 
+        
+        console.log("Cloud Data Received! Auto-refreshing Master Table... ☁️");
+
+        // Cloud-la irundhu vara fresh data-va LocalStorage-la update panrom
+        brands.forEach(brand => {
+            if (brandsData[brand]) {
+                const customers = brandsData[brand];
+                const custNames = Object.keys(customers);
+
+                localStorage.setItem(brand + '_customers', JSON.stringify(custNames));
+                
+                custNames.forEach(cust => {
+                    localStorage.setItem(brand + '_data_' + cust, JSON.stringify(Object.values(customers[cust])));
+                });
+            } else {
+                // Cloud-la brand illana local-la clean panrom
+                localStorage.removeItem(brand + '_customers');
+            }
+        });
+
+        // ✨ ITHU THAAN MAIN: Table-ah reload illaama refresh pannum
+        if (typeof fetchUniqueNames === "function") {
+            fetchUniqueNames(); 
+        }
+    });
+   db.ref('vimag/samples').on('value', snap => {
+        const data = snap.val() ? Object.values(snap.val()) : [];
+        localStorage.setItem('vimag_samples', JSON.stringify(data));
+        // Current-ah samples page-la irundha table-ah update pannu
+        if(document.getElementById('samplesPage')?.style.display === 'block') loadSamples();
+    });
+
+     // 3. Distributors Live Sync
+    db.ref('vimag/distributors').on('value', snap => {
+        const data = snap.val() ? Object.values(snap.val()) : [];
+        localStorage.setItem('vimag_dist', JSON.stringify(data));
+        // Current-ah dist page-la irundha table-ah update pannu
+        if(document.getElementById('distPage')?.style.display === 'block') loadDist();
+    });
+}
+function fetchUniqueNames() {
+       let customerData = {};
+    let uniqueStaff = new Set();
+
+    try {
+        // 2. DATA PROCESSING (Safety Checks-oda)
+        brands.forEach(brand => {
+            const rawCusts = localStorage.getItem(brand + '_customers');
+            const customers = JSON.parse(rawCusts || "[]");
+            
+            customers.forEach(name => {
+                if (name && name.trim() !== "") {
+                    let rawName = name.trim();
+                    if (!customerData[rawName]) customerData[rawName] = [];
+                    customerData[rawName].push(brand);
+
+                    const rawData = localStorage.getItem(brand + '_data_' + rawName);
+                    const data = JSON.parse(rawData || "[]");
+                    
+                    data.forEach(i => {
+                        // 🛑 FIXED: HandledBy-ah String-ah maathi safety-ah trim panrom
+                        if (i && i.handledBy != null) { 
+                            let staffName = String(i.handledBy).trim(); 
+                            if (staffName !== "") {
+                                uniqueStaff.add(staffName);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // 3. TABLE RENDER (Target id "tBody" correct-aa check pannikonga)
+        let rows = Object.keys(customerData).sort().map((name, index) => 
+            `<tr>
+                <td>${index+1}</td>
+                <td><a href="Sales Report.html?name=${encodeURIComponent(name)}" style="text-decoration:none; color:black; font-weight:bold;">${name}</a></td>
+                <td>${customerData[name].length} Brand(s)</td>
+            </tr>`
+        ).join('');
+        
+        const tableBody = document.getElementById('tBody');
+        if (tableBody) tableBody.innerHTML = rows;
+
+        // 4. DROPDOWN RENDER
+        const sDrop = document.getElementById('staffDropdown');
+        if (sDrop) {
+            sDrop.innerHTML = '<option value="">👤 HANDLED BY</option>';
+            uniqueStaff.forEach(staff => sDrop.add(new Option(staff, staff)));
+        }
+    } catch (e) {
+        console.error("Master Page load error: ", e);
+    }
+} 
+
+async function pushAllOldData() {
+    if(!confirm("Local-la irukura ella data-vaiyum Firebase and Sheets-ku backup anupalaama?")) return;
+    
+    let allData = [];
+
+    // 1. Samples Data Backup
+    let samples = JSON.parse(localStorage.getItem('vimag_samples') || "[]");
+    samples.forEach(s => {
+        allData.push({ 
+            brand: "Samples", sampleBrand: s.sampleBrand || s.brand, 
+            id: s.id, art: s.art, prod: s.prod, comp: s.comp, 
+            vol: s.vol, type: s.type, extra: s.extra || s.details, req: s.req 
+        });
+    });
+
+    // 2. Distributors Data Backup
+    let dists = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    dists.forEach(d => {
+        allData.push({ 
+            brand: "Distributors", distBrand: d.distBrand || d.brand, 
+            id: d.id, name: d.name, source: d.source, 
+            invVal: d.invVal, direct: d.direct, other: (d.invVal - d.direct) 
+        });
+    });
+
+    // 3. 11 Brands Data Backup
+    brands.forEach(brand => {
+        const customers = JSON.parse(localStorage.getItem(brand + '_customers') || "[]");
+        customers.forEach(cust => {
+            const data = JSON.parse(localStorage.getItem(brand + '_data_' + cust) || "[]");
+            data.forEach(item => {
+                allData.push({ 
+                    brand: brand, customerName: cust, artNo: item.artNo, 
+                    name: item.name, price: item.price, qty: item.qty, 
+                    monthQty: item.monthQty, handledBy: item.handledBy, 
+                    remarks: item.remarks, id: item.id || Date.now() 
+                });
+            });
+        });
+    });
+
+    // 🚀 FIREBASE & SHEET BACKUP START
+    console.log("Bulk upload started...");
+    
+    for (let i = 0; i < allData.length; i++) {
+        // Namma pudhusa ezhudhuna Dual-Upload function-ah call panrom
+        sendToCloud(allData[i]); 
+        
+        // Firebase speed handle pannum, aana Sheet backup-kaga chinna gap (300ms) pothum
+        await new Promise(r => setTimeout(r, 300));
+    }
+    
+    alert("ALL DATAS SUCCESSFULLY SENT TO FIREBASE & SHEETS ✅");
+}
+function generateStaffReport(staffName) {
+    if (!staffName || staffName === "" || staffName === "👤 HANDLED BY") return;
+
+    // ✨ Pudhu tab-la report open panrom
+    window.open(`Handledby.html?name=${encodeURIComponent(staffName)}`, "_blank");
+
+    // ✨ Dropdown-ah thirumba default value-ku reset panrom
+    const sDrop = document.getElementById('staffDropdown');
+    if (sDrop) sDrop.selectedIndex = 0;
+}
+
+function showIndex() {
+    document.getElementById('indexPage').style.display='block';
+    ['masterReportPage', 'samplesPage', 'distPage'].forEach(id => document.getElementById(id).style.display='none');
+}
+
+function hideSamplesPage() {
+    document.getElementById('samplesPage').style.display='none';
+    document.getElementById('masterReportPage').style.display='block';
+}
+
+function hideDistPage() {
+    document.getElementById('distPage').style.display='none';
+    document.getElementById('masterReportPage').style.display='block';
+}
+
+function openMasterReport() {
+    const reportPage = document.getElementById('masterReportPage');
+    const indexPage = document.getElementById('indexPage');
+    if (reportPage && indexPage) {
+        indexPage.style.display = 'none';
+        reportPage.style.display = 'block';
+        fetchUniqueNames();
+    }
+}
+
+function topSearchByArticle() {
+    const artInput = document.getElementById('topArtSearch').value.toString().trim().toUpperCase();
+    const res = document.getElementById('topArtResult');
+    if(!artInput) return res.innerHTML = "";
+    
+    let found = "";
+    brands.forEach(b => {
+        const custs = JSON.parse(localStorage.getItem(b + '_customers') || "[]");
+        custs.forEach(c => {
+            const data = JSON.parse(localStorage.getItem(b + '_data_' + c) || "[]");
+            data.forEach(i => {
+                // Safety check: i.artNo and i.name null-ah irundha handle panrom
+                let sArt = i && i.artNo ? i.artNo.toString().trim().toUpperCase() : "";
+                let sName = i && i.name ? i.name.toString().trim().toUpperCase() : "";
+                
+                if(sArt === artInput || (artInput.length > 2 && sName.includes(artInput))) {
+                    found += `<div style="border-bottom:1px solid #eee; padding:8px;">
+                                <b style="color:#27ae60;">${b}</b>: <br>
+                                <a href="${b} Customer Status.html?name=${encodeURIComponent(c)}&art=${encodeURIComponent(sArt)}" style="text-decoration:none; color:#2980b9; font-weight:bold; font-size:14px;">🔗 ${c} (${sArt})</a>
+                              </div>`;
+                }
+            });
+        });
+    });
+    res.innerHTML = found || "<span style='color:red; font-size:12px;'>Not Found</span>";
+}
+
+
+function generateStaffReport(staffName) {
+    // 1. Staff select pannala na function-ah stop panrom
+    if (!staffName || staffName === "" || staffName === "👤 HANDLED BY") {
+        return;
+    }
+
+    console.log("Generating Report for Staff: " + staffName);
+
+    // 2. ✨ URL Parameter-la staff name-ah anupi pudhu tab-la open panrom
+    // EncodeURIComponent use panradhala name-la space irundhalum error varaadhu
+    const reportURL = `Handledby.html?name=${encodeURIComponent(staffName)}`;
+    window.open(reportURL, "_blank");
+
+    // 3. ✨ Dropdown-ah thirumba 'All' or 'Handled By' nu reset panrom
+    const sDrop = document.getElementById('staffDropdown');
+    if (sDrop) {
+        sDrop.selectedIndex = 0; // First option-ku reset aagidum
+    }
+}
+function drawPieChart() {
+    let data = [];
+    let total = 0;
+    brands.forEach(b => {
+        let val = 0;
+        const custs = JSON.parse(localStorage.getItem(b + '_customers') || "[]");
+        custs.forEach(c => {
+            const entries = JSON.parse(localStorage.getItem(b + '_data_' + c) || "[]");
+            entries.forEach(i => {
+                // Calculation logic remains same
+                val += (parseFloat(i.price || 0) * parseInt(i.monthQty || 0));
+            });
+        });
+        if(val > 0) {
+            data.push({ label: b, value: val });
+            total += val;
+        }
+    });
+
+    const pie = document.getElementById('pieChartCanvas');
+    const leg = document.getElementById('pieLegend');
+    if(!pie || !leg) return;
+
+    pie.innerHTML = "";
+    leg.innerHTML = "";
+
+    if(total === 0) {
+        pie.innerText = "No Data";
+        pie.style.background = "#eee";
+        return;
+    }
+
+    let curr = 0;
+    let parts = [];
+    data.forEach((item, idx) => {
+        let p = (item.value / total) * 100;
+        let c = colors[idx % colors.length];
+        parts.push(`${c} ${curr}% ${curr + p}%`);
+        curr += p;
+        leg.innerHTML += `<div class="legend-item"><div class="color-sq" style="background:${c}"></div>${item.label} (${p.toFixed(1)}%)</div>`;
+    });
+
+    pie.style.background = `conic-gradient(${parts.join(', ')})`;
+    document.getElementById('pieModal').style.display = 'flex';
+}
+
+function showBrandProgress() { 
+    let tT = 0, tA = 0; 
+    let html = brands.map(b => { 
+        let targetTotal = 0; 
+        let achievedTotal = 0; 
+        const custs = JSON.parse(localStorage.getItem(b + '_customers') || "[]"); 
+        custs.forEach(c => { 
+            const data = JSON.parse(localStorage.getItem(b + '_data_' + c) || "[]"); 
+            data.forEach(i => { 
+                let price = parseFloat(i.price || 0); 
+                let targetQty = parseInt(i.qty || 0); 
+                let achievedQty = parseInt(i.monthQty || 0); 
+                targetTotal += (price * targetQty); 
+                achievedTotal += (price * achievedQty); 
+            }); 
+        }); 
+        tT += targetTotal; 
+        tA += achievedTotal; 
+        let percentage = targetTotal > 0 ? ((achievedTotal / targetTotal) * 100).toFixed(1) : 0; 
+        return `<tr> 
+            <td style="font-weight:bold; text-align:left; padding-left:15px;">${b}</td> 
+            <td style="color:blue;">${targetTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td style="color:green;">${achievedTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td style="font-weight:bold; background: ${percentage >= 100 ? '#e8f5e9' : 'white'}">${percentage}%</td> 
+        </tr>`; 
+    }).join(''); 
+
+    const tbody = document.getElementById('progressTbody'); 
+    if(tbody) tbody.innerHTML = html;
+
+    let totalPct = tT > 0 ? ((tA / tT) * 100).toFixed(1) : 0; 
+    const tfoot = document.getElementById('progressTfoot'); 
+    if(tfoot) { 
+        tfoot.innerHTML = ` 
+        <tr style="font-weight:bold; background:#f2f2f2;"> 
+            <td>GRAND TOTAL:</td> 
+            <td style="color:blue;">${tT.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td style="color:green;">${tA.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td style="color: #27ae60;">${totalPct}%</td> 
+        </tr>`; 
+    } 
+
+    const modal = document.getElementById('progressModal'); 
+    if(modal) modal.style.display = 'flex'; 
+}
+function showSamplesPage() { 
+    document.getElementById('masterReportPage').style.display='none'; 
+    document.getElementById('samplesPage').style.display='block'; 
+    const sampBrandDrop = document.getElementById('sampBrand');
+    if(sampBrandDrop) {
+        sampBrandDrop.innerHTML = brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+    }
+    loadSamples(); 
+} 
+
+function loadSamples() {
+    let rawData = JSON.parse(localStorage.getItem('vimag_samples') || "[]");
+    let data = rawData.filter(s => s.id && s.id.toString() !== "-" && s.art !== "-");
+    let tbody = document.getElementById('sampleTbody');
+    if(!tbody) return;
+    tbody.innerHTML = data.map(s => `
+        <tr>
+            <td><input type="checkbox" class="s-chk" value="${s.id}"></td>
+            <td>${s.sampleBrand || s.brand || "-"}</td>
+            <td>${s.art || "-"}</td>
+            <td>${s.prod || "-"}</td>
+            <td>${s.comp || "-"}</td>
+            <td>${s.vol || "-"}</td>
+            <td>${s.type || "-"}</td>
+            <td>${s.extra || "-"}</td>
+            <td>${s.remarks || "-"}</td>
+            <td>${s.req || "-"}</td>
+        </tr>`).join('');
+}
+
+function loadDist() {
+    let localData = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    let cleanData = localData.filter(d => d.id && d.id.toString() !== "-" && d.name && d.name !== "-");
+    let tbody = document.getElementById('distTbody');
+    if (!tbody) return;
+
+    if(cleanData.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8' style='padding:20px; text-align:center; color:gray;'>No data found.</td></tr>";
+        return;
+    }
+
+    let searchVal = document.getElementById('distSearchBox') ? document.getElementById('distSearchBox').value.toUpperCase().trim() : "";
+    let sourceFilter = document.getElementById('distSourceFilter') ? document.getElementById('distSourceFilter').value : "";
+    let dropdownName = document.getElementById('distNameFilter') ? document.getElementById('distNameFilter').value : "";
+
+    let filtered = cleanData.filter(d => {
+        let bMatch = (d.distBrand || d.brand || "").toUpperCase().includes(searchVal) || (d.name || "").toUpperCase().includes(searchVal);
+        let sMatch = (sourceFilter === "") || (d.source === sourceFilter);
+        let dMatch = (dropdownName === "") || (d.name === dropdownName);
+        return bMatch && sMatch && dMatch;
+    });
+
+    let tInv = 0, tDir = 0, tOth = 0;
+    tbody.innerHTML = filtered.map(d => {
+        let inv = parseFloat(d.invVal || 0), dir = parseFloat(d.direct || 0), oth = inv - dir;
+        tInv += inv; tDir += dir; tOth += oth;
+        return `<tr>
+            <td><input type="checkbox" class="d-chk" value="${d.id}"></td>
+            <td>${d.distBrand || d.brand || "-"}</td>
+            <td>${d.name || "-"}</td>
+            <td>${d.source || "-"}</td>
+            <td>${d.supplier || "-"}</td>
+            <td>${inv.toLocaleString()}</td>
+            <td>${dir.toLocaleString()}</td>
+            <td>${oth.toLocaleString()}</td>
+        </tr>`;
+    }).join('');
+    
+    if (filtered.length > 0) {
+        tbody.innerHTML += `<tr style="background: #f1f1f1; font-weight: bold; color: #27ae60;">
+            <td colspan="5" style="text-align: right; padding-right:15px;">GRAND TOTAL:</td>
+            <td>${tInv.toLocaleString()}</td><td>${tDir.toLocaleString()}</td><td>${tOth.toLocaleString()}</td>
+        </tr>`;
+    }
+}
+function saveSample() {
+    const artNo = document.getElementById('sampArt').value;
+    if(!artNo) return alert("Article Number kandippa venum!");
+
+    const s = {
+        brand: document.getElementById('sampBrand').value,
+        sampleBrand: document.getElementById('sampBrand').value,
+        id: sampleEditId || "S-" + Date.now(),
+        art: document.getElementById('sampArt').value,
+        prod: document.getElementById('sampProd').value,
+        comp: document.getElementById('sampComp').value,
+        vol: document.getElementById('sampVol').value,
+        type: document.getElementById('sampType').value,
+        extra: document.getElementById('sampExtra').value || "-",
+        req: document.getElementById('sampReq').value,
+        remarks: document.getElementById('sampRemarks') ? document.getElementById('sampRemarks').value : "-"
+    };
+
+    isSyncing = true;
+
+    let localData = JSON.parse(localStorage.getItem('vimag_samples') || "[]");
+    const idx = localData.findIndex(item => String(item.id) === String(s.id));
+    
+    if (idx > -1) localData[idx] = s; 
+    else localData.push(s);
+
+    localStorage.setItem('vimag_samples', JSON.stringify(localData));
+    loadSamples();
+    
+    document.getElementById('sampleModal').style.display = 'none';
+    
+    // ✨ FIX 1: ID-ya reset panrom (Next entry-ku idhu romba mukkiyam)
+    sampleEditId = null; 
+
+    // Cloud Sync
+    sendToCloud(s);
+
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+        isSyncing = false;
+    }, 2000);
+
+    alert("Sample Saved! ✅");
+}
+function prepareSampleUpdate() {
+    // 1. Checkbox select aagiya-nu paakkurom
+    let chk = document.querySelector('.s-chk:checked');
+    if(!chk) return alert("Ethachum onna select pannunga bro!");
+
+    // 2. Local storage-la irundhu andha specific data-va edukkurom
+    let data = JSON.parse(localStorage.getItem('vimag_samples') || "[]");
+    let s = data.find(i => String(i.id) === String(chk.value));
+
+    if(s) {
+        // 3. Edit panra ID-ya save panrom (saveSample function-kku idhu thaan trigger)
+        sampleEditId = s.id;
+
+        // 4. Modal input-la pazhaya data-va fill panrom
+       document.getElementById('sampBrand').value = s.sampleBrand || s.brand || "";
+        document.getElementById('sampArt').value = s.art;
+        document.getElementById('sampProd').value = s.prod;
+        document.getElementById('sampComp').value = s.comp;
+        document.getElementById('sampVol').value = s.vol;
+        document.getElementById('sampType').value = s.type;
+  document.getElementById('sampExtra').value = s.extra || "";
+             document.getElementById('sampReq').value = s.req;
+
+        // 5. Modal-ah open panrom
+        document.getElementById('sampleModal').style.display = 'flex';
+        
+        // Type 'Existing'-na andha extra box-ah kaatum
+        handleSampleTypeChange();
+    }
+}
+function showDistPage() {
+
+    document.getElementById('masterReportPage').style.display='none';
+    document.getElementById('distPage').style.display='block';
+    
+    // Brand dropdown load
+    document.getElementById('distBrand').innerHTML = brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+    
+    // DISTRIBUTOR NAME FILTER LOAD
+    let data = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    // தப்பான வரிகளைத் தவிர்த்து பெயர்களை எடுக்கிறோம்
+    let cleanNames = data.filter(d => d.name && d.name.trim() !== "" && d.name !== "-");
+    let names = [...new Set(cleanNames.map(d => d.name))].sort();
+    
+    let filterDrop = document.getElementById('distNameFilter');
+    if(filterDrop) {
+        filterDrop.innerHTML = '<option value="">ALL DISTRIBUTORS</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+    }
+    loadDist();
+}winm
+function loadDist() {
+    let localData = [];
+    try {
+        localData = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    } catch(e) {
+        console.error("Error loading data");
+    }
+
+    // 🛑 இதோ திருத்தம்: 'data'க்கு பதில் 'localData' பயன்படுத்தப்பட்டுள்ளது
+    localData = localData.filter(d => d.id && d.id.toString().trim() !== "" && d.id.toString() !== "-" && d.name !== "-");
+
+    let tbody = document.getElementById('distTbody');
+    if (!tbody) return;
+
+    if(localData.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8' style='padding:20px; color:gray;'>No data found.</td></tr>";
+        return;
+    }
+let searchBox = document.getElementById('distSearchBox');
+let searchVal = searchBox ? searchBox.value.toUpperCase().trim() : ""; 
+      let sourceFilter = document.getElementById('distSourceFilter') ? document.getElementById('distSourceFilter').value : "";
+    let dropdownName = document.getElementById('distNameFilter') ? document.getElementById('distNameFilter').value : "";
+
+    // 🛑 இதோ திருத்தம்: localData-வை பில்டர் செய்கிறோம்
+    let filtered = localData.filter(d => {
+        let bName = (d.distBrand || d.brand || "").toUpperCase();
+        let dName = (d.name || "").toUpperCase();
+        let globalSearchMatch = bName.includes(searchVal) || dName.includes(searchVal);
+        let sourceMatch = (sourceFilter === "") || (d.source && d.source === sourceFilter);
+        let dropdownMatch = (dropdownName === "") || (d.name === dropdownName);
+        return globalSearchMatch && sourceMatch && dropdownMatch;
+    });
+
+    let tInv = 0, tDir = 0, tOth = 0;
+    tbody.innerHTML = filtered.map(d => {
+        let inv = parseFloat(d.invVal || 0);
+        let dir = parseFloat(d.direct || 0);
+        let oth = inv - dir;
+        tInv += inv; tDir += dir; tOth += oth;
+        return `<tr> 
+            <td><input type="checkbox" class="d-chk" value="${d.id}"></td> 
+            <td>${d.distBrand || d.brand || "-"}</td> 
+            <td>${d.name || "-"}</td> 
+            <td>${d.source || "-"}</td> 
+            <td>${d.supplier || "-"}</td> 
+            <td>${inv.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td>${dir.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td>${oth.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+        </tr>`;
+    }).join('');
+
+    if (filtered.length > 0) {
+        tbody.innerHTML += ` <tr style="background: #f1f1f1; font-weight: bold; color: #27ae60;"> 
+            <td colspan="5" style="text-align: right; padding-right:15px;">GRAND TOTAL:</td> 
+            <td>${tInv.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td>${tDir.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+            <td>${tOth.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+        </tr>`;
+    }
+}
+
+function saveDist() {
+    const dName = document.getElementById('distName').value.trim();
+    if(!dName || dName === "-") return alert("Name missing!");
+
+    const d = {
+        brand: document.getElementById('distBrand').value, // Dropdown brand
+        distBrand: document.getElementById('distBrand').value,
+        id: distEditId || "D-" + Date.now(),
+        name: dName,
+        source: document.getElementById('distSource').value,
+        supplier: document.getElementById('distSupplier').value || "-",
+        invVal: parseFloat(document.getElementById('distInvVal').value || 0),
+        direct: parseFloat(document.getElementById('distDirect').value || 0)
+    };
+
+    // 🛡️ SYNC LOCK
+    isSyncing = true;
+
+    // 💾 LOCAL UPDATE
+    let localData = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    const idx = localData.findIndex(item => String(item.id) === String(d.id));
+    
+    if (idx > -1) localData[idx] = d; 
+    else localData.push(d);
+
+    localStorage.setItem('vimag_dist', JSON.stringify(localData));
+    loadDist(); // Table refresh
+    
+    document.getElementById('distModal').style.display = 'none';
+    
+    // ✨ FIX: ID-ya reset panrom (Adutha pudhu entry-ku idhu mukkiyam)
+    distEditId = null; 
+
+    // ☁️ CLOUD SYNC
+    sendToCloud(d);
+
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+        isSyncing = false;
+    }, 2000);
+
+    alert("Distributor Saved! ✅");
+}
+// --- 2. PREPARE UPDATE ---
+function prepareDistUpdate() { 
+    let chk = document.querySelector('.d-chk:checked'); 
+    if(!chk) return alert("Select one!"); 
+    
+    let data = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    let d = data.find(i => String(i.id) === String(chk.value)); 
+    
+    if(d) { 
+        distEditId = d.id; 
+        document.getElementById('distBrand').value = d.distBrand || d.brand; 
+        document.getElementById('distName').value = d.name; 
+        document.getElementById('distSource').value = d.source; 
+        document.getElementById('distInvVal').value = d.invVal; 
+        document.getElementById('distDirect').value = d.direct; 
+        
+        const sBox = document.getElementById('localSourceBox'); 
+        const sInput = document.getElementById('distSupplier'); 
+        if(d.source === "Local Purchase") { 
+            sBox.style.display = "block"; 
+            sInput.value = d.supplier || ""; 
+        } else { 
+            sBox.style.display = "none"; 
+            sInput.value = ""; 
+        } 
+        document.getElementById('distModal').style.display='flex'; 
+    } 
+} 
+
+function openSampleModal() { document.querySelectorAll('#sampleModal input').forEach(i=>i.value=""); document.getElementById('sampleModal').style.display='flex'; }
+function openDistModal() { document.querySelectorAll('#distModal input').forEach(i=>i.value=""); document.getElementById('distModal').style.display='flex'; }
+function filter() { let val = document.getElementById('sBox').value.toUpperCase(); let rows = document.getElementById('tBody').getElementsByTagName('tr'); for (let i = 0; i < rows.length; i++) { rows[i].style.display = (rows[i].innerText.toUpperCase().indexOf(val) > -1) ? "" : "none"; } }
+function handleSampleTypeChange() { document.getElementById('extraSampleBox').style.display = (document.getElementById('sampType').value === 'Existing') ? 'block' : 'none'; }
+function handleDistSourceChange() { document.getElementById('localSourceBox').style.display = (document.getElementById('distSource').value === 'Local Purchase') ? 'block' : 'none'; }
+function toggleAllSamples(s) { document.querySelectorAll('.s-chk').forEach(c=>c.checked=s.checked); }
+function toggleAllDist(s) { document.querySelectorAll('.d-chk').forEach(c=>c.checked=s.checked); }
+function closeSampleModal() { document.getElementById('sampleModal').style.display = 'none'; }
+function closeDistModal() { document.getElementById('distModal').style.display = 'none'; }
+var lastDeletedMap = { vimag_samples: null, vimag_dist: null };
+
+// 2. Local Purchase செலக்ட் பண்ணா பாக்ஸ் வர்றதுக்கு
+function handleDistSourceChange() { 
+    const src = document.getElementById('distSource').value;
+    const localBox = document.getElementById('localSourceBox');
+    if(localBox) {
+        localBox.style.display = (src === "Local Purchase") ? "block" : "none"; 
+    }
+}
+var lastDeletedDist = null;
+var lastDeletedSamples = null;
+
+// DISTRIBUTORS DELETE
+function deleteSelectedDist() {
+    let data = JSON.parse(localStorage.getItem('vimag_dist') || "[]");
+    let checkedRows = Array.from(document.querySelectorAll('.d-chk:checked'));
+    
+    if (checkedRows.length === 0) return alert("Select pannunga!");
+    
+    if (confirm("Delete panna Cloud (Firebase & Sheet)-layum azhinjidum. OK-va?")) {
+        let checkedIds = checkedRows.map(c => String(c.value));
+        lastDeletedDist = data.filter(d => checkedIds.includes(String(d.id)));
+
+        checkedIds.forEach(id => {
+            if(id && id !== "undefined") {
+                // 1. Firebase Delete
+                db.ref(`vimag/distributors/${id}`).remove()
+                  .then(() => console.log("Firebase: Deleted 🗑️"));
+
+                // 2. Sheet Backup Delete
+                const payload = { action: 'delete', sheetName: 'Distributors', id: id, apiKey: "VIMAG" };
+                const params = new URLSearchParams(payload).toString();
+                fetch(G_SHEET_URL + "?" + params, { method: 'GET', mode: 'no-cors' });
+            }
+        });
+
+        localStorage.setItem('vimag_dist', JSON.stringify(data.filter(d => !checkedIds.includes(String(d.id)))));
+        loadDist();
+        alert("Deleted Successfully! ✅");
+    }
+}
+
+// SAMPLES DELETE
+function deleteSelectedSamples() {
+    let data = JSON.parse(localStorage.getItem('vimag_samples') || "[]");
+    let checkedRows = Array.from(document.querySelectorAll('.s-chk:checked'));
+    if (checkedRows.length === 0) return alert("Select samples!");
+
+    if (confirm("Delete panna Cloud-layum azhinjidum. OK-va?")) {
+        let checkedIds = checkedRows.map(c => String(c.value));
+        lastDeletedSamples = data.filter(s => checkedIds.includes(String(s.id)));
+
+        checkedIds.forEach(id => {
+            if(id && id !== "undefined") {
+                // A. Firebase Delete
+                db.ref(`vimag/samples/${id}`).remove();
+                // B. Sheet Delete Backup
+                const payload = { action: 'delete', sheetName: 'Samples', id: id, apiKey: "VIMAG" };
+                fetch(G_SHEET_URL + "&" + new URLSearchParams(payload).toString(), { mode: 'no-cors' });
+            }
+        });
+
+        localStorage.setItem('vimag_samples', JSON.stringify(data.filter(s => !checkedIds.includes(String(s.id)))));
+        loadSamples();
+        alert("Samples Deleted! 🗑️");
+    }
+}
+
+function syncEverything() {
+    console.log("Jet Speed Master Sync: Active ⚡");
+
+    // A. Master Hub & Brands Sync
+    db.ref('vimag/brands').on('value', (snapshot) => {
+        const brandsData = snapshot.val() || {};
+        let customerData = {}; 
+
+        Object.keys(brandsData).forEach(brand => {
+            const customers = brandsData[brand];
+            const custNames = Object.keys(customers);
+
+            // LocalStorage backup
+            localStorage.setItem(brand + '_customers', JSON.stringify(custNames));
+
+            custNames.forEach(cust => {
+                let rawName = cust.trim();
+                if (!customerData[rawName]) customerData[rawName] = [];
+                customerData[rawName].push(brand);
+                
+                // Deep data sync
+                localStorage.setItem(brand + '_data_' + rawName, JSON.stringify(Object.values(customers[cust])));
+            });
+        });
+
+        // ✨ MASTER TABLE-AH DIRECT-AH REFRESH PANROM
+        renderMasterTable(customerData);
+    });
+
+    // B. Samples Sync
+    db.ref('vimag/samples').on('value', snap => {
+        const data = snap.val() ? Object.values(snap.val()) : [];
+        localStorage.setItem('vimag_samples', JSON.stringify(data));
+        if(document.getElementById('samplesPage')?.style.display === 'block') loadSamples();
+    });
+
+    // C. Distributors Sync
+    db.ref('vimag/distributors').on('value', snap => {
+        const data = snap.val() ? Object.values(snap.val()) : [];
+        localStorage.setItem('vimag_dist', JSON.stringify(data));
+        if(document.getElementById('distPage')?.style.display === 'block') loadDist();
+    });
+}
+
+function renderMasterTable(customerData) {
+    const tableBody = document.getElementById('tBody');
+    if (!tableBody) return;
+
+    let rows = Object.keys(customerData).sort().map((name, index) => {
+        // ✨ Brand names-ah comma separator vechu list-ah mathuroam
+        const brandsList = customerData[name].join(','); 
+
+        return `<tr>
+            <td>${index + 1}</td>
+            <td>
+                <a href="Sales Report.html?name=${encodeURIComponent(name)}" 
+                   style="text-decoration:none; color:black; font-weight:bold;">
+                   ${name}
+                </a>
+            </td>
+            <td>
+                <!-- ✨ Ippo idhula 'onclick' sethurukaen, click panna neenga pottu irukura brandModal open aagum -->
+                <span onclick="showBrands('${name}', '${brandsList}')" 
+                      style="background:#3498db; color:white; padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:bold; display:inline-block;">
+                    ${customerData[name].length} Brand(s) ℹ️
+                </span>
+            </td>
+        </tr>`;
+    }).join('');
+
+    tableBody.innerHTML = rows || "<tr><td colspan='3' style='padding:20px; color:gray;'>No Customers Found ☁️</td></tr>";
+}
+
+function showBrands(name, list) {
+    const brandsArray = list.split(',');
+    const modal = document.getElementById('brandModal');
+    const listElement = document.getElementById('modalBrandList');
+    
+    if(!modal) return;
+
+    document.getElementById('modalCustName').innerText = name;
+    
+    listElement.innerHTML = brandsArray.map(b => `
+        <li style="padding:12px 20px; border-bottom:1px solid #f9f9f9; cursor:pointer; color:#333; font-weight:500; font-size:14px; display:flex; align-items:center; gap:10px; transition:0.2s;" 
+            onclick="window.location.href='${b} Customer Status.html?name=${encodeURIComponent(name)}'">
+            <span style="color:#3498db; font-size:16px;">🏢</span> ${b}
+        </li>`).join('');
+    
+    modal.style.display = 'flex';
+}
+// 🛡️ WINDOW ONLOAD (Auto-Sync only after Login)
+window.onload = function() {
+    // Page load aagum bodhu live connection start aagum
+    syncEverything();
+    
+    // Safety direct to index
+    document.getElementById('indexPage').style.display = 'block';
+    document.getElementById('masterReportPage').style.display = 'none';
+};
+
+</script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Performance Report</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; padding: 20px; background: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 2px solid #27ae60; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 12px; }
+        th { background: yellow; position: relative; }
+        .f-icon { border: none; background: none; cursor: pointer; font-size: 12px; margin-left: 5px; }
+        .excel-pop { 
+            display: none; position: absolute; top: 100%; left: 0; 
+            background: white; border: 1px solid #27ae60; padding: 10px; 
+            z-index: 1000; min-width: 200px; text-align: left; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-radius: 5px; 
+        }
+        .list-area { max-height: 180px; overflow-y: auto; margin-bottom: 10px; border-bottom: 1px solid #eee; }
+        .excel-pop label { display: block; font-size: 11px; margin-bottom: 6px; cursor: pointer; color: black; text-transform: none; }
+        .apply-btn { width: 100%; padding: 6px; background: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; }
+        .gt { background: #27ae60; color: white; font-weight: bold; }
+        @media print { .excel-pop, .f-icon, button { display: none !important; } }
+    </style>
+</head>
+<body>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="staffTitle" style="color:#27ae60; margin:0;">Staff Performance: </h2>
+        <button onclick="window.print()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:5px;">🖨️ PRINT REPORT</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>BRAND <button onclick="tP(event, 'pB')" class="f-icon">🔍</button>
+                    <div id="pB" class="excel-pop"><div class="list-area" id="lB"></div><button class="apply-btn" onclick="apF()">APPLY</button></div>
+                </th>
+                <th>CUSTOMER <button onclick="tP(event, 'pC')" class="f-icon">🔍</button>
+                    <div id="pC" class="excel-pop"><div class="list-area" id="lC"></div><button class="apply-btn" onclick="apF()">APPLY</button></div>
+                </th>
+                <th>ARTICLE <button onclick="tP(event, 'pA')" class="f-icon">🔍</button>
+                    <div id="pA" class="excel-pop"><div class="list-area" id="lA"></div><button class="apply-btn" onclick="apF()">APPLY</button></div>
+                </th>
+                <th>PRODUCT <button onclick="tP(event, 'pP')" class="f-icon">🔍</button>
+                    <div id="pP" class="excel-pop"><div class="list-area" id="lP"></div><button class="apply-btn" onclick="apF()">APPLY</button></div>
+                </th>
+                <th>Price</th><th>Target</th><th>Actual</th><th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="tB"></tbody>
+        <tfoot id="tF"></tfoot>
+    </table>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+<script>
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const params = new URLSearchParams(window.location.search);
+const staffName = params.get('name');
+
+
+let masterDB = [];
+let sel = { brand: [], cust: [], art: [], prod: [] };
+
+// ☁️ கிளவுட் சிங்க் மற்றும் டேட்டா லோடிங்
+async function syncAndLoad() {
+    if(!staffName) return;
+    document.getElementById('staffTitle').innerText = "Staff Performance: " + staffName;
+    const tbody = document.getElementById('tB');
+    tbody.innerHTML = "<tr><td colspan='9'>Connecting to Cloud... ☁️</td></tr>";
+
+    try {
+        // ☁️ FETCH DATA (Ippo 'db' correctly define aayirukku)
+        const snapshot = await db.ref('vimag/brands').once('value');
+        const allBrands = snapshot.val();
+        masterDB = [];
+
+        if (allBrands) {
+            Object.keys(allBrands).forEach(brand => {
+                Object.keys(allBrands[brand]).forEach(cust => {
+                    Object.values(allBrands[brand][cust]).forEach(item => {
+                        // 🛡️ Filter dummy/identity rows
+                        if(!item.artNo || item.id === "_id_lock" || item.id === "_identity") return;
+
+                        let sName = item.handledBy || "";
+                        if(sName.toString().trim().toUpperCase() === staffName.trim().toUpperCase()) {
+                            let p = parseFloat(item.price || 0);
+                            let tQ = parseInt(item.qty || 0);
+                            let aQ = parseInt(item.monthQty || 0);
+                            masterDB.push({
+                                brand: brand,
+                                cust: cust,
+                                art: item.artNo || '-',
+                                prod: item.name || '-',
+                                p, tQ, aQ,
+                                aV: p * aQ,
+                                sym: item.currency || "€"
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        if(masterDB.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='9'>No data found for this staff.</td></tr>";
+        } else {
+            refM(masterDB); 
+            ren(masterDB); 
+        }
+    } catch (e) {
+        console.error("Firebase Error:", e);
+        tbody.innerHTML = `<tr><td colspan='9' style='color:red;'>Connection Error: ${e.message}</td></tr>`;
+    }
+}
+
+function refM() {
+    // Current-ah table-la enna data theriyudho, adhai vechu dropdown options-ah filter panrom
+    const filtered = masterDB.filter(i => 
+        (sel.brand.length === 0 || sel.brand.includes(String(i.brand))) &&
+        (sel.cust.length === 0 || sel.cust.includes(String(i.cust))) &&
+        (sel.art.length === 0 || sel.art.includes(String(i.art))) &&
+        (sel.prod.length === 0 || sel.prod.includes(String(i.prod)))
+    );
+
+    // List render pannum bodhu table-la irukura current relevant data-va anupuroam
+    uM('lB', 'brand', filtered, masterDB); 
+    uM('lC', 'cust', filtered, masterDB);
+    uM('lA', 'art', filtered, masterDB);
+    uM('lP', 'prod', filtered, masterDB);
+}
+function uM(id, k, currentVisible, fullData) {
+    const div = document.getElementById(id);
+    if (!div) return;
+    
+    // Total items from Master (for untick logic)
+    const allItems = [...new Set(fullData.map(i => i[k]))].filter(v => v).sort();
+    // Currently relevant items based on other filters
+    const visibleItems = [...new Set(currentVisible.map(i => i[k]))];
+
+    const isAllChecked = allItems.every(val => sel[k].includes(String(val))) && allItems.length > 0;
+
+    let html = `
+        <label style="display:block; cursor:pointer; font-weight:bold; border-bottom:1px solid #ddd; padding-bottom:5px; margin-bottom:5px;">
+            <input type="checkbox" ${isAllChecked ? 'checked' : ''} onchange="toggleAllFilters('${k}', this.checked, ${JSON.stringify(allItems).replace(/"/g, '&quot;')})"> (Select All)
+        </label>
+    `;
+
+    html += allItems.map(val => {
+        const isChecked = sel[k].includes(String(val)) ? 'checked' : '';
+        // ✨ Inga dhaan magic: Current selection-ku relevan-ah illana andha option-ah hide panrom
+        const isVisible = visibleItems.includes(val) || sel[k].length === 0 ? 'block' : 'none';
+        
+        return `<label onclick="event.stopPropagation()" style="display:${isVisible}; cursor:pointer;">
+            <input type="checkbox" value="${val}" ${isChecked} onchange="uS('${k}', this.checked, this.value)"> ${val}
+        </label>`;
+    }).join('');
+
+    div.innerHTML = html;
+}
+function toggleAllFilters(k, checked, items) {
+    if (checked) {
+        items.forEach(val => {
+            if (!sel[k].includes(String(val))) sel[k].push(String(val));
+        });
+    } else {
+        sel[k] = []; // Clear specific category
+    }
+    // Refresh table & lists but don't close popup
+    const filtered = masterDB.filter(i => 
+        (sel.brand.length === 0 || sel.brand.includes(String(i.brand))) &&
+        (sel.cust.length === 0 || sel.cust.includes(String(i.cust))) &&
+        (sel.art.length === 0 || sel.art.includes(String(i.art))) &&
+        (sel.prod.length === 0 || sel.prod.includes(String(i.prod)))
+    );
+    ren(filtered);
+    refM(); // Update dropdowns
+}
+function apF() {
+    document.querySelectorAll('.excel-pop').forEach(p => p.style.display = 'none');
+    // Final table refresh
+    const filtered = masterDB.filter(i => 
+        (sel.brand.length === 0 || sel.brand.includes(String(i.brand))) &&
+        (sel.cust.length === 0 || sel.cust.includes(String(i.cust))) &&
+        (sel.art.length === 0 || sel.art.includes(String(i.art))) &&
+        (sel.prod.length === 0 || sel.prod.includes(String(i.prod)))
+    );
+    ren(filtered);
+    refM();
+}
+function uS(k, checked, val) {
+    val = String(val);
+    if (checked) {
+        if (!sel[k].includes(val)) sel[k].push(val);
+    } else {
+        sel[k] = sel[k].filter(x => x !== val);
+    }
+    // Don't close, just update internal lists
+}
+function tP(e, id) { 
+    e.stopPropagation(); 
+    document.querySelectorAll('.excel-pop').forEach(p => { if(p.id !== id) p.style.display = 'none'; }); 
+    const el = document.getElementById(id); 
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block'; 
+} 
+
+
+function ren(data) { 
+    const tbody = document.getElementById('tB'); 
+    if (!tbody) return; 
+    let sum = 0; 
+    if (data.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding:20px;'>No data found.</td></tr>"; 
+        document.getElementById('tF').innerHTML = ""; 
+        return; 
+    } 
+    tbody.innerHTML = data.map((i, x) => { 
+        let val = parseFloat(i.aV || 0); 
+        sum += val; 
+        return `<tr> 
+            <td>${x + 1}</td> 
+            <td style="font-weight:bold;">${i.brand}</td> 
+            <td>${i.cust}</td> 
+            <td>${i.art}</td> 
+            <td style="text-align:left;">${i.prod}</td> 
+            <td>${i.sym}${parseFloat(i.p || 0).toFixed(2)}</td> 
+            <td>${i.tQ || 0}</td> 
+            <td>${i.aQ || 0}</td> 
+            <td style="color:#2980b9; font-weight:bold;">${i.sym}${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+        </tr>`; 
+    }).join(''); 
+
+    document.getElementById('tF').innerHTML = ` 
+        <tr class="gt"> 
+            <td colspan="8" style="text-align:right;">GRAND TOTAL:</td> 
+            <td>${data[0] ? data[0].sym : "€"}${sum.toLocaleString(undefined, {minimumFractionDigits: 2})}</td> 
+        </tr>`; 
+} 
+
+
+// 🚀 JET SPEED START
+window.onload = syncAndLoad; 
+
+window.onclick = () => document.querySelectorAll('.excel-pop').forEach(p => p.style.display = 'none');
+
+</script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vimag - Financial Reports</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; background-color: Yellow; padding: 30px; text-align: center; }
+        .report-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 1400px; margin: 0 auto; border: 3px solid #27ae60; }
+        h1 { color: #27ae60; margin: 0; font-size: 2.2em; }
+        .filter-section { margin: 25px 0; display: flex; justify-content: center; gap: 15px; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 10px; }
+        select { padding: 10px; border-radius: 8px; border: 2.5px solid #27ae60; font-family: 'Times New Roman'; font-size: 14px; font-weight: bold; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th { background-color: #27ae60; color: white; padding: 12px; text-transform: uppercase; font-size: 11px; border: 1px solid #219150; position: relative; }
+        .th-filter { background: #f2f2f2; color: #333; border: 1px solid #ccc; font-size: 10px; margin-top: 5px; width: 100%; border-radius: 4px; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 14px; color: black; }
+        .total-val { color: #2980b9; font-weight: bold; }
+        .achieved-val { color: #27ae60; font-weight: bold; }
+        .balance-val { color: #e74c3c; font-weight: bold; }
+        .grand-total-row { background: #f2f2f2; font-weight: bold; font-size: 16px; }
+        .back-btn { position: absolute; left: 20px; top: 20px; background: #2c3e50; color: white; padding: 12px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+        .print-btn { background: #e74c3c; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Times New Roman'; }
+        @media print { .back-btn, .print-btn, .filter-section { display: none; } body { background: white; } .report-card { border: 1px solid #000; width: 100%; } }
+    </style>
+</head>
+<body>
+
+<a href="index.html?view=master" class="back-btn">⬅ BACK TO HUB</a>
+
+<div class="report-card">
+    <img src="Logo.jpeg" width="120"><br>
+    <h1>Financial Performance Report</h1>
+
+    <div class="filter-section">
+        <select id="moSelect" onchange="generateReport('MONTHLY', this.value)">
+            <option value="">-- Choose Month --</option>
+            <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+            <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+            <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+        </select>
+
+        <select id="fySelect" onchange="generateReport('YEARLY', this.value)">
+            <option value="">-- Choose Year --</option>
+        </select>
+
+        <button class="print-btn" onclick="window.print()">PRINT REPORT</button>
+    </div>
+
+    <h2 id="reportTitle" style="color: #2c3e50;">Performance Analysis Report</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Brand <br> <select id="brandDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+                <th>Customer <br> <select id="custDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+                <th>Article No</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th id="dynamicTargetHeader">TARGET</th>
+                <th id="dynamicAchievedHeader">ACHIEVED</th>
+                <th>Balance</th>
+                <th>Handled By <br> <select id="staffDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+            </tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+        <tfoot>
+            <tr class="grand-total-row">
+                <td colspan="6" align="right">GRAND TOTAL:</td>
+                <td id="gT" class="total-val">0.00</td>
+                <td id="gA" class="achieved-val">0.00</td>
+                <td id="gB" class="balance-val">0.00</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+// கூகுள் ஸ்கிரிப்ட் லிங்க்
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const G_SHEET_URL = "https://script.google.com/macros/s/AKfycbxt9YfMYA8PKNlC0Vb_DIDVRsMWZnCUPMRGsCoQSnLDXWYorh57KU0NRFzrAmsY8ySRXA/exec?apiKey=VIMAG";
+
+let masterData = [];
+
+window.onload = function() {
+    const fySelect = document.getElementById('fySelect');
+    for (let y = 2024; y <= 2039; y++) {
+        let option = document.createElement("option");
+        option.value = y;
+        option.text = y + "-" + (y + 1);
+        fySelect.add(option);
+    }
+};
+
+async function syncAllData() {
+    const syncBtn = document.querySelector('.sync-btn') || { innerText: "" };
+    const originalText = syncBtn.innerText;
+    syncBtn.innerText = "Syncing Cloud... ⚡";
+
+    try {
+        // 🚀 OREY CALL-LA 11 BRANDS DATA-VUM VARUM
+        const snapshot = await db.ref('vimag/brands').once('value');
+        const allBrandsData = snapshot.val();
+
+        if (allBrandsData) {
+            // Local memory-ah update pannuvom (Backup and Report-kaga)
+            Object.keys(allBrandsData).forEach(brand => {
+                const brandObj = allBrandsData[brand];
+                const customerNames = Object.keys(brandObj);
+
+                // 1. Customer names save panrom
+                localStorage.setItem(brand + '_customers', JSON.stringify(customerNames));
+
+                // 2. Ovvoru customer data-vaiyum save panrom
+                customerNames.forEach(cust => {
+                    const custData = Object.values(brandObj[cust]);
+                    localStorage.setItem(brand + '_data_' + cust, JSON.stringify(custData));
+                });
+            });
+            alert("Jet Speed Sync Complete! ✅");
+        }
+    } catch (e) {
+        console.error("Firebase Sync Error:", e);
+        alert("Sync Failed! Check connection.");
+    } finally {
+        syncBtn.innerText = originalText;
+    }
+}
+async function generateReport(type, value) {
+    if (value === "" || value === null) return;
+    const tbody = document.getElementById('reportBody') || document.getElementById('tB');
+    if (tbody) tbody.innerHTML = "<tr><td colspan='10' style='padding:20px;'>Fetching Live Data... ⚡</td></tr>";
+
+    masterData = [];
+    const sV = Number(value); // April index = 3
+
+    try {
+        const snapshot = await db.ref('vimag/brands').once('value');
+        const allData = snapshot.val();
+
+        if (allData) {
+            Object.keys(allData).forEach(brand => {
+                Object.keys(allData[brand]).forEach(cust => {
+                    const entries = Object.values(allData[brand][cust]);
+
+                    entries.forEach(item => {
+                        if (!item || !item.artNo || item.id === "_id_lock" || item.artNo === "SYSTEM") return;
+
+                        let match = false;
+                        let rawDate = (item.date || item.Date || "").toString();
+
+                        if (rawDate.includes('/')) {
+                            let parts = rawDate.split('/');
+                            let p1 = parseInt(parts[0]); // First part
+                            let p2 = parseInt(parts[1]); // Second part
+                            let p3 = parseInt(parts[2]); // Year part
+
+                            let itemMonth, itemYear = p3;
+
+                            // ✨ UNIVERSAL DATE CHECKER
+                            // M1 12 mela irundha adhu kandippa Date (DD/MM format)
+                            if (p1 > 12) {
+                                itemMonth = p2; // Second part is Month
+                            } else {
+                                itemMonth = p1; // First part is Month
+                            }
+
+                            if (type === 'MONTHLY') {
+                                // itemMonth 4 (April) - 1 === sV (3) match aagum
+                                if ((itemMonth - 1) === sV) match = true;
+                            } 
+                            else if (type === 'YEARLY') {
+                                let isPart1 = (itemYear === sV && itemMonth >= 4);
+                                let isPart2 = (itemYear === (sV + 1) && itemMonth <= 3);
+                                if (isPart1 || isPart2) match = true;
+                            }
+                        }
+
+                        if (match) {
+                            let p = parseFloat(item.price || 0);
+                            masterData.push({
+                                brand: brand,
+                                customer: cust,
+                                art: item.artNo,
+                                prod: item.name || '-',
+                                price: p,
+                                curr: item.currency || "€",
+                                tV: p * parseInt(item.qty || 0),
+                                aV: p * parseInt(item.monthQty || 0),
+                                bV: (p * parseInt(item.qty || 0)) - (p * parseInt(item.monthQty || 0)),
+                                staff: (item.handledBy || "Unassigned").trim()
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        if (masterData.length === 0) {
+            if (tbody) tbody.innerHTML = "<tr><td colspan='10' style='color:orange; padding:20px;'>No data found. Check if dates are entered correctly. 🔍</td></tr>";
+        } else {
+            displayTable(masterData);
+            if (typeof initialFillDrops === "function") initialFillDrops();
+        }
+
+    } catch (e) {
+        console.error("Error:", e);
+        if (tbody) tbody.innerHTML = "<tr><td colspan='10' style='color:red;'>Connection Error!</td></tr>";
+    }
+}
+function initialFillDrops() {
+    fillDrop('brandDrop', new Set(masterData.map(m => m.brand)));
+    fillDrop('custDrop', new Set(masterData.map(m => m.customer)));
+    fillDrop('staffDrop', new Set(masterData.map(m => m.staff)));
+}
+
+function fillDrop(id, set) {
+    let d = document.getElementById(id);
+    if (!d) return;
+    let currentVal = d.value; 
+    d.innerHTML = '<option value="">All</option>';
+    Array.from(set).sort().forEach(v => {
+        let opt = new Option(v, v);
+        if (v === currentVal) opt.selected = true;
+        d.add(opt);
+    });
+}
+
+function applyTableFilter() {
+    let b = document.getElementById('brandDrop').value;
+    let c = document.getElementById('custDrop').value;
+    let s = document.getElementById('staffDrop').value;
+
+    // 1. Data-va filter panrom
+    let filtered = masterData.filter(item => {
+        return (b === "" || item.brand === b) &&
+               (c === "" || item.customer === c) &&
+               (s === "" || item.staff === s);
+    });
+
+    displayTable(filtered); // Table update aagum
+
+    // 2. ✨ DEEP CASCADING LOGIC:
+    // Edhai select pannalum, matha dropdown-la "Filtered Data"-la irukura options mattum kaatum
+    
+    if (b !== "" || c !== "" || s !== "") {
+        // Brand empty-ah irundha mattum brand dropdown-ah update pannu (optional)
+        if (b === "") fillDrop('brandDrop', new Set(filtered.map(i => i.brand)));
+        
+        // Customer empty-ah irundha, filtered customers-ah mattum kaattu
+        if (c === "") fillDrop('custDrop', new Set(filtered.map(i => i.customer)));
+        
+        // Staff empty-ah irundha, filtered staff-ah mattum kaattu
+        if (s === "") fillDrop('staffDrop', new Set(filtered.map(i => i.staff)));
+    } 
+    else {
+        // Ellamae empty-na initial dropdowns-ku reset pannu
+        initialFillDrops();
+    }
+}
+// 🛑 Table-ஐ திரையில் காட்டும் முக்கியமான பங்க்ஷன்
+function displayTable(data) {
+    const tbody = document.getElementById('reportBody') || document.getElementById('productTableBody') || document.getElementById('tB');
+    if(!tbody) return;
+    
+    tbody.innerHTML = "";
+    let gT = 0, gA = 0, gB = 0;
+
+    data.forEach((item, index) => {
+        gT += item.tV; gA += item.aV; gB += item.bV;
+        tbody.innerHTML += `<tr>
+            <td>${index + 1}</td>
+            <td style="font-weight:bold;">${item.brand}</td>
+            <td>${item.customer}</td>
+            <td>${item.art}</td>
+            <td style="text-align:left;">${item.prod}</td>
+            <td>${item.curr}${item.price.toFixed(2)}</td>
+            <td>${item.tV.toLocaleString()}</td>
+            <td>${item.aV.toLocaleString()}</td>
+            <td>${item.bV.toLocaleString()}</td>
+            <td>${item.staff}</td>
+        </tr>`;
+    });
+
+    // கிராண்ட் டோட்டல் அப்டேட் (ID-கள் சரியாக இருக்கிறதா எனப் பார்க்கவும்)
+    if(document.getElementById('gT')) document.getElementById('gT').innerText = gT.toLocaleString(undefined, {minimumFractionDigits:2});
+    if(document.getElementById('gA')) document.getElementById('gA').innerText = gA.toLocaleString(undefined, {minimumFractionDigits:2});
+    if(document.getElementById('gB')) document.getElementById('gB').innerText = gB.toLocaleString(undefined, {minimumFractionDigits:2});
+}
+</script>
+</body>
+</html>
+
+
+
+
