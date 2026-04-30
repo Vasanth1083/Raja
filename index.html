@@ -340,17 +340,29 @@ function fetchUniqueNames() {
             });
         });
 
-        // 3. TABLE RENDER (Target id "tBody" correct-aa check pannikonga)
-        let rows = Object.keys(customerData).sort().map((name, index) => 
-            `<tr>
-                <td>${index+1}</td>
-                <td><a href="Sales Report.html?name=${encodeURIComponent(name)}" style="text-decoration:none; color:black; font-weight:bold;">${name}</a></td>
-                <td>${customerData[name].length} Brand(s)</td>
-            </tr>`
-        ).join('');
-        
-        const tableBody = document.getElementById('tBody');
-        if (tableBody) tableBody.innerHTML = rows;
+    let rows = Object.keys(customerData).sort().map((name, index) => {
+            const brandsList = customerData[name].join(','); // Popup-kaga brand names-ah comma separator-oda edukkurom
+            
+            return `<tr>
+                <td>${index + 1}</td>
+                <td>
+                    <a href="Sales Report.html?name=${encodeURIComponent(name)}" style="text-decoration:none; color:black; font-weight:bold;">
+                        👤 ${name}
+                    </a>
+                </td>
+                <td style="text-align:center;">
+                    <!-- 🛡️ IDHU DHAAN TRIGGER: showBrands call pannuthu -->
+                    <span onclick="showBrands('${name}', '${brandsList}')" 
+                          style="background:#3498db; color:white; padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:bold; display:inline-block; transition:0.3s; box-shadow: 0 2px 5px rgba(52,152,219,0.3);">
+                        ${customerData[name].length} Brand(s) ℹ️
+                    </span>
+                </td>
+            </tr>`;
+        }).join('');
+
+        if (tableBody) tableBody.innerHTML = rows || "<tr><td colspan='3'>No Customers Found ☁️</td></tr>";
+
+
 
         // 4. DROPDOWN RENDER
         const sDrop = document.getElementById('staffDropdown');
@@ -759,7 +771,7 @@ function showDistPage() {
         filterDrop.innerHTML = '<option value="">ALL DISTRIBUTORS</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
     }
     loadDist();
-}winm
+}
 function loadDist() {
     let localData = [];
     try {
