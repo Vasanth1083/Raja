@@ -263,51 +263,52 @@ async function sendToCloud(payload) {
 // --- LIVE SYNC FROM FIREBASE (No Page Reload Needed) ---
 
 function syncEverything() {
-    console.log("Starting Jet Speed Live Connection... ⚡");
+    console.log("Jet Speed Master Sync: Active ⚡");
 
-    // 1. Brands & Master Table Live Sync
+    // A. Master Hub & Brands Sync
     db.ref('vimag/brands').on('value', (snapshot) => {
-        const brandsData = snapshot.val() || {}; 
-        
-        console.log("Cloud Data Received! Auto-refreshing Master Table... ☁️");
+        const brandsData = snapshot.val() || {};
+        let customerData = {}; 
 
-        // Cloud-la irundhu vara fresh data-va LocalStorage-la update panrom
-        brands.forEach(brand => {
-            if (brandsData[brand]) {
-                const customers = brandsData[brand];
-                const custNames = Object.keys(customers);
+        Object.keys(brandsData).forEach(brand => {
+            const customers = brandsData[brand];
+            const custNames = Object.keys(customers);
 
-                localStorage.setItem(brand + '_customers', JSON.stringify(custNames));
+            // LocalStorage backup
+            localStorage.setItem(brand + '_customers', JSON.stringify(custNames));
+
+            custNames.forEach(cust => {
+                let rawName = cust.trim();
+                if (!customerData[rawName]) customerData[rawName] = [];
+                customerData[rawName].push(brand);
                 
-                custNames.forEach(cust => {
-                    localStorage.setItem(brand + '_data_' + cust, JSON.stringify(Object.values(customers[cust])));
-                });
-            } else {
-                // Cloud-la brand illana local-la clean panrom
-                localStorage.removeItem(brand + '_customers');
-            }
+  const rawItems = Object.values(customers[cust] || {});
+                const cleanItems = rawItems.filter(item => item.artNo && item.artNo !== "SYSTEM" && item.id !== "_id_lock");
+                // Deep data sync
+                localStorage.setItem(brand + '_data_' + rawName, JSON.stringify(Object.values(customers[cust])));
+            });
         });
 
-        // ✨ ITHU THAAN MAIN: Table-ah reload illaama refresh pannum
-        if (typeof fetchUniqueNames === "function") {
-            fetchUniqueNames(); 
-        }
+  if (typeof renderMasterTable === "function") renderMasterTable(customerData);
+        // ✨ Table refresh panna idhuvum help pannum
+        if (typeof fetchUniqueNames === "function") fetchUniqueNames();
     });
-   db.ref('vimag/samples').on('value', snap => {
+
+    // B. Samples Sync
+     db.ref('vimag/samples').on('value', snap => {
         const data = snap.val() ? Object.values(snap.val()) : [];
-        localStorage.setItem('vimag_samples', JSON.stringify(data));
-        // Current-ah samples page-la irundha table-ah update pannu
+        // Samples ID 'S-' nu irukkura data-va mattum yedukkum
+        localStorage.setItem('vimag_samples', JSON.stringify(data.filter(i => i.id)));
         if(document.getElementById('samplesPage')?.style.display === 'block') loadSamples();
     });
 
-     // 3. Distributors Live Sync
     db.ref('vimag/distributors').on('value', snap => {
         const data = snap.val() ? Object.values(snap.val()) : [];
-        localStorage.setItem('vimag_dist', JSON.stringify(data));
-        // Current-ah dist page-la irundha table-ah update pannu
+        localStorage.setItem('vimag_dist', JSON.stringify(data.filter(i => i.id)));
         if(document.getElementById('distPage')?.style.display === 'block') loadDist();
     });
 }
+
 function fetchUniqueNames() {
     let customerData = {};
     let uniqueStaff = new Set(); // 👤 Staff collect panna idhu mukkiyam
