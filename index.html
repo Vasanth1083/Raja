@@ -309,72 +309,69 @@ function syncEverything() {
     });
 }
 function fetchUniqueNames() {
-       let customerData = {};
-    let uniqueStaff = new Set();
+    let customerData = {};
+    let uniqueStaff = new Set(); // 👤 Staff collect panna idhu mukkiyam
+    const tableBody = document.getElementById('tBody');
+    const sDrop = document.getElementById('staffDropdown');
 
     try {
-        // 2. DATA PROCESSING (Safety Checks-oda)
         brands.forEach(brand => {
             const rawCusts = localStorage.getItem(brand + '_customers');
             const customers = JSON.parse(rawCusts || "[]");
-            
             customers.forEach(name => {
                 if (name && name.trim() !== "") {
                     let rawName = name.trim();
                     if (!customerData[rawName]) customerData[rawName] = [];
-                    customerData[rawName].push(brand);
-
+                    if (!customerData[rawName].includes(brand)) customerData[rawName].push(brand);
+                    
+                    // ✨ ITHU DHAAN MISSING: Staff names-ah scan panni Set-la podrom
                     const rawData = localStorage.getItem(brand + '_data_' + rawName);
                     const data = JSON.parse(rawData || "[]");
-                    
                     data.forEach(i => {
-                        // 🛑 FIXED: HandledBy-ah String-ah maathi safety-ah trim panrom
-                        if (i && i.handledBy != null) { 
-                            let staffName = String(i.handledBy).trim(); 
-                            if (staffName !== "") {
-                                uniqueStaff.add(staffName);
-                            }
+                        if (i && (i.handledBy || i.HandledBy)) {
+                            let staffName = String(i.handledBy || i.HandledBy).trim();
+                            if (staffName !== "" && staffName !== "-") uniqueStaff.add(staffName);
                         }
                     });
                 }
             });
         });
 
-    let rows = Object.keys(customerData).sort().map((name, index) => {
-            const brandsList = customerData[name].join(','); // Popup-kaga brand names-ah comma separator-oda edukkurom
-            
+        // 📝 Table Rows (Neenga change panna keta logic)
+        let rows = Object.keys(customerData).sort().map((name, index) => {
+            const brandsList = customerData[name].join(',');
             return `<tr>
                 <td>${index + 1}</td>
-                <td>
-                    <a href="Sales Report.html?name=${encodeURIComponent(name)}" style="text-decoration:none; color:black; font-weight:bold;">
-                        👤 ${name}
-                    </a>
-                </td>
+                <td><a href="Sales Report.html?name=${encodeURIComponent(name)}" style="text-decoration:none; color:black; font-weight:bold;">👤 ${name}</a></td>
                 <td style="text-align:center;">
-                    <!-- 🛡️ IDHU DHAAN TRIGGER: showBrands call pannuthu -->
                     <span onclick="showBrands('${name}', '${brandsList}')" 
-                          style="background:#3498db; color:white; padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:bold; display:inline-block; transition:0.3s; box-shadow: 0 2px 5px rgba(52,152,219,0.3);">
+                          style="background:green; color:white; padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:bold; display:inline-block; transition:0.3s; box-shadow: 0 2px 5px rgba(52,152,219,0.3);">
                         ${customerData[name].length} Brand(s) ℹ️
                     </span>
                 </td>
             </tr>`;
         }).join('');
 
-        if (tableBody) tableBody.innerHTML = rows || "<tr><td colspan='3'>No Customers Found ☁️</td></tr>";
+        if (tableBody) tableBody.innerHTML = rows || "<tr><td colspan='3'>No Data Found ☁️</td></tr>";
 
-
-
-        // 4. DROPDOWN RENDER
-        const sDrop = document.getElementById('staffDropdown');
+        // 👤 STAFF DROPDOWN FILL (Indha section check pannunga)
         if (sDrop) {
             sDrop.innerHTML = '<option value="">👤 HANDLED BY</option>';
-            uniqueStaff.forEach(staff => sDrop.add(new Option(staff, staff)));
+            // Dropdown select panna report open aagura trigger
+            sDrop.onchange = function() { 
+                if(this.value) window.open(`Handledby.html?name=${encodeURIComponent(this.value)}`, "_blank"); 
+            };
+            
+            // Unique staff list-ah dropdown-la fill panrom
+            Array.from(uniqueStaff).sort().forEach(staff => {
+                sDrop.add(new Option(staff, staff));
+            });
         }
-    } catch (e) {
-        console.error("Master Page load error: ", e);
-    }
-} 
 
+    } catch (e) {
+        console.error("Master Hub Error: ", e);
+    }
+}
 async function pushAllOldData() {
     if(!confirm("Local-la irukura ella data-vaiyum Firebase and Sheets-ku backup anupalaama?")) return;
     
