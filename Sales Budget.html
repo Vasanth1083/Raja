@@ -149,7 +149,7 @@
     <!-- ==================== PAGE 1: கார்டுகள் இருக்கும் முதன்மைப் பக்கம் ==================== -->
     <div id="mainHubSection">
         <div class="target-header-box">
-            <button class="btn-back" onclick="window.location.href='Followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
+            <button class="btn-back" onclick="window.location.href='followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
             <div class="center-branding">
                 <img src="Logo.jpeg" alt="Vimag Logo">
                 <h1 style="font-size: 27px;">VIMAG INDUSTRIAL SOLUTIONS</h1>
@@ -495,38 +495,82 @@
         }
 
         async function calculateCorporateReportMetrics(monthHeadersArray, duration, budgetId) {
-            const tbody = document.getElementById('corporateBrandTableBody');
-            if (!tbody) return;
+    const tbody = document.getElementById('corporateBrandTableBody');
+    if (!tbody) return;
 
-            const masterDB = new Dexie("VimagMasterDB");
-            masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+    const masterDB = new Dexie("VimagMasterDB");
+    masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+    
+    let allMasterProducts = [];
+    try { allMasterProducts = await masterDB.brands.toArray(); } catch(e) {}
+    const allActivityLogs = await localDB.logs.toArray();
+
+    // 1. Initial Quick Load from local Dexie Cache
+    let localBrandsList = [...new Set(allMasterProducts.map(p => (p.brand || "").toUpperCase().trim()))]
+                            .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
+
+    if (localBrandsList.length > 0) {
+        processAndRenderMetrics(localBrandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId);
+    } else {
+        tbody.innerHTML = `<tr><td colspan="${5 + duration}" style="padding:25px; font-weight:bold; color:#7f8c8d; text-align:center;">ஆரம்ப நிலை தரவுகள் சேகரிக்கப்படுகிறது... ⏳</td></tr>`;
+    }
+
+    // 2. ⚡ LIVE BACKGROUND CLOUD SYNC: Directly reads from Firebase across all 11 brands to sync targets instantly
+    cloudDB.ref('vimag/brands').once('value', async (snapshot) => {
+        const cloudBrandsTree = snapshot.val() || {};
+        let bulkPayload = [];
+
+        // Loop through all customer branches in the cloud tree to update local cache parameters
+        for (const brandKey of Object.keys(cloudBrandsTree)) {
+            const customerBranches = cloudBrandsTree[brandKey] || {};
             
-            let allMasterProducts = [];
-            try { allMasterProducts = await masterDB.brands.toArray(); } catch(e) {}
-            const allActivityLogs = await localDB.logs.toArray();
+            for (const customerKey of Object.keys(customerBranches)) {
+                if (customerKey === "_id_lock" || customerKey === "SYSTEM_ID") continue;
+                const itemsMap = customerBranches[customerKey] || {};
 
-            let localBrandsList = [...new Set(allMasterProducts.map(p => (p.brand || "").toUpperCase().trim()))]
-                                    .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
+                for (const itemKey of Object.keys(itemsMap)) {
+                    const itemData = itemsMap[itemKey] || {};
+                    
+                    if (itemData && itemData.id && itemData.artNo && itemData.artNo !== "SYSTEM") {
+                        let price = parseFloat(itemData.price || 0);
+                        let budgetSpecificData = (itemData.budgets && itemData.budgets[budgetId]) ? itemData.budgets[budgetId] : {};
+                        let rawAchieved = budgetSpecificData.achieved || new Array(monthHeadersArray.length).fill(0);
+                        
+                        let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
 
-            if (localBrandsList.length > 0) {
-                processAndRenderMetrics(localBrandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId);
-            } else {
-                tbody.innerHTML = `<tr><td colspan="${5 + duration}" style="padding:25px; font-weight:bold; color:#7f8c8d;">ஆரம்ப நிலை தரவுகள் சேகரிக்கப்படுகிறது... ⏳</td></tr>`;
-            }
-
-            // BACKGROUND SYNC
-            cloudDB.ref('vimag/brands').once('value', async (snapshot) => {
-                const cloudBrandsTree = snapshot.val() || {};
-                const liveFetchedBrands = Object.keys(cloudBrandsTree)
-                    .filter(bName => bName !== "_id_lock" && bName !== "SYSTEM" && bName !== "SYSTEM_ID")
-                    .map(b => b.toUpperCase().trim());
-
-                if (liveFetchedBrands.length > 0) {
-                    processAndRenderMetrics(liveFetchedBrands, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId);
+                        bulkPayload.push({
+                            id: `${itemData.id}_${budgetId}`,
+                            baseItemId: itemData.id,
+                            budgetId: budgetId,
+                            brand: brandKey.toUpperCase().trim(),
+                            customerName: customerKey,
+                            artNo: itemData.artNo,
+                            name: itemData.name || itemData.productName || "Industrial Tool Component",
+                            price: price,
+                            currency: itemData.currency || "€",
+                            targetQty: parseInt(budgetSpecificData.qty || 0),
+                            monthQty: parseInt(budgetSpecificData.monthQty || 0),
+                            brandwise_target: parseFloat(budgetSpecificData.brandwise_target || 0),
+                            achievedQty: qtyAchievedArray
+                        });
+                    }
                 }
-            });
+            }
         }
 
+        // Save fresh cloud target states back to Dexie cache arrays synchronously
+        if (bulkPayload.length > 0) {
+            await masterDB.brands.bulkPut(bulkPayload);
+        }
+
+        // Re-read local cache parameters and draw the table instantly with up-to-date data
+        const freshProductsList = await masterDB.brands.toArray();
+        let updatedBrandsList = [...new Set(freshProductsList.map(p => (p.brand || "").toUpperCase().trim()))]
+                                .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
+
+        processAndRenderMetrics(updatedBrandsList, freshProductsList, allActivityLogs, monthHeadersArray, duration, budgetId);
+    });
+}
         // 📊 தரவுகளைக் கணக்கிட்டு மெயின் பட்ஜெட் டேபிளில் தனித்துவமாகப் பொருத்தும் சப்-இன்ஜின்
 function processAndRenderMetrics(brandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId) {
     const tbody = document.getElementById('corporateBrandTableBody');
