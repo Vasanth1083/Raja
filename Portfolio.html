@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Portfolio</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+
+    <style>
+        body { font-family: 'Times New Roman', serif; padding: 20px; background: #fdfdf5; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 15px; border: 3px solid #27ae60; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .print-hidden { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        
+        /* 🎯 Header Scorecard Style */
+        #printHeaderBox { border: 3px solid #27ae60; background: #fdfdf5; padding: 25px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .score-box { border: 2px solid orange; background: white; padding: 12px; border-radius: 12px; min-width: 160px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th { background: #27ae60; color: white; padding: 10px; font-size: 12px; border: 1px solid #1e7d45; text-transform: uppercase; }
+        td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 14px; color: black; }
+        
+        select { width: 100%; font-size: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ddd; padding: 2px; }
+        .back-btn { background: #2c3e50; color: white; padding: 8px 15px; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        
+        @media print {
+            .print-hidden, select, .search-icon { display: none !important; }
+            body { padding: 0; background: white; }
+            .container { border: none; box-shadow: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="print-hidden">
+        <a href="Followup.html" class="back-btn">⬅ BACK</a>
+        <button onclick="window.print()" style="background:red; color:white; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🖨️ PRINT REPORT</button>
+    </div>
+
+    <!-- 🎯 TOP SCORECARD -->
+    <div id="printHeaderBox">
+        <div class="score-box" style="text-align: left;">
+            <small style="display: block; font-weight: bold; text-transform: uppercase;">📉 Overall Target</small>
+            <span id="sumTarget" style="font-size: 20px; font-weight: 900; color: #2980b9;">€ 0.00</span>
+        </div>
+
+        <div style="text-align: center; flex: 2;">
+            <img src="Logo.jpeg" style="width: 70px; margin-bottom: 5px;">
+            <h1 style="margin: 0; color: green; font-size: 22px; font-weight: 900;">Vimag Industrial Solutions</h1>
+            <h2 id="staffNameHead" style="margin: 4px 0; color: red; font-size: 24px; font-weight: bold; text-transform: uppercase;">STAFF NAME</h2>
+            <small id="statsLine" style="display: block; color: orange; font-weight: bold; font-size: 18px;">Precision Performance Analytics</small>
+        </div>
+
+        <div class="score-box" style="text-align: right;">
+            <small style="display: block; font-weight: bold; text-transform: uppercase;">🏆 Total Achieved</small>
+            <span id="sumAchieved" style="font-size: 20px; font-weight: 900; color: #c2185b;">€ 0.00</span>
+        </div>
+    </div>
+
+    <!-- 📊 ANALYTICS TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>S.NO</th>
+                <th>BRAND 🔍<br><select id="fStaffBrand" onchange="runCascadingFilter('brand')"></select></th>
+                <th>CUSTOMER 🔍<br><select id="fStaffCust" onchange="runCascadingFilter('cust')"></select></th>
+                <th>ART NO 🔍<br><select id="fStaffArt" onchange="runCascadingFilter('art')"></select></th>
+                <th style="text-align: left;">PRODUCT</th>
+                <th>PRICE</th>
+                <th>TARGET</th>
+                <th>ACHIEVED</th>
+                <th style="text-align: right;">VALUE</th>
+            </tr>
+        </thead>
+        <tbody id="portfolioBody"></tbody>
+    </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+firebase.initializeApp(firebaseConfig);
+const cloudDB = firebase.database();
+
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+// 2. Warehouse Connection (Dexie Master DB)
+const vimagDB = new Dexie("VimagMasterDB");
+vimagDB.version(1).stores({ 
+    brands: 'id, brand, customerName, artNo, handledBy' 
+});
+
+const params = new URLSearchParams(window.location.search);
+const staffName = params.get('name');
+let masterData = []; // Store original data for sub-filtering
+    let selections = { brand: 'ALL', cust: 'ALL', art: 'ALL' };
+
+    vimagDB.open().then(() => {
+        if (!staffName) return (window.location.href = "Followup.html");
+        document.getElementById('staffNameHead').innerText = staffName.toUpperCase();
+        loadInitialData();
+    });
+
+    async function loadInitialData() {
+        const all = await vimagDB.brands.toArray();
+        masterData = all.filter(i => 
+            i.id !== "_id_lock" && i.artNo !== "SYSTEM" && 
+            (i.handledBy || "").trim().toUpperCase() === staffName.trim().toUpperCase()
+        );
+
+        if (masterData.length === 0) {
+            document.getElementById('portfolioBody').innerHTML = `<tr><td colspan="9" style="padding:50px; color:red; font-weight:bold;">No Data Found!</td></tr>`;
+            return;
+        }
+        refreshView();
+    }
+
+    function runCascadingFilter(trigger) {
+        selections.brand = document.getElementById('fStaffBrand').value;
+        selections.cust = document.getElementById('fStaffCust').value;
+        selections.art = document.getElementById('fStaffArt').value;
+        refreshView(trigger);
+    }
+
+    function refreshView(trigger) {
+        // 1. பில்டர் செய்த டேட்டா
+        const filtered = masterData.filter(i => 
+            (selections.brand === "ALL" || i.brand === selections.brand) &&
+            (selections.cust === "ALL" || i.customerName === selections.cust) &&
+            (selections.art === "ALL" || i.artNo === selections.art)
+        );
+
+        // 2. டேபிள் மற்றும் ஸ்கோர்கார்டு அப்டேட்
+        renderTable(filtered);
+
+        // 3. Cascading Dropdowns: மாற்றியதைத் தவிர மற்றவற்றை மட்டும் அப்டேட் செய்யும் (Flow Accuracy)
+        const brands = [...new Set(filtered.map(i => i.brand))].sort();
+        const custs = [...new Set(filtered.map(i => i.customerName))].sort();
+        const arts = [...new Set(filtered.map(i => i.artNo))].sort();
+
+        if (trigger !== 'brand') fillSelect('fStaffBrand', [...new Set(masterData.map(i => i.brand))].sort(), "BRAND", selections.brand, brands);
+        if (trigger !== 'cust') fillSelect('fStaffCust', [...new Set(masterData.map(i => i.customerName))].sort(), "CUSTOMER", selections.cust, custs);
+        if (trigger !== 'art') fillSelect('fStaffArt', [...new Set(masterData.map(i => i.artNo))].sort(), "ART NO", selections.art, arts);
+    }
+
+    function fillSelect(id, fullList, label, selectedVal, relevantList) {
+        const el = document.getElementById(id);
+        let html = `<option value="ALL">ALL ${label}</option>`;
+        fullList.forEach(val => {
+            // ரெலவன்ட் இல்லாதவற்றை மறைக்காமல் 'disabled' செய்யலாம் அல்லது லிஸ்டில் இருந்து நீக்கலாம். 
+            // இங்கு 'Flow' சரியாக இருக்க ரெலவன்ட் மட்டும் காட்டப்படுகிறது.
+            if (relevantList.includes(val) || selectedVal === val) {
+                html += `<option value="${val}" ${val === selectedVal ? 'selected' : ''}>${val}</option>`;
+            }
+        });
+        el.innerHTML = html;
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('portfolioBody');
+        let tT = 0, tA = 0, sym = "€";
+
+        tbody.innerHTML = data.map((i, idx) => {
+            const p = parseFloat(i.price || 0), target = parseInt(i.qty || 0), actual = parseInt(i.monthQty || 0);
+            const val = p * actual; sym = i.currency || "€";
+            tT += (p * target); tA += val;
+
+            return `<tr>
+                <td>${idx + 1}</td>
+                <td style="font-weight:bold; color:#2980b9;">${i.brand.toUpperCase()}</td>
+                <td style="font-weight:bold; text-align:left;">${i.customerName}</td>
+                <td style="font-weight:bold;">${i.artNo}</td>
+                <td style="text-align:left;">${i.name || '-'}</td>
+                <td>${sym}${p.toFixed(2)}</td>
+                <td>${target}</td>
+                <td style="font-weight:bold; color:${actual >= target ? 'green' : 'red'}">${actual}</td>
+                <td style="text-align:right; font-weight:bold; color:#c2185b;">${sym}${val.toLocaleString()}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('sumTarget').innerText = sym + " " + tT.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('sumAchieved').innerText = sym + " " + tA.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('statsLine').innerText = `Portfolio Analysis: ${data.length} Active Records`;
+    }
+</script>
+</body>
+</html>

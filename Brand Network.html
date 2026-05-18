@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Network - VIMAG</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+
+    <style>
+        body { 
+            font-family: 'Times New Roman', serif; 
+            background: url('Background6.jpg') no-repeat center center fixed; 
+            background-size: cover; 
+            margin: 0; padding: 20px;
+        }
+
+      .master-header-box {
+    max-width:  100%;
+max-width: 850px;
+    margin: 0 auto 20px auto;
+    background: white;
+    border: 2px solid #27ae60;
+    border-radius: 25px;
+    padding: 20px;
+    text-align: center;
+    position: relative; /* Corner buttons-kaga */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: url('Background6.jpg') no-repeat center center fixed;
+    background-size: cover;
+    filter: blur(10px); 
+    z-index: -1;
+}
+
+    /* 🏢 CENTER TITLE SECTION */
+.header-center { margin-bottom: 20px; }
+.brand-name-cell, th:nth-child(1) {
+    width: 25%;
+    border-right: 2px;
+}
+
+.customer-list-cell {
+    padding: 15px;
+    background: transparent;
+}
+        /* 🔘 BUTTON GROUP INSIDE BOX */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.3); 
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 35px; 
+    overflow: hidden; 
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+border: 1px solid gree6E;
+}
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+            font-family: 'Times New Roman';
+        }
+
+
+/* 🏠 TOP LEFT */
+.top-left { position: absolute; top: 20px; left: 20px; }
+
+/* 🖨️ ✕ TOP RIGHT */
+.top-right { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+
+/* 🔘 BUTTON & INPUT SIZES (Uniform) */
+.action-btn, #territoryFilter, #search {
+    height: 40px;
+    border-radius: 8px;
+    border: 1.5px solid BLACK;
+    font-family: 'Times New Roman', serif;
+    font-size: 13px;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+.action-btn { padding: 0 20px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+
+/* 🔍 📍 BOTTOM TOOL ROW (Titles-ku keezha) */
+.tool-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+#search { width: 90px; text-align: center; background: WHITE; }
+#territoryFilter { width: 210px; background: #db1f6a; color: white; border: none; padding: 0 10px; cursor: pointer; }
+/* COLORS */
+.home-btn { background: green; color: white; }
+.print-btn { background: black; color: white; }
+.close-btn { background: red; color: white; }
+
+/* 🏗️ BOTTOM HEADER CONTENT */
+.header-bottom { margin-top: 10px; }        /* 📋 TABLE AREA */
+        .container { max-width: 900px; margin: 0 auto; }
+table {
+    width: 100% !important; /* Screen size-ku etha maadhiri full-aa viriyum */
+    border-collapse: collapse;
+    table-layout: fixed;    /* Columns orey alignment-la irukka idhu mukkiyam */
+    background: transparent;
+    border: 2px ;
+}
+        th { background: yellow; color: black; padding: 15px; text-transform: uppercase; border: 1px; }
+        .brand-name-cell { background:  padding: 20px; font-weight: bold; width: 30%; border: 1px solid #eee; }
+        .customer-list-cell { padding: 15px; background: border-bottom: 1px solid #eee; }
+
+        .cust-row { display: flex; align-items: center; padding: 5px 0; }
+
+        .sno { color: #27ae60; font-weight: bold; min-width: 30px; }
+        .cust-link { text-decoration: none; color: black; font-weight: 500; }
+
+@media print {
+    /* 1. தேவையில்லாத அனைத்தையும் முழுமையாக மறைக்க */
+    body::before, .top-left, .top-right, .tool-row, .btn-container {
+        display: none !important;
+    }
+
+    /* 2. பாடி செட்டிங்ஸ் - நிழல்களை நீக்க */
+    body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact; /* கலர்கள் சரியாகத் தெரிய */
+    }
+
+    /* 3. மெயின் ரேப்பர் - அவுட்டர் பாக்ஸ் நிழலை நீக்க */
+    .main-wrapper {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 10mm !important;
+        background: white !important;
+        box-shadow: none !important; /* நிழலை நீக்கியாச்சு */
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* 4. ஹெடர் - நிழல் இல்லாமல் சுத்தமாக மாற்ற */
+    .master-header-box {
+        border: 1px solid #333 !important;
+        background: white !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 5. டேபிள் ஏரியா - ஷேடிங் மற்றும் பிளர் நீக்கம் */
+    .container {
+        background: white !important;
+        backdrop-filter: none !important; /* அந்த பிளர் எஃபெக்ட் நீக்கம் */
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        background: white !important;
+        table-layout: auto !important; /* பிரிண்டிற்கு ஏற்றவாறு அட்ஜஸ்ட் ஆகும் */
+    }
+
+    /* 6. பார்டர்கள் - தெளிவான PDF லுக் */
+    th, td {
+        border: 1px solid #000 !important; /* மெல்லிய கருப்பு பார்டர் */
+        color: black !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+    }
+
+    th {
+        background-color: #f2f2f2 !important; /* ஹெடர் மட்டும் லேசான கிரே */
+    }
+
+    .brand-name-cell {
+        background-color: white !important;
+        font-weight: bold !important;
+    }
+
+    /* டேபிள் ரோக்கள் பிரிந்து அடுத்த பக்கத்திற்குச் செல்லும்போது உடையாமல் இருக்க */
+    tr {
+        page-break-inside: avoid !important;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="main-wrapper"> <!-- This is the new outer white box -->
+
+<div class="master-header-box">
+       <!-- 🏢 CENTER LOGO & TITLES -->
+    <div class="header-center">
+        <img src="Logo.jpeg" width="120" style="margin-bottom: 5px;">
+    <h1 style="color: #139e99; margin: 0; font-size: 22px;">🎯BRAND-WISE ACQUISITION NETWORK</h1>
+    </div>
+   <!-- 🏠 HOME (Top Left) -->
+    <div class="top-left">
+        <a href="index.html" class="action-btn home-btn">🏠 HOME</a>
+    </div>
+
+    <!-- 🖨️ ✕ (Top Right) -->
+    <div class="top-right">
+        <button class="action-btn print-btn" onclick="window.print()">🖨️ PRINT</button>
+    </div>
+    <!-- 🔍 📍 TOOLS SECTION (Titles-ku keezha) -->
+    <div class="tool-row">
+        <input type="text" id="search" placeholder="🔍 Search" onkeyup="filterNetwork()">
+        
+        <select id="territoryFilter" onchange="openTerritoryView(this.value)">
+            <option value="ALL">📍TERRITORY NETWORK</option>
+        </select>
+
+    </div>
+
+</div>
+   <!-- 🎯 THE MISSING CONTAINER (TABLE AREA) -->
+    <div class="container">
+        <div id="networkContent">
+            <p style="text-align: center; color: white; padding: 50px;">Fetching Warehouse Data... ⚡</p>
+        </div>
+ </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+<script>
+
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+const vimagDB = new Dexie("VimagMasterDB");
+vimagDB.version(1).stores({
+    brands: 'id, brand, customerName, artNo',
+    samples: 'id, art, comp',
+    distributors: 'id, name'
+});
+// 2. 🔌 Database Open
+vimagDB.open().then(() => {
+    console.log("Master Warehouse Connected! 🏰");
+}).catch(err => {
+    console.error("Warehouse connection failed:", err);
+});
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+    async function loadNetwork() {
+        try {
+ await vimagDB.open(); 
+            console.log("Database Connected! ✅");
+            const allItems = await vimagDB.brands.toArray();
+            let html = `<table>
+                <thead>
+                    <tr>
+                        <th>BRAND</th>
+                        <th>🏢 CUSTOMER LIST</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            brands.forEach(b => {
+                // Fetch and sort unique customers
+                const custNames = [...new Set(allItems
+                    .filter(i => i.brand === b && i.id !== "_id_lock" && i.artNo !== "SYSTEM")
+                    .map(i => i.customerName)
+                )].sort();
+
+                // One by One Numbered List
+                const listRows = custNames.map((name, idx) => `
+                    <div class="cust-row">
+                        <span class="sno">${(idx + 1).toString().padStart(2, '0')}.</span>
+                        <a href="Sales Report.html?name=${encodeURIComponent(name)}" class="cust-link">${name}</a>
+                    </div>`).join('');
+
+                html += `
+                    <tr class="brand-row">
+                        <td class="brand-name-cell">
+                            <div style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#2c3e50;">
+                                📍 ${b.toUpperCase()}
+                            </div>
+                        </td>
+                        <td class="customer-list-cell">
+                            ${listRows || "<span style='color:#bdc3c7;'>No customers found</span>"}
+                        </td>
+                    </tr>`;
+            });
+            document.getElementById('networkContent').innerHTML = html + "</tbody></table>";
+        } catch (e) {
+            console.error(e);
+            document.getElementById('networkContent').innerHTML = "Database Connection Error! 🚩";
+        
+        }
+    }
+// 3. Simple Search inside Network
+function filterNetwork() {
+    // Corrected ID to match your HTML 'search' input
+    let q = document.getElementById('search').value.toUpperCase(); 
+    let rows = document.querySelectorAll('.brand-row'); // Targets the main list rows
+
+    rows.forEach(row => {
+        // Checks if the Brand or Customer Name contains the search text
+        row.style.display = row.innerText.toUpperCase().includes(q) ? "" : "none";
+    });
+}
+
+async function loadTerritories() {
+    const brandsList = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+    let territorySet = new Set();
+    try {
+        const snapshot = await db.ref('vimag/brands').once('value');
+        const allBrandsData = snapshot.val() || {};
+        brandsList.forEach(brand => {
+            if (allBrandsData[brand]) {
+                const customers = allBrandsData[brand];
+                Object.keys(customers).forEach(custName => {
+                    const lockData = customers[custName]["_id_lock"];
+                    if (lockData && lockData.region) {
+                        let rName = lockData.region.trim().toUpperCase();
+                        if (rName !== "" && rName !== "GENERAL" && rName !== "NULL") {
+                            territorySet.add(rName);
+                        }
+                    }
+                });
+            }
+        });
+        const drop = document.getElementById('territoryFilter');
+        if (drop) {
+            drop.innerHTML = '<option value="ALL">📍 TERRITORY NETWORK</option>';
+            [...territorySet].sort().forEach(region => {
+                drop.add(new Option(region, region));
+            });
+        }
+    } catch (e) { console.error("Territory fetch error:", e); }
+}
+
+// 2. Select panna udane Territory.html-ku redirect panna indha function
+function openTerritoryView(selectedLoc) {
+    if (!selectedLoc || selectedLoc === "ALL") return;
+    
+    // Puthu page-ku region pera URL-la anupuroam
+    window.location.href = `Territory.html?region=${encodeURIComponent(selectedLoc)}`;
+}
+// ⚠️ மிக முக்கியமான திருத்தம்: கடைசியில் இருக்கும் window.onload-ஐ இப்படி மாற்றவும்
+window.onload = function() {
+    loadNetwork();    // கஸ்டமர் லிஸ்ட்டை லோட் செய்ய
+    loadTerritories();
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Budget</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+    <style>
+        * { box-sizing: border-box; transition: 0.3s; }
+        body { 
+            font-family: 'Times New Roman'; 
+            padding: 20px; 
+            background-image: url('Background12.png');
+            background-size: cover;      
+            background-position: center;  
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+            margin: 0; 
+            min-height: 100vh; 
+        }
+
+        .target-header-box { 
+            border: 2px solid #e67e22; 
+            background: #faf7fa; 
+            padding: 20px; 
+            border-radius: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            position: relative; 
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08); 
+            width: 100%;
+            max-width: 1500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .center-branding { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; }
+        .center-branding img { width: 110px; height: auto; margin-bottom: 8px; }
+        .center-branding h1 { margin: 0; color: #2d7f91; font-size: 26px; font-weight: 900; text-transform: uppercase; }
+        .center-branding h2 { margin: 4px 0 0 0; color: #e67e22; font-size: 16px; font-weight: bold; }
+
+        .btn-group-right { display: flex; gap: 12px; align-items: center; }
+        .btn-back { background: #2c3e50; color: white; padding: 10px 22px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-add-tgt { background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-del-tgt { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+
+        .table-container { max-width: 100%; margin: 0 auto; background: transparent; padding: 0; box-shadow: none;  }
+        .target-budget-card {
+            background: white; padding: 16px 20px; border: 2px solid #27ae60; border-radius: 10px;
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; margin-bottom: 12px;
+        }
+        .target-budget-card:hover { transform: scale(1.005); background: #fdfdfd; }
+        .card-left-section { display: flex; align-items: center; gap: 15px; }
+        .card-report-title { font-size: 16px; font-weight: bold; color: black; }
+        .card-month-range { font-size: 14px; font-weight: bold; color: #e67e22; margin-left: 8px; }
+        .card-open-link { font-size: 13px; color: #27ae60; font-weight: bold; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 10000; }
+        .modal-content { 
+            background: white; padding: 30px; border-radius: 20px; width: 500px; 
+            border: 2px solid #e67e22; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .modal-title { color: #e67e22; text-align: center; margin-top: 0; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .modal-divider { border: none; border-top: 2.5px solid #e67e22; margin-bottom: 20px; }
+        .modal-content label { font-size: 13px; display: block; margin-top: 15px; font-weight: bold; color: black; }
+        .modal-content select, .modal-content input { 
+            width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #ccc; 
+            border-radius: 8px; font-family: 'Times New Roman'; font-size: 14px; font-weight: bold; outline: none;
+        }
+        .month-row { display: flex; gap: 15px; width: 100%; }
+        .month-col { flex: 1; }
+        .disabled-input { background: #e9ecef !important; color: #495057; cursor: not-allowed; }
+        .modal-btn-group { margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end; }
+        .btn-discard { background: #cccccc; color: black; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
+        .btn-save-tgt { background: #e67e22; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
+
+      /* 🎯 பிரிண்ட் எடுக்கும் போது 12 மாதங்களும் ஒரே பக்கத்திற்குள் கச்சிதமாகப் பொருந்தும் புதிய விதி */
+@media print {
+    /* 1. பிரிண்ட் செய்யும் போது ஹோம் மற்றும் பிரிண்ட் பட்டன்களை முழுமையாக மறைக்கிறது */
+    .btn-back, .btn-print, #targetReportPage button { 
+        display: none !important; 
+    }
+    
+    body { 
+        background: white !important; 
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* 2. ஒட்டுமொத்தப் பக்கத்தையும் பிரிண்ட் காகிதத்தின் அளவிற்குள் (A4 Size) கட்டாயமாகச் சுருக்குகிறது */
+    #targetReportPage {
+        display: block !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .table-container {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        overflow: visible !important; /* ஸ்க்ரோல் பாரை நீக்கி முழு டேபிளையும் காட்டுகிறது */
+    }
+
+    /* 3. 🎯 மிக முக்கியப் பகுதி: table-layout: auto ஆக்கி, காலம்களின் பிக்சல் அகலங்களை நீக்கி, 
+       காகிதத்தின் அகலத்திற்குள் (Landscape A4 Width) கச்சிதமாகச் சுருக்கிப் பொருத்துகிறது */
+    #targetReportPage table {
+        table-layout: auto !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* 4. 🎯 படத்திலிருப்பது போல தலைப்பு எண்கள், வார்த்தைகள் அனைத்தும் கட் ஆகாமல் 
+       தானாகவே அடுத்தடுத்த வரிகளில் மடிந்து (Word Wrap) அழகாக அமரும்படியான ஸ்டைல் */
+    th, td {
+        border: 1px solid black !important;
+        color: black !important;
+        padding: 6px 3px !important; /* நெரிசலைத் தவிர்க்க உள் இடைவெளியைக் குறைக்கிறது */
+        font-size: 11px !important;  /* எண்கள் ஒரே வரியில் தெரிய எழுத்தின் அளவைச் சிறிதாக்குகிறது */
+        
+        white-space: normal !important; /* 🔄 கட்டாயமாக அடுத்த வரியில் மடிய வைக்கும் சிக்னல் */
+        word-wrap: break-word !important; 
+        word-break: break-all !important;
+    }
+
+    /* ஹெடர் பாக்ஸின் நிழல்களை நீக்கி பார்டரை மட்டும் வைக்கிறது */
+    .target-header-box {
+        border: 1px solid black !important;
+        box-shadow: none !important;
+        background: white !important;
+        padding: 10px !important;
+    }
+    
+    .live-card {
+        border: 1px solid black !important;
+        box-shadow: none !important;
+        padding: 8px !important;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <!-- ==================== PAGE 1: கார்டுகள் இருக்கும் முதன்மைப் பக்கம் ==================== -->
+    <div id="mainHubSection">
+        <div class="target-header-box">
+            <button class="btn-back" onclick="window.location.href='followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
+            <div class="center-branding">
+                <img src="Logo.jpeg" alt="Vimag Logo">
+                <h1 style="font-size: 27px;">VIMAG INDUSTRIAL SOLUTIONS</h1>
+                <h2 style="color: orange; font-size: 22px;">🚀 Volume & Value Performance</h2>
+            </div>
+            <div class="btn-group-right">
+                <button class="btn-add-tgt" onclick="openBudgetModal()">🎯 ADD TARGET</button>
+                <button class="btn-del-tgt" onclick="deleteSelectedBudgets()">🗑️ DELETE</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="budgetCardContainer" style="display: flex; flex-direction: column; width: 100%;">
+                <!-- கார்டுகள் இங்கே தோன்றும் -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 2: 11 பிராண்டுகள் கொண்ட மாஸ்டர் ரிப்போர்ட் ==================== -->
+<!-- 🎯 கச்சிதமாக சீரமைக்கப்பட்ட மற்றும் இடது/வலது ஸ்க்ரோலிங் வசதி கொண்ட மாஸ்டர் ரிப்போர்ட் பக்கம் -->
+<div id="targetReportPage" style="display:none; max-width: 1500px; margin: 0 auto; padding: 0 10px;">
+    
+    <!-- ஹெடர் பகுதி -->
+    <div class="target-header-box">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-back" onclick="closeTargetReportPage()" style="background: GREEN; font-family: 'Times New Roman', serif; font-weight: bold; cursor: pointer;">🏠HOME</button>
+            <button class="btn-back" onclick="window.print()" style="background: RED; font-family: 'Times New Roman', serif; font-weight: bold; cursor: pointer;">🖨️ PRINT</button>
+        </div>
+        <div class="center-branding">
+            <img src="Logo.jpeg" alt="Vimag Logo">
+            <h1>VIMAG INDUSTRIAL SOLUTIONS</h1>
+            <h2 id="corporateReportTitle" style="color: ORANGE; margin-top: 5px;">TARGET REPORT OVERVIEW</h2>
+        </div>
+        <div style="background: #fdfdfd; border: 1px solid #ccc; padding: 12px 18px; border-radius: 10px; min-width: 260px;">
+            <div style="font-size: 11px; color: red; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 6px; text-align: center;">LIVE PERFORMANCE OVERVIEW</div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px;"><span>🔷 PORTFOLIO:</span> <span id="corporatePortfolio" style="color:#2980b9;">€ 0.00</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px;"><span>🟢 TURNOVER:</span> <span id="corporateTurnover" style="color:#27ae60;">€ 0.00</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;"><span>🔶 CONVERSION RATE:</span> <span id="corporateConversion" style="color:#e67e22;">0.0%</span></div>
+        </div>
+    </div>
+
+    <!-- 🔄 மாஸ்டர் ஸ்க்ரோல் கன்டெெய்னர்: 12 மாதங்கள் வரும்போது லேஅவுட் சிதையாமல் ஸ்க்ரோல் பாரை ஆன் செய்கிறது -->
+    <div style="background: white; border-radius: 10px; border: 1px solid #2c3e50; box-shadow: 0 4px 15px rgba(0,0,0,0.06); width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box;">
+        
+        <!-- 12 மாதத் தரவுகள் நெரிசல் இல்லாமல் தெரிய குறைந்தபட்ச அகல லாக் (min-width: 1300px) சேர்க்கப்பட்டுள்ளது -->
+        <table style="width:100%; min-width: 1500px; border-collapse: collapse; text-align: center; table-layout: auto;">
+            <thead>
+               <tr style="background: #e67e22; color: white;">
+    <th rowspan="2" style="color: white; padding: 12px; border: 1px solid black !important; white-space: nowrap;">S.NO</th>
+    <th rowspan="2" style="text-align: left; padding: 10px 12px; color: white; border: 1px solid black !important; white-space: nowrap;">🏷️ BRAND PORTFOLIO</th>
+    <th rowspan="2" style="color: white; border: 1px solid black !important; white-space: nowrap; padding: 10px 12px;">🎯 TARGET</th>
+    <th colspan="3" id="achievedMainHeader" style="color: white; border: 1px solid black !important; white-space: nowrap;">📊 ACHIEVED VALUE / MONTH</th>
+    <th rowspan="2" style="color: white; border: 1px solid black !important; white-space: nowrap; padding: 10px 12px;">Σ ACHIEVED</th>
+    <th rowspan="2" style="color: white; border: 1px solid black !important; white-space: nowrap; padding: 10px 12px;">% EXEC</th>
+</tr>
+                <tr id="corporateMonthSubHeaderRow" style="background: #f39c12; color: white; font-size: 12px; font-weight: bold;">
+                    <!-- மாதங்கள் இங்கே தானாக வந்து லூப் ஆகும் -->
+                </tr>
+            </thead>
+            <tbody id="corporateBrandTableBody" style="color: Black;">
+                <!-- பிராண்டுகளின் மதிப்புகள் ஜாவாஸ்கிரிப்ட் மூலம் இங்கே வரும் -->
+            </tbody>
+            <tfoot>
+                <tr style="background: #fcf8f2; font-weight: bold; border-top: 2px solid #2c3e50;">
+                    <td style="text-align: center; padding: 15px; border: 1px solid black; font-size: 16px;">Σ</td>
+                    <td style="text-align: left; padding-left: 15px; border: 1px solid black; color: RED; font-size: 17px; text-transform: uppercase; white-space: nowrap;">CONSOLIDATED LEDGER:</td>
+                    <td id="corpGtTarget" style="color: #2980b9; font-weight: bold; border: 1px solid black; white-space: nowrap;">€ 0.00</td>
+                    <!-- மாதாந்திர கூட்டுத்தொகை செல்கள் ஜாவாஸ்கிரிப்ட் மூலம் இங்கே தானாகவே இணையும் -->
+                    <td id="corpGtAchieved" style="color: GREEN; font-weight: bold; border: 1px solid black; white-space: nowrap;">€ 0.00</td>
+                    <td id="corpGtExec" style="color: #c0392b; font-weight: bold; border: 1px solid black; white-space: nowrap;">0.0% 🚀</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+    <!-- 📋 டார்கெட் ஒதுக்கீடு பாப்-அப் விண்டோ (Modal) -->
+    <div id="budgetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">New Target Allocation</div>
+            <hr class="modal-divider">
+            
+            <label>Select Plan Duration *</label>
+            <select id="tgtDurationSelect" onchange="autoCalculateToMonth()">
+                <option value="3" selected>3 MONTHS REPORT</option>
+                <option value="6">6 MONTHS REPORT</option>
+                <option value="12">1 YEAR REPORT</option>
+            </select>
+
+            <label>Select Base Plan Year *</label>
+            <select id="tgtYearSelect" onchange="updateMonthDropdowns(); autoCalculateToMonth();"></select>
+
+            <div class="month-row" style="margin-top: 15px; margin-bottom: 10px;">
+                <div class="month-col">
+                    <label>From Month *</label>
+                    <select id="tgtFromMonthSelect" onchange="autoCalculateToMonth()"></select>
+                </div>
+                <div class="month-col">
+                    <label>To Month (Auto-Mark) 🔒</label>
+                    <input type="text" id="tgtToMonthInput" class="disabled-input" readonly value="MAR-26">
+                </div>
+            </div>
+
+            <div class="modal-btn-group">
+                <button class="btn-discard" onclick="closeBudgetModal()">Discard</button>
+                <button class="btn-save-tgt" onclick="saveSalesBudget()">SAVE TARGET</button>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        const localDB = new Dexie("VimagFollowUpDB");
+        localDB.version(2).stores({ 
+            customers: '++id,name', 
+            logs: '++id,custId,brand,product,status,isDone',
+            budgets: '++id,staffName,targetMonth,allocatedValue'
+        });
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+        databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+            projectId: "vimag-database",
+            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const cloudDB = firebase.database();
+
+        const monthNamesShort = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        let isSaving = false;
+        let activeReportBudgetId = null; 
+
+        window.onload = function() {
+            initYearDropdown();
+            syncBudgetsData();
+        };
+
+        function syncBudgetsData() {
+            cloudDB.ref('vimag_followup/budgets').on('value', async (snap) => {
+                const data = snap.val();
+                if (data) {
+                    await localDB.budgets.clear();
+                    await localDB.budgets.bulkPut(Object.values(data));
+                }
+                renderBudgetsCards();
+            });
+        }
+
+        function initYearDropdown() {
+            const yearSel = document.getElementById('tgtYearSelect');
+            if (!yearSel) return;
+            yearSel.innerHTML = "";
+            for (let year = 2026; year <= 2056; year++) {
+                let opt = document.createElement("option");
+                opt.value = year; opt.text = year;
+                if (year === 2026) opt.selected = true;
+                yearSel.add(opt);
+            }
+            updateMonthDropdowns();
+        }
+
+        function updateMonthDropdowns() {
+            const fromMonthSel = document.getElementById('tgtFromMonthSelect');
+            const selectedYear = document.getElementById('tgtYearSelect').value;
+            const shortYear = String(selectedYear).substring(2);
+
+            if (fromMonthSel) {
+                const prevIdx = fromMonthSel.selectedIndex >= 0 ? fromMonthSel.selectedIndex : 0;
+                fromMonthSel.innerHTML = monthNamesShort.map((m, index) => 
+                    `<option value="${index}">${m}-${shortYear}</option>`
+                ).join('');
+                fromMonthSel.selectedIndex = prevIdx;
+            }
+        }
+
+        function autoCalculateToMonth() {
+            const duration = parseInt(document.getElementById('tgtDurationSelect').value);
+            const startMonthIndex = parseInt(document.getElementById('tgtFromMonthSelect').value);
+            let baseYear = parseInt(document.getElementById('tgtYearSelect').value);
+
+            if (isNaN(startMonthIndex) || isNaN(baseYear)) return;
+
+            let endMonthIndex = startMonthIndex + (duration - 1);
+            if (endMonthIndex >= 12) {
+                baseYear += Math.floor(endMonthIndex / 12);
+                endMonthIndex = endMonthIndex % 12;
+            }
+
+            const finalShortYear = String(baseYear).substring(2);
+            document.getElementById('tgtToMonthInput').value = `${monthNamesShort[endMonthIndex]}-${finalShortYear}`;
+        }
+
+        async function renderBudgetsCards() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeStaff = (urlParams.get('name') || "").toUpperCase();
+
+            let list = await localDB.budgets.toArray();
+            if (activeStaff) {
+                list = list.filter(b => b.staffName === activeStaff);
+            }
+
+            const container = document.getElementById('budgetCardContainer');
+            if (!container) return;
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:40px; color:white; font-weight:bold; font-size:18px;">No targets allocated yet! Click "ADD TARGET".</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(b => {
+                let rawText = b.targetMonth || "";
+                let reportTitle = "TARGET REPORT";
+                let dateRange = rawText;
+
+                if (rawText.includes('(') && rawText.includes(')')) {
+                    const parts = rawText.split('(');
+                    reportTitle = parts[1].replace(')', '').toUpperCase();
+                    dateRange = parts[0].replace(' TO ', ' ➔ ').trim();
+                }
+
+                return `
+                    <div class="target-budget-card" onclick="launchBudgetReportView('${b.id}', '${b.targetMonth}')">
+                        <div class="card-left-section">
+                            <input type="checkbox" class="tgt-row-check" value="${b.id}" onclick="event.stopPropagation();" style="width:16px; height:16px; cursor:pointer;">
+                            <span class="card-report-title">📝 ${reportTitle}</span>
+                            <span class="card-month-range">[${dateRange}]</span>
+                        </div>
+                        <div class="card-open-link">OPEN LOG SHEET ❯</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openBudgetModal() { 
+            document.getElementById('budgetModal').style.display = 'flex'; 
+            autoCalculateToMonth();
+        }
+        function closeBudgetModal() { document.getElementById('budgetModal').style.display = 'none'; }
+
+        async function saveSalesBudget() {
+            if (isSaving) return; 
+            isSaving = true;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const staffNameFromUrl = urlParams.get('name') || "GENERAL TARGET";
+
+            const duration = document.getElementById('tgtDurationSelect').options[document.getElementById('tgtDurationSelect').selectedIndex].text;
+            const fromMonthText = document.getElementById('tgtFromMonthSelect').options[document.getElementById('tgtFromMonthSelect').selectedIndex].text;
+            const toMonthText = document.getElementById('tgtToMonthInput').value;
+
+            const uniqueId = "bud_" + Date.now(); // 🎯 தனித்துவ ஸ்ட்ரிங் ஐடி
+            const displayMonthRange = `${fromMonthText} TO ${toMonthText} (${duration})`;
+
+            const budgetItem = { 
+                id: uniqueId, 
+                staffName: staffNameFromUrl.toUpperCase(), 
+                targetMonth: displayMonthRange,
+                allocatedValue: "" 
+            };
+
+            try {
+                await localDB.budgets.add(budgetItem);
+                await cloudDB.ref(`vimag_followup/budgets/${uniqueId}`).set(budgetItem);
+                closeBudgetModal();
+                console.log("Target timeline allocation successfully synchronized! 🎯");
+            } catch (err) {
+                console.error("Save error:", err);
+            } finally {
+                isSaving = false; 
+            }
+        }
+
+        async function deleteSelectedBudgets() {
+            const checks = document.querySelectorAll('.tgt-row-check:checked');
+            if (checks.length === 0) return alert("நீக்க வேண்டிய டார்கெட்டை தேர்வு செய்யவும்! 🗑️");
+            if (!confirm("தேர்வு செய்த பட்ஜெட்டுகளை நீக்கலாமா?")) return;
+
+            for (let c of checks) {
+                const id = c.value;
+                await localDB.budgets.delete(id);
+                await cloudDB.ref(`vimag_followup/budgets/${id}`).remove();
+            }
+            renderBudgetsCards();
+        }
+
+        async function launchBudgetReportView(budgetId, targetText) {
+            // 🎯 தற்போதைய கார்டின் தனித்துவமான ஐடியை லாக் செய்கிறோம்
+            activeReportBudgetId = budgetId; 
+
+            document.getElementById('corporateReportTitle').innerText = targetText.toUpperCase();
+            document.getElementById('mainHubSection').style.display = 'none';
+            document.getElementById('targetReportPage').style.display = 'block';
+
+            let currentDuration = 3;
+            let monthHeadersArray = [];
+
+            try {
+                if (targetText.includes('-')) {
+                    const cleanText = targetText.includes('(') ? targetText.split('(')[0] : targetText;
+                    const parts = cleanText.split('TO');
+                    
+                    const startPart = parts[0].trim().split('-');
+                    const startMonthStr = startPart[0].toUpperCase();
+                    const yearShort = startPart[1].replace(/[^0-9]/g, '');
+                    const startMonthIdx = monthNamesShort.indexOf(startMonthStr);
+                    
+                    if (targetText.includes("6 MONTHS")) currentDuration = 6;
+                    else if (targetText.includes("1 YEAR") || targetText.includes("12 MONTHS")) currentDuration = 12;
+
+                    const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
+                    subHeaderRow.innerHTML = "";
+
+                    let currentMonthIdx = startMonthIdx;
+                    let currentYear = parseInt("20" + yearShort);
+
+             for (let i = 0; i < currentDuration; i++) {
+    let mName = monthNamesShort[currentMonthIdx];
+    let yShort = String(currentYear).substring(2);
+    let headerLabel = `${mName}-${yShort}`;
+    monthHeadersArray.push(headerLabel);
+
+    let th = document.createElement('th');
+    // 🎯 width: 70px லாக் மற்றும் white-space: normal மூலம் எழுத்துக்கள் அடுத்த வரியில் மடிந்து கச்சிதமாகத் தெரியும்
+    th.style.cssText = "background: #f39c12; color: white; font-size: 13px; padding: 8px 4px; border: 1px solid black !important; width: 70px; min-width: 70px; max-width: 70px; box-sizing: border-box; text-align: center; vertical-align: middle; white-space: normal !important; word-wrap: break-word; line-height: 1.2;";
+    th.innerText = headerLabel;
+    if(subHeaderRow) subHeaderRow.appendChild(th);
+
+    currentMonthIdx++;
+    if (currentMonthIdx >= 12) {
+        currentMonthIdx = 0;
+        currentYear++;
+    }
+}
+                    localStorage.setItem('vimag_active_report_months', JSON.stringify(monthHeadersArray));
+                    const mainHeader = document.getElementById('achievedMainHeader');
+                    if (mainHeader) mainHeader.colSpan = currentDuration;
+                }
+            } catch (e) { console.error("Month Loop Error:", e); }
+
+            await calculateCorporateReportMetrics(monthHeadersArray, currentDuration, activeReportBudgetId);
+        }
+
+        async function calculateCorporateReportMetrics(monthHeadersArray, duration, budgetId) {
+            const tbody = document.getElementById('corporateBrandTableBody');
+            if (!tbody) return;
+
+            const masterDB = new Dexie("VimagMasterDB");
+            masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+            
+            let allMasterProducts = [];
+            try { allMasterProducts = await masterDB.brands.toArray(); } catch(e) {}
+            const allActivityLogs = await localDB.logs.toArray();
+
+            let localBrandsList = [...new Set(allMasterProducts.map(p => (p.brand || "").toUpperCase().trim()))]
+                                    .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
+
+            if (localBrandsList.length > 0) {
+                processAndRenderMetrics(localBrandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="${5 + duration}" style="padding:25px; font-weight:bold; color:#7f8c8d;">ஆரம்ப நிலை தரவுகள் சேகரிக்கப்படுகிறது... ⏳</td></tr>`;
+            }
+
+            // BACKGROUND SYNC
+            cloudDB.ref('vimag/brands').once('value', async (snapshot) => {
+                const cloudBrandsTree = snapshot.val() || {};
+                const liveFetchedBrands = Object.keys(cloudBrandsTree)
+                    .filter(bName => bName !== "_id_lock" && bName !== "SYSTEM" && bName !== "SYSTEM_ID")
+                    .map(b => b.toUpperCase().trim());
+
+                if (liveFetchedBrands.length > 0) {
+                    processAndRenderMetrics(liveFetchedBrands, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId);
+                }
+            });
+        }
+
+        // 📊 தரவுகளைக் கணக்கிட்டு மெயின் பட்ஜெட் டேபிளில் தனித்துவமாகப் பொருத்தும் சப்-இன்ஜின்
+function processAndRenderMetrics(brandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId) {
+    const tbody = document.getElementById('corporateBrandTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    // 🎯 பிராண்ட்வைஸ் போல டேபிளின் லேஅவுட்டை 'auto' ஆக்கி, சைஸை 100% ஆக மாற்றுகிறோம்
+    const mainTable = document.querySelector('#targetReportPage table');
+    if (mainTable) {
+        mainTable.style.tableLayout = "auto";
+        mainTable.style.width = "100%";
+        mainTable.style.minWidth = "100%";
+    }
+
+    let grandTotalTarget = 0;
+    let grandTotalAchieved = 0;
+    let monthlyGrandTotals = new Array(duration).fill(0);
+
+    // ஆல்பாபெடிக் வரிசையில் பிராண்டுகளை அடுக்குதல்
+    brandsList.sort().forEach((brandName, idx) => {
+        const brandProducts = allMasterProducts.filter(p => 
+            p.brand && p.brand.toUpperCase().trim() === brandName && p.budgetId === budgetId
+        );
+        
+        let overallTarget = 0;
+        let totalBrandAchieved = 0;
+        let monthlyValues = new Array(duration).fill(0);
+
+        brandProducts.forEach(p => {
+            overallTarget += parseFloat(p.brandwise_target || 0); 
+            if (p.achievedQty && Array.isArray(p.achievedQty)) {
+                for (let i = 0; i < duration; i++) {
+                    let monthlyUnitQty = parseInt(p.achievedQty[i] || 0);
+                    monthlyValues[i] += monthlyUnitQty * (parseFloat(p.price) || 0);
+                }
+            }
+        });
+
+        monthlyValues.forEach((val, i) => {
+            totalBrandAchieved += val;
+            monthlyGrandTotals[i] += val;
+        });
+
+        let execPercentage = overallTarget > 0 ? (totalBrandAchieved / overallTarget) * 100 : 0;
+        grandTotalTarget += overallTarget;
+        grandTotalAchieved += totalBrandAchieved;
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid black";
+        tr.style.backgroundColor = "white";
+        tr.style.fontWeight = "bold";
+        
+        // 🎯 பிக்சல் அகலங்கள் (width) நீக்கப்பட்டு, டேட்டாவுக்கு ஏற்ப சைஸ் மாற வழிவகுக்கப்பட்டுள்ளது
+        let monthlyCellsHtml = monthlyValues.map(v => 
+            `<td style="padding:10px 12px; border: 1px solid black !important; color: #27ae60; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${v.toFixed(2)}</td>`
+        ).join('');
+
+        const redirectUrl = `Brandwise.html?brand=${encodeURIComponent(brandName.toLowerCase())}&budgetId=${encodeURIComponent(budgetId)}`;
+
+        tr.innerHTML = `
+            <td style="padding:10px 8px; border: 1px solid black !important; font-size: 14px; text-align: center; color: black;">${idx + 1}</td>
+            <td style="padding:10px 12px; border: 1px solid black !important; text-align: left !important; padding-left: 14px !important; font-size: 14px; color: #1d609c; cursor: pointer; white-space: nowrap;" onclick="window.location.href='${redirectUrl}'">🔷 ${brandName}</td>
+            <td style="padding:10px 12px; border: 1px solid black !important; color: #1d609c; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${overallTarget.toFixed(2)}</td>
+            ${monthlyCellsHtml}
+            <td style="padding:10px 12px; border: 1px solid black !important; color: green; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${totalBrandAchieved.toFixed(2)}</td>
+            <td style="padding:10px 8px; border: 1px solid black !important; color: ${execPercentage >= 100 ? 'green' : '#d94556'}; background-color: #fdf2f2; text-align: center; font-size: 14px; white-space: nowrap;">${execPercentage.toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // 🏆 🎯 சம்மரி லெட்ஜர் (TFOOT) வரிசையையும் பிராண்ட்வைஸ் போல அகலக் கட்டுப்பாடுகள் இன்றி மாற்றுகிறோம்
+    const tfootRow = document.querySelector('#targetReportPage table tfoot tr');
+    if (tfootRow) {
+        let gtExecCalc = grandTotalTarget > 0 ? (grandTotalAchieved / grandTotalTarget) * 100 : 0;
+        
+        let footerMonthlyCellsHtml = monthlyGrandTotals.map(mTot => 
+            `<td style="color: #27ae60; padding: 12px 12px; border: 1px solid black !important; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${mTot.toFixed(2)}</td>`
+        ).join('');
+
+        tfootRow.style.backgroundColor = "#fcf8f2";
+        tfootRow.style.borderTop = "2px solid #2c3e50";
+        tfootRow.style.borderBottom = "2px solid black";
+
+        tfootRow.innerHTML = `
+            <td style="text-align: center; padding: 15px 8px; border: 1px solid black !important; font-size: 16px; font-weight: bold; color: black;">Σ</td>
+            <td style="text-align: left !important; padding-left: 15px; border: 1px solid black !important; color: RED; font-size: 14px; font-weight: bold; text-transform: uppercase; white-space: nowrap; vertical-align: middle;">CONSOLIDATED LEDGER:</td>
+            <td style="color: #1d609c; font-weight: bold; border: 1px solid black !important; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${grandTotalTarget.toFixed(2)}</td>
+            ${footerMonthlyCellsHtml}
+            <td style="color: green; font-weight: bold; border: 1px solid black !important; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">€ ${grandTotalAchieved.toFixed(2)}</td>
+            <td style="color: ${gtExecCalc >= 100 ? 'green' : '#d94556'}; font-weight: bold; border: 1px solid black !important; background: #fdf2f2; text-align: center; font-size: 14px; white-space: nowrap; vertical-align: middle;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%;">
+                    <span>${gtExecCalc.toFixed(1)}%</span><span style="font-size: 14px;">🚀</span>
+                </div>
+            </td>
+        `;
+    }
+
+    // மேல் பகுதி லைவ் விட்ஜெட்டுகள்
+    let gtExecPercent = grandTotalTarget > 0 ? (grandTotalAchieved / grandTotalTarget) * 100 : 0;
+    const portfolioEl = document.getElementById('corporatePortfolio');
+    const turnoverEl = document.getElementById('corporateTurnover');
+    const conversionEl = document.getElementById('corporateConversion');
+
+    if(portfolioEl) portfolioEl.innerText = `€ ${grandTotalTarget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if(turnoverEl) turnoverEl.innerText = `€ ${grandTotalAchieved.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if(conversionEl) conversionEl.innerText = `${gtExecPercent.toFixed(1)}%`;
+}
+        function closeTargetReportPage() {
+            document.getElementById('targetReportPage').style.display = 'none';
+            document.getElementById('mainHubSection').style.display = 'block';
+            renderBudgetsCards();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brandwise</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+    <style>
+        body { 
+            font-family: 'Times New Roman', serif; 
+            background-image: url('Background12.png'); 
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 15px; 
+            box-sizing: border-box;
+        }
+        
+        .target-header-box { 
+            background: white; 
+            padding: 32px 40px; 
+            border-radius: 12px; 
+            border: 2px solid #e67e22; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); 
+            max-width: 100%; 
+            margin: 0 auto 15px auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-sizing: border-box; 
+        }
+        
+        .btn-group { display: flex; flex-direction: column; gap: 5px; width: 100px; }
+        .btn-back { background: #2c3e50; color: white; border: none; padding: 8px 10px; font-weight: bold; border-radius: 6px; cursor: pointer; font-family: 'Times New Roman'; font-size: 19px; }
+        
+        .header-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; }
+        .company-title { margin: 0; font-size: 25px; color: #006064; font-weight: bold; text-transform: uppercase; }
+        .brand-subtitle { margin: 0; font-size: 23px; color: #e67e22; font-weight: bold; text-transform: uppercase; }
+        
+        .live-card { border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; background: #fafafa; font-size: 11px; font-weight: bold; min-width: 220px; box-sizing: border-box;}
+        .live-row { display: flex; justify-content: space-between; margin-bottom: 2px; color: #333; }
+        
+        .table-container { 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            border: 2px solid #e67e22; 
+            width: 100%; 
+            margin: 0 auto; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); 
+            box-sizing: border-box;
+            overflow-x: auto; 
+        }
+        
+        table { width: 100%; border-collapse: collapse; text-align: center; background: white; table-layout: auto; }
+        
+        th { 
+            background: #e67e22; color: white; font-size: 15px; font-weight: bold; padding: 10px 4px; 
+            border: 1px solid black !important; text-transform: uppercase; white-space: normal !important; 
+            word-wrap: break-word; vertical-align: middle; line-height: 1.2; max-width: 90px; box-sizing: border-box;
+        }
+        .sub-header th { background: #f39c12; font-size: 13px; padding: 6px 4px; border: 1px solid black !important; min-width: 60px; }
+        
+        td { border: 1px solid black !important; padding: 10px 8px; font-size: 14px; color: black; font-weight: bold; box-sizing: border-box; }
+        
+        .col-pick { width: 50px; text-align: center; }
+        .col-sno { width: 45px; text-align: center; }
+        .col-art { width: 40px; text-align: center; }
+        .col-desc { text-align: left; padding-left: 10px; min-width: 200px; white-space: normal !important; word-wrap: break-word; line-height: 1.3; }
+        .col-price { min-width: 65px; text-align: center; }
+        .col-target { min-width: 95px; text-align: center; max-width: 95px; }
+        .col-achieved { min-width: 100px; text-align: center; max-width: 100px; }
+        .col-exec { min-width: 65px; text-align: center; }
+        
+        .currency-cell { text-align: center; padding-right: 6px; white-space: nowrap; }
+        .blue-text { color: #1d609c; } 
+        .Green-text { color: green; }
+        .green-text-live { color: #27ae60 !important; } 
+        .red-text { color: #d94556; }
+        
+        .radio-custom { width: 18px; height: 18px; cursor: pointer; margin: 0; vertical-align: middle; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 10000; }
+        .modal-content { background-color: white; padding: 20px; border-radius: 12px; width: 420px; max-height: 80vh; border: 2px solid #2c3e50; text-align: left; display: flex; flex-direction: column; box-sizing: border-box; }
+        .modal-body { overflow-y: auto; flex-grow: 1; padding-right: 5px; margin-bottom: 12px; }
+        .modal-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 4px; text-transform: uppercase; }
+        .modal label { display: block; margin-top: 10px; font-size: 11px; font-weight: bold; color: #333; text-transform: uppercase; }
+        .modal input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-weight: bold; font-family: 'Times New Roman'; }
+        .modal-btn-group { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 12px; }
+        .btn-save { background: #e67e22; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-close { background: #7f8c8d; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        
+        .month-input-row { display: grid; grid-template-columns: 1.2fr 2fr; gap: 8px; align-items: center; background: #fdfefe; padding: 5px; border: 1px solid #edf2f7; border-radius: 6px; margin-top: 4px; }
+@media print {
+    /* 1. Hides back and print buttons entirely on physical paper layout */
+    .btn-back, .btn-print, .print-hidden-block { 
+        display: none !important; 
+    }
+    
+    /* 2. Masks selection radio elements out of print frames */
+    .radio-custom, input[type="radio"], input[type="checkbox"] {
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
+    body { 
+        background: white !important; 
+        background-image: none !important;
+        padding: 0 !important; 
+        margin: 0 !important;
+    }
+    
+    .target-header-box, .header-box, .table-container { 
+        border: 1px solid black !important; 
+        box-shadow: none !important; 
+        background: white !important;
+    }
+    
+    /* 3. Forces deep black contrast boundaries across data grids */
+    table, th, td {
+        border: 1px solid black !important;
+        color: black !important;
+    }
+} 
+    </style>
+</head>
+<body>  
+
+<div class="target-header-box" style="background: white; padding: 20px 30px; border-radius: 12px; border: 2px solid #e67e22; box-shadow: 0 4px 15px rgba(0,0,0,0.06); max-width: 100%; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; font-family: 'Times New Roman', serif; position: relative;">
+    
+    <!-- 1. இடது ஓரம்: பேக் மற்றும் அதற்கு நேர் கீழே பிரிண்ட் பட்டன் இருக்கும் பகுதி -->
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 120px; width: 120px; align-items: center; position: relative; z-index: 10000;" class="print-hidden-block">
+        <button class="btn-back" onclick="window.history.back()" style="background: GREEN; color: white; border: none; padding: 8px 7px; font-weight: bold; border-radius: 7px; cursor: pointer !important; font-family: 'Times New Roman', serif; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); width: 100%; box-sizing: border-box; text-align: center;">
+            🏠 HOME
+        </button>
+        <button class="btn-print" onclick="window.print()" style="background: RED; color: white; border: none; padding: 8px 7px; font-weight: bold; border-radius: 8px; cursor: pointer !important; font-family: 'Times New Roman', serif; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-align: center;">
+            🖨️ PRINT
+        </button>
+    </div>
+    <!-- 2. மையப் பகுதி: 🎯 லோகோ மற்றும் டைட்டில்களை கச்சிதமாக நடுவில் வைக்கும் இன்ஜின் -->
+    <div class="header-center" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-left: -60px; margin-right: -60px;">
+        <img src="Logo.jpeg" alt="Vimag Logo" width="120" style="height: auto; margin-bottom: 4px;">
+        <h1 class="company-title" style="margin: 0; font-size: 25px; color: #006064; font-weight: bold; text-transform: uppercase; line-height: 1.2;">Vimag Industrial Solutions</h1>
+        <div class="brand-subtitle" id="dynamicBrandSubtitle" style="margin-top: 4px; font-size: 21px; color: #e67e22; font-weight: bold; text-transform: uppercase;">🛠️ PERFORMANCE RESOURCE</div>
+    </div>
+
+    <!-- 3. வலது ஓரம்: படத்திலிருக்கும் அதே அளவிலான கச்சிதமான லைவ் ஓவர்வியூ கார்டு -->
+    <div class="live-card" style="border: 1px solid #e0e0e0; border-radius: 16px; padding: 16px 24px; background: #ffffff; min-width: 280px; width: 280px; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: left;">
+        <div style="color: #d60000; text-align: center; font-size: 13px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+            LIVE PERFORMANCE OVERVIEW
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 15px; font-weight: bold; color: #000000;">
+            <span>🔷 PORTFOLIO:</span> 
+            <span id="overviewPortfolio" class="blue-text" style="color: #1d609c; font-size: 15px; font-weight: bold;">€ 0.00</span>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 15px; font-weight: bold; color: #000000;">
+            <span>🟢 TURNOVER:</span> 
+            <span id="overviewTurnover" style="color: #27ae60; font-size: 15px; font-weight: bold;">€ 0.00</span>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: bold; color: #000000;">
+            <span>🔶 CONVERSION RATE:</span> 
+            <span id="overviewConversion" class="red-text" style="color: #e67e22; font-size: 15px; font-weight: bold;">0.0%</span>
+        </div>
+    </div>
+
+</div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-pick" rowspan="2">PICK</th>
+                    <th class="col-sno" rowspan="2">S.NO</th>
+                    <th class="col-art" rowspan="2">ART NO</th>
+                    <th style="text-align: left; padding-left: 10px;" rowspan="2">📦 PRODUCT DESCRIPTION</th>
+                    <th class="col-price" rowspan="2">💰 PRICE</th>
+                    <th class="col-target" rowspan="2">🎯TARGET</th>
+                    <th id="achievedMainHeader" colspan="3">📊 ACHIEVED VALUE / MONTH</th>
+                    <th class="col-achieved" rowspan="2">Σ ACHIEVED</th>
+                    <th class="col-exec" rowspan="2">% EXEC</th>
+                </tr>
+                <tr class="sub-header" id="corporateMonthSubHeaderRow">
+                    <!-- Months loop here -->
+                </tr>
+            </thead>
+            <tbody id="brandwiseTableBody">
+                <tr><td colspan="11" style="padding: 15px;">Fetching details... ⏳</td></tr>
+            </tbody>
+            <tfoot id="corporateTableFoot">
+                <!-- Ledger summary injected here -->
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Modal Popup Box -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalProductTitle">Fix Row Target</div>
+            
+            <div class="modal-body">
+                <input type="hidden" id="modalRowIndex">
+                
+                <label style="color: #1d609c;">OVERALL TARGET QUANTITY (PCS) *</label>
+                <input type="number" id="inputTargetQty" placeholder="Enter Target Quantity" style="border: 2px solid #1d609c; margin-bottom: 5px;">
+
+                <div style="font-weight: bold; font-size: 11px; color: #e67e22; margin-top: 10px; border-bottom: 1px dashed #e67e22; padding-bottom: 2px;">📈 ACHIEVED QUANTITY PER MONTH (PCS)</div>
+                <div id="dynamicMonthlyInputContainer" style="max-height: 200px; overflow-y: auto; margin-top: 5px; padding-right: 3px;"></div>
+            </div>
+
+            <div class="modal-btn-group">
+                <button class="btn-close" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveRowValuesFirebase()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- SDK Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+    
+    <script>
+        const vimagDB = new Dexie("VimagMasterDB");
+        vimagDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+        databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+            projectId: "vimag-database",
+            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let filteredArticles = [];
+        let currentBrandName = "Rhodius";
+        const mainSymbol = "€";
+        let activeMonthHeaders = JSON.parse(localStorage.getItem('vimag_active_report_months')) || ["JAN-26", "FEB-26", "MAR-26"];
+        
+        // Session lock token variable
+        let activeBudgetId = null; 
+
+        function getCurrencySymbol(code) { return code === "USD" || code === "$" ? "$" : "€"; }
+
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let rawBrand = urlParams.get('brand') || 'Rhodius';
+            
+            // Extract the secure budget tracker ID passed from the cards portal
+            activeBudgetId = urlParams.get('budgetId') || ''; 
+
+            currentBrandName = rawBrand.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            document.getElementById("dynamicBrandSubtitle").textContent = `🛠️ ${currentBrandName.toUpperCase()} PERFORMANCE`;
+
+            await loadDataFromDexieLocal();
+            loadUniversalCloudLiveData();
+        };
+
+        async function loadDataFromDexieLocal() {
+            try {
+                const allWarehouseItems = await vimagDB.brands.toArray();
+                processRawDataToTable(allWarehouseItems);
+            } catch (err) { console.log("Local Database Uninitialized: ", err); }
+        }
+
+        function loadUniversalCloudLiveData() {
+            const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
+            if (subHeaderRow) subHeaderRow.innerHTML = activeMonthHeaders.map(m => `<th>${m}</th>`).join('');
+            
+            const mainHeader = document.getElementById('achievedMainHeader');
+            if (mainHeader) mainHeader.setAttribute('colspan', activeMonthHeaders.length);
+
+            db.ref(`vimag/brands/${currentBrandName}`).on('value', async (snapshot) => {
+                const brandTreeData = snapshot.val() || {};
+
+                for (const custName of Object.keys(brandTreeData)) {
+                    if (custName === "_id_lock" || custName === "SYSTEM_ID") continue;
+                    const customerItems = brandTreeData[custName] || {};
+                    
+                    for (const itemKey of Object.keys(customerItems)) {
+                        const item = customerItems[itemKey];
+                        if (item && item.id && item.artNo && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
+                            
+                            let price = parseFloat(item.price || 0);
+                            
+                            // Query entries belonging to our uniquely active budget ID path exclusively
+                            let budgetSpecificData = (item.budgets && item.budgets[activeBudgetId]) ? item.budgets[activeBudgetId] : {};
+                            let rawAchieved = budgetSpecificData.achieved || new Array(activeMonthHeaders.length).fill(0);
+                            let targetQty = parseInt(budgetSpecificData.qty || 0);
+                            let monthQty = parseInt(budgetSpecificData.monthQty || 0);
+                            let brandwiseTarget = parseFloat(budgetSpecificData.brandwise_target || 0);
+
+                            let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
+
+                            await vimagDB.brands.put({
+                                id: `${item.id}_${activeBudgetId}`, // Form compound tracking key to avoid overwriting items
+                                baseItemId: item.id,
+                                budgetId: activeBudgetId,
+                                brand: currentBrandName,
+                                customerName: custName,
+                                artNo: item.artNo,
+                                name: item.name || item.productName || "",
+                                price: price,
+                                currency: item.currency || "€",
+                                targetQty: targetQty,
+                                monthQty: monthQty,
+                                brandwise_target: brandwiseTarget,
+                                achievedQty: qtyAchievedArray
+                            });
+                        }
+                    }
+                }
+                
+                const freshWarehouseItems = await vimagDB.brands.toArray();
+                processRawDataToTable(freshWarehouseItems);
+            });
+        }
+
+        function processRawDataToTable(rawList) {
+            filteredArticles = [];
+            const seenArticles = new Set();
+
+            if (!rawList || !Array.isArray(rawList)) return;
+
+            rawList.forEach(item => {
+                if (!item || !item.brand || !item.artNo || item.artNo === "SYSTEM" || item.artNo === "_id_lock") return;
+                
+                // Match items belonging ONLY to this specific open budget session ID
+                if (item.brand.toUpperCase().trim() === currentBrandName.toUpperCase().trim() && item.budgetId === activeBudgetId) {
+                    const articleKey = item.artNo.toUpperCase().trim();
+                    
+                    if (!seenArticles.has(articleKey)) {
+                        seenArticles.add(articleKey);
+                        
+                        let qtyAchievedArr = item.achievedQty || [];
+                        if(qtyAchievedArr.length < activeMonthHeaders.length) {
+                            let diff = activeMonthHeaders.length - qtyAchievedArr.length;
+                            qtyAchievedArr = qtyAchievedArr.concat(new Array(diff).fill(0));
+                        }
+
+                        filteredArticles.push({
+                            id: item.id,
+                            baseItemId: item.baseItemId,
+                            brand: currentBrandName,
+                            customerName: item.customerName,
+                            articleNo: item.artNo.trim(),
+                            description: item.name || "Industrial Tool Component",
+                            price: parseFloat(item.price || 0),
+                            currency: item.currency || "€",
+                            targetValue: parseFloat(item.brandwise_target || 0), 
+                            targetQty: parseInt(item.targetQty || 0),
+                            monthQty: item.monthQty || 0,
+                            achievedQtyValues: qtyAchievedArr
+                        });
+                    }
+                }
+            });
+            renderTableRows();
+        }
+
+        function renderTableRows() {
+            const tbody = document.getElementById("brandwiseTableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            let globalTargetValue = 0, globalAchievedValue = 0;
+            let globalMonthTotals = new Array(activeMonthHeaders.length).fill(0);
+
+            if (filteredArticles.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${7 + activeMonthHeaders.length}" style="padding: 15px; font-weight: bold; color: #7f8c8d;">No Product Records Found for ${currentBrandName.toUpperCase()}</td></tr>`;
+                return;
+            }
+
+            filteredArticles.forEach((item, index) => {
+                const tr = document.createElement("tr");
+                const sym = getCurrencySymbol(item.currency);
+                
+                let totalVal = item.targetValue; 
+                let rowMonthlyValues = new Array(activeMonthHeaders.length).fill(0);
+                
+                for (let i = 0; i < activeMonthHeaders.length; i++) {
+                    let qVal = parseInt(item.achievedQtyValues[i] || 0);
+                    rowMonthlyValues[i] = qVal * item.price;
+                }
+
+                let rowTotalAchieved = rowMonthlyValues.reduce((a, b) => a + b, 0);
+                let execPercent = totalVal > 0 ? ((rowTotalAchieved / totalVal) * 100).toFixed(1) : "0.0";
+
+                globalTargetValue += totalVal;
+                globalAchievedValue += rowTotalAchieved;
+                rowMonthlyValues.forEach((v, i) => { globalMonthTotals[i] += v; });
+
+                let monthlyCellsHtml = rowMonthlyValues.map(v => `<td class="currency-cell green-text-live">${sym} ${v.toFixed(2)}</td>`).join('');
+
+                tr.innerHTML = `
+                    <td class="col-pick"><input type="radio" name="pickRowRadio" class="radio-custom" onclick="openInputModal(${index})"></td>
+                    <td class="col-sno">${index + 1}</td>
+                    <td class="col-art" style="font-weight: bold;">${item.articleNo}</td>
+                    <td class="col-desc">${item.description}</td>
+                    <td class="col-price">${sym} ${item.price.toFixed(2)}</td>
+                    <td class="col-target blue-text">${sym} ${totalVal.toFixed(2)}</td>
+                    ${monthlyCellsHtml}
+                    <td class="col-achieved Green-text">${sym} ${rowTotalAchieved.toFixed(2)}</td>
+                    <td class="col-exec red-text">${execPercent}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const tfoot = document.getElementById("corporateTableFoot");
+            if (!tfoot) return;
+            
+            let footHtml = `
+                <tr style="background: #ffffff; font-weight: bold; border-top: 1px solid black; border-bottom: 1px solid black;">
+                    <td colspan="2" style="border: 1px solid black !important; COLOR: RED; font-size: 19px;">Σ</td>
+                    <td colspan="2" style="text-align: left; padding-left: 15px; font-size: 16px; color: RED">CONSOLIDATED LEDGER:</td>
+                    <td style="border: 1px solid black !important;"></td>
+                    <td class="currency-cell blue-text" style="border: 1px solid black !important;">€ ${globalTargetValue.toFixed(2)}</td>
+            `;
+
+            globalMonthTotals.forEach(mSum => {
+                footHtml += `<td class="currency-cell green-text-live" style="border: 1px solid black !important;">€ ${mSum.toFixed(2)}</td>`;
+            });
+
+            let overallExec = globalTargetValue > 0 ? ((globalAchievedValue / globalTargetValue) * 100).toFixed(1) : "0.0";
+            footHtml += `
+                    <td class="currency-cell Green-text" style="border: 1px solid black !important;">€ ${globalAchievedValue.toFixed(2)}</td>
+                    <td class="currency-cell red-text" style="text-align: center; padding-right: 4px; border: 1px solid black !important; background-color: #fdf2f2;">
+                        <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; width: 100%;">
+                            <span>${overallExec}%</span> <span style="font-size: 12px; filter: grayscale(0.2);">🚀</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tfoot.innerHTML = footHtml;
+
+            document.getElementById("overviewTurnover").textContent = `${mainSymbol}${globalAchievedValue.toFixed(2)}`;
+            document.getElementById("overviewPortfolio").textContent = `${mainSymbol}${globalTargetValue.toFixed(2)}`;
+            document.getElementById("overviewConversion").textContent = `${overallExec}%`;
+        }
+
+        function openInputModal(index) {
+            const item = filteredArticles[index];
+            document.getElementById("modalRowIndex").value = index;
+            document.getElementById("modalProductTitle").textContent = `Fix Target Qty: ${item.articleNo}`;
+            
+            document.getElementById("inputTargetQty").value = item.targetQty || "";
+            
+            const container = document.getElementById("dynamicMonthlyInputContainer");
+            if (!container) return;
+            container.innerHTML = "";
+
+            activeMonthHeaders.forEach((monthLabel, i) => {
+                let currentMonthQty = item.achievedQtyValues[i] || 0;
+                
+                container.innerHTML += `
+                    <div class="month-input-row">
+                        <span style="font-size: 11px; font-weight: bold; color: #2c3e50;">📅 ${monthLabel}:</span>
+                        <input type="number" class="monthly-modal-input" data-month-idx="${i}" value="${currentMonthQty}" placeholder="Qty">
+                    </div>
+                `;
+            });
+
+            document.getElementById("inputModal").style.display = "flex";
+        }
+
+        function closeModal() { 
+            document.getElementById("inputModal").style.display = "none"; 
+            const checkedRadio = document.querySelector('input[name="pickRowRadio"]:checked');
+            if(checkedRadio) checkedRadio.checked = false;
+        }
+
+        function saveRowValuesFirebase() {
+            const index = document.getElementById("modalRowIndex").value;
+            if (index === "" || !filteredArticles[index]) return;
+
+            const updatedQty = parseInt(document.getElementById("inputTargetQty").value) || 0;
+            const targetItem = filteredArticles[index];
+            
+            // Calculate total financial weight target
+            const computedTargetVal = updatedQty * targetItem.price;
+            
+            let updatedAchievedValueArray = new Array(activeMonthHeaders.length).fill(0);
+            let updatedAchievedQtyArray = new Array(activeMonthHeaders.length).fill(0);
+            const inputElements = document.querySelectorAll(".monthly-modal-input");
+            
+            let computed_aV = 0; 
+            let computed_monthQty = 0; 
+
+            inputElements.forEach(input => {
+                const mIdx = parseInt(input.getAttribute("data-month-idx"));
+                const qVal = parseInt(input.value) || 0;
+                
+                let computedMonthVal = qVal * targetItem.price;
+                
+                updatedAchievedQtyArray[mIdx] = qVal;
+                updatedAchievedValueArray[mIdx] = computedMonthVal;
+                
+                computed_aV += computedMonthVal;
+                computed_monthQty += qVal;
+            });
+
+            // Target the safe isolated database node map
+            const nodePath = `vimag/brands/${targetItem.brand}/${targetItem.customerName}/${targetItem.baseItemId}/budgets/${activeBudgetId}`;
+            
+            // Update cloud database node structures synchronously
+            db.ref(nodePath).update({
+                qty: updatedQty,                        
+                monthQty: computed_monthQty,            
+                aV: computed_aV,                        
+                brandwise_target: computedTargetVal,    
+                achieved: updatedAchievedValueArray     
+            }).then(() => {
+                return vimagDB.brands.update(targetItem.id, {
+                    targetQty: updatedQty,
+                    monthQty: computed_monthQty,
+                    brandwise_target: computedTargetVal,
+                    achievedQty: updatedAchievedQtyArray
+                });
+            }).then(() => {
+                // Refresh local caching array blocks
+                targetItem.targetQty = updatedQty;
+                targetItem.targetValue = computedTargetVal;
+                targetItem.monthQty = computed_monthQty;
+                targetItem.achievedQtyValues = updatedAchievedQtyArray;
+
+                closeModal();
+                renderTableRows(); // Re-draw interface immediately
+                console.log("Timeline Quantities Tracked & Multiplied! 🚀");
+            }).catch(err => alert("Cloud Sync Failed: " + err.message));
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("inputModal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>

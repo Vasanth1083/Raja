@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vimag Follow-Up</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+
+    <style>
+
+        * { box-sizing: border-box; transition: 0.3s; }
+body { 
+    font-family: 'Times New Roman', serif; 
+    padding: 20px; 
+    /* 🟠 Orange-ah thookittu image-ah inga poduvom */
+    background-image: url('Background8.jpeg');
+    background-size: cover;      /* Screen full-ah cover pannum */
+    background-position: center;  /* Image-ah center pannum */
+    background-repeat: no-repeat; 
+    background-attachment: fixed; /* Scroll pannunaalum image move aagadhu, professional-ah irukkum */
+    margin: 0; 
+    min-height: 100vh; 
+}
+        /* ✨ Header Box with Side Dashboard */
+        .header-box { 
+            border: 3px solid #27ae60; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            position: relative; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+
+        .header-content { text-align: left; flex: 1; }
+
+        /* 📊 Side Dashboard Style */
+        .side-stats {
+            background: #f1f8f4;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #27ae60;
+            min-width: 180px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+        .stat-line:last-child { margin-bottom: 0; }
+        .stat-val { color: #27ae60; font-size: 16px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; font-family: serif; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-del { background: #e74c3c; color: white; }
+        .btn-home { background: GREEN; color: white; position: absolute; left: 20px; top: 20px; }
+
+        .dist-card { background: white; padding: 18px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #27ae60; cursor: pointer; }
+        .dist-card:hover { transform: scale(1.01); background: #f0fdf4; }
+        .dist-name { font-size: 18px; font-weight: bold; text-transform: uppercase; color: #333; flex: 1; }
+
+        /* 📊 Table with Full Borders */
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px; solid black; margin-top: 0px; }
+        th, td { border: 1px solid black; padding: 12px; text-align: left; }
+        th { background: #27ae60; color: white; text-transform: uppercase; font-size: 16px; }
+        .brand-text { color: black; font-size: 16px; }
+        .completed-row td { background-color: #dcfce7 !important; }
+        
+        .status-badge { padding: 5px 12px; border-radius: 4px; font-size: 11px; color: white; display: inline-block; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 350px; border: 3px solid #27ae60; }
+        .modal-content label { font-size: 12px; display: block; margin-top: 10px; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: Times New Roman; }
+@media print {
+    /* 1. டேபிளுக்கு வெளியே உள்ள பட்டன்கள் மற்றும் பில்டர்களை முழுமையாக மறைக்க */
+    button, .home-link, .top-btns, #addBtn, #updBtn, #delBtn, #printBtn, 
+    header, .nav-bar, .filter-section, .th-filter, .top-left-home { 
+        display: none !important; 
+    }
+#printHeaderBox {
+        border: 2px solid #27ae60 !important; /* பிரிண்டில் கருப்பு பார்டர் நேர்த்தியாக இருக்கும் */
+        display: flex !important;
+        margin-bottom: 20px !important;
+    }
+    /* 1. பின்னணியில் உள்ள ஹோம் பேஜை முழுமையாக மறைக்க */
+    #mainHomeContent { 
+        display: none !important; 
+    }
+    /* 2. முழு பக்க பின்னணியை சுத்தமான வெள்ளையாக்க (பச்சை நிறம் வராது) */
+    html, body, .container, .card, .report-card {
+        background: white !important;
+        background-image: none !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        box-shadow: none !important;
+display: block !important; /* Flex-ஐ நீக்க இது கட்டாயம் */
+        overflow: visible !important;
+    }
+
+span[onclick="closeStatusTable()"] {
+        display: none !important;
+    }
+
+    /* 3. 🎯 அலைன்மென்ட் பிக்ஸ்: ஸ்கிரீனில் உள்ளபடியே (Left/Center) அப்படியே வரும் */
+    th, td { 
+        border: 1px solid black !important; 
+        padding: 10px !important; 
+        color: black !important;
+        background-color: white !important;
+        /* --- 🎯 கட்டாயமாக சென்டர் செய்யாது, ஸ்கிரீன் அலைன்மென்ட்டை அப்படியே பின்பற்றும் --- */
+        text-align: inherit !important; 
+        vertical-align: middle !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* 4. செக்பாக்ஸ்கள் அப்படியே தெரிய வேண்டும் */
+    input[type="checkbox"] {
+        display: inline-block !important;
+        visibility: visible !important;
+        accent-color: black !important;
+    }
+
+    /* 5. டேபிள் பாக்ஸ் - 1px மெல்லிய நேரான கோடுகள் */
+    table { 
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        border: 1px solid black !important;
+        table-layout: auto !important;
+        margin-top: 10px !important;
+ page-break-inside: auto;
+    }
+
+    /* 6. STATUS ஹெடர் மங்கலாகத் தெரிவதைத் தடுத்து கருகருவென மாற்ற */
+    th, th *, .f-icon {
+        color: black !important;
+        opacity: 1 !important;
+        font-weight: bold !important;
+        text-transform: uppercase;
+    }
+
+    /* டிராப்டவுன் அம்புக்குறியை மட்டும் நீக்க */
+    th select {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    /* 7. FOLLOW-UP பேட்ஜ்கள் மற்றும் STATUS சாதாரண கருப்பு எழுத்தாக மாற */
+    table .badge, table .status-btn, table span, table b, table i {
+        background: transparent !important;
+        color: black !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        font-weight: bold !important;
+    }
+  #statusTableArea {
+        position: absolute !important; /* Fixed-ஐ மாற்றவும் */
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+.print-hidden, 
+    #statusTableArea span[onclick="closeStatusTable()"] {
+        display: none !important;
+    }
+
+    /* 8. கடைசி வரிசைக்கு பாட்டம் லைன் கண்டிப்பாக வர */
+    tr:last-child td {
+        border-bottom: 1px solid black !important;
+    }
+  tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    /* லிங்குகளை சாதாரண எழுத்தாக மாற்ற */
+    a { text-decoration: none !important; color: black !important; }
+}    </style>
+</head>
+<body>
+
+<!-- PAGE 1: HOME -->
+<div id="homePage">
+    
+    <!-- 🟢 1. WRAPPER ADD PANNIYACHU (Headings and Cards hide panna idhu mukhya) -->
+    <div id="mainHomeContent">
+        <div class="header-box" style="padding: 40px 20px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f7f6df; min-height: 60px; margin-bottom: 20px;">
+            
+            <!-- 🏠 HOME BUTTON -->
+            <a href="index.html" class="btn btn-home" style="text-decoration: none; position: absolute; left: 30px; top: 30px; padding: 12px 20px; background: green; color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🏠 HOME</a>
+
+            <!-- 📊 SIDE STATS (Left Side) -->
+            <div class="side-stats" style="position: absolute; left: 30px; top: 85px; background: #fdfdfd; border: 2px solid #27ae60; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-width: 170px;">
+                <div class="stat-line" style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>📊 TOTAL:</span> <span class="stat-val" id="topTotal" style="font-weight:900;">0</span></div>
+                <div class="stat-line" style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>🏆 ACHIEVED:</span> <span class="stat-val" id="topDone" style="color: #16a34a; font-weight:900;">0</span></div>
+                <div class="stat-line" style="display: flex; justify-content: space-between;"><span>⏳ PENDING:</span> <span class="stat-val" id="topPending" style="color: #e74c3c; font-weight:900;">0</span></div>
+            </div>
+
+            <!-- ✨ LIVE TRACKER (Right Side - Glassmorphism) -->
+            <div class="action-box" style="position: absolute; right: 30px; top: 30px; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.5); padding: 15px; border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); min-width: 210px; display: flex; flex-direction: column; gap: 10px; z-index: 100;">
+                <div style="font-size: 15px; color: red; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; text-align: center;">LIVE TRACKER</div>
+                <div onclick="filterByStatus('ENQUIRY')" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 2px;" class="status-link"><span style="color: #2980b9; font-weight: 800; font-size: 13px;">📝 ENQUIRY</span> <span id="cntEnquiry" style="color: #2980b9; font-weight: 900; font-size: 14px;">0</span></div>
+                <div onclick="filterByStatus('TRIAL ORDER')" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 2px;" class="status-link"><span style="color: #f39c12; font-weight: 800; font-size: 13px;">📦 TRIAL ORDER</span> <span id="cntTrialOrder" style="color: #f39c12; font-weight: 900; font-size: 14px;">0</span></div>
+                <div onclick="filterByStatus('TRIAL')" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 2px;" class="status-link"><span style="color: #9b59b6; font-weight: 800; font-size: 13px;">🧪 TRIAL</span> <span id="cntTrial" style="color: #9b59b6; font-weight: 900; font-size: 14px;">0</span></div>
+                <div onclick="filterByStatus('REGULAR ORDER')" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 2px;" class="status-link"><span style="color: #27ae60; font-weight: 800; font-size: 13px;">✅ REGULAR</span> <span id="cntRegular" style="color: #27ae60; font-weight: 900; font-size: 14px;">0</span></div>
+            </div>
+
+
+            <!-- 🎯 CENTER HEADINGS -->
+            <div style="text-align: center; margin-top: 5px;">
+                <h1 style="color: red; margin: 0; font-size: 2.2em; font-weight: 900;">VIMAG FOLLOW-UP</h1>
+                <div style="margin-top: 10px;">
+                    <h2 style="color: GREEN; margin: 0; font-size: 1.8em; font-weight: bold;">Staff Activity Tracker</h2>
+                </div>
+            </div>
+
+            <!-- 🛠️ ACTION BUTTONS -->
+            <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center; width: 100%;">
+                <button class="btn btn-add" onclick="openDistModal()" style="padding: 10px 15px; background: #27ae60; color: white; border-radius: 10px;"> + Add Staff </button>
+<!-- 🎯 TARGET BUTTON (Directs to separate Target.html page) -->
+<button class="btn" onclick="window.location.href='Sales Budget.html'" style="padding: 10px 15px; background: #e67e22; color: white; border-radius: 10px; font-weight: bold; cursor: pointer;">
+    🎯 TARGET
+</button>
+
+<!-- 👤 Staff Portfolio Dropdown Style Button -->
+    <div style="position: relative; display: inline-block;">
+        <select id="portfolioStaffSelect" onchange="if(this.value) openStaffPortfolio(this.value)" 
+            style="padding: 11px 15px; background: #2c3e50; color: white; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; outline: none; appearance: none; -webkit-appearance: none; min-width: 180px; text-align: center;">
+            <option value="" style="background: white; color: black;">👤 STAFF PORTFOLIO</option>
+            <!-- Staff names will flow here -->
+        </select>
+        <!-- Dropdown arrow icon -->
+        <span style="position: absolute; right: 10px; top: 13px; color: white; pointer-events: none; font-size: 10px;">▼</span>
+    </div>
+
+<!-- 📅 VISIT PLAN BUTTON DIRECTS TO VISIT SHEET -->
+<button class="btn" onclick="window.location.href='Plan.html'" style="padding: 10px 15px; background: #8e44ad; color: white; border-radius: 10px; font-weight: bold; cursor: pointer;">
+    🚗 VISIT PLAN
+</button>
+                <button class="btn btn-del" onclick="deleteDistributors()" style="padding: 10px 15px; background: #e74c3c; color: white; border-radius: 10px;"> 🗑️ Delete Selected </button>
+            </div>
+        </div>
+
+        <!-- 🏢 Staff Cards -->
+        <div id="distributorList" style="padding: 10px 20px;"></div>
+    </div>
+    <!-- 📦 HOME CONTENT END -->
+
+    <!-- 📋 2. FULL SCREEN GLASS STATUS TABLE (Corrected with Action Fix) -->
+<!-- 📋 2. STATUS REPORT WITH HEADER & CLEAN TABLE -->
+<div id="statusTableArea" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; overflow-y: auto; padding: 20px 10px;">
+    
+    <!-- Outer Card with Green Border -->
+    <div style="max-width: 1100px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; min-height: fit-content; margin-bottom: 50px;">
+        
+        <!-- 🎯 1. HEADER BOX (Branding) -->
+<div id="printHeaderBox" style="border: 2.5px solid #27ae60; background: #fdfdf5;; padding: 25px; border-radius: 15px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+            
+            <!-- Logo Top Center -->
+            <img src="Logo.jpeg" style="width: 100px; height: auto; margin-bottom: 12px;" alt="Logo">
+
+            <!-- Company Name & Title -->
+            <div style="text-align: center;">
+                <h1 style="margin: 0; color: #27ae60; font-size: 29px; font-weight: 900; text-transform: uppercase; font-family: 'Times New Roman';">Vimag Industrial Solutions</h1>
+                <h2 id="statusTableTitle" style="margin: 8px 0 0 0; color: red; font-size: 23px; font-weight: bold; font-family: 'Times New Roman';">ENQUIRY</h2>
+            </div>
+
+            <!-- Print Button (Left Bottom) -->
+            <div onclick="window.print()" class="print-hidden" style="position: absolute; left: 20px; bottom: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px; color: #333; font-weight: bold; font-size: 14px; text-decoration: underline;">
+                🖨️ PRINT
+            </div>
+
+            <!-- Close Button (Right Top) -->
+            <span onclick="closeStatusTable()" class="print-hidden" style="position: absolute; right: 20px; top: 15px; font-size: 35px; cursor: pointer; color: #ff4757; font-weight: 900; line-height: 0.6;">&times;</span>
+        </div>
+            
+            <div style="overflow-x:auto; background: rgba(255, 255, 255, 0.9); border-radius: 0px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #2c3e50; color: white;">
+                            <th style="padding:18px; text-align:center;">S.No</th>             
+<th width="160"> <select id="statusStaffFilter" onchange="applyStatusStaffFilter()" 
+                style="width: 100%; border: none; background: #27ae60; color: white; font-weight: bold; font-size: 16px; cursor: pointer; outline: none; appearance: auto; -webkit-appearance: menulist; font-family: Times New Roman; text-align: center;">
+                <option value="ALL">STAFF NAME</option>
+                </select>          
+        </th>
+                            <th style="padding:18px; text-align:left;">CUSTOMER</th>
+                            <th style="padding:18px; text-align:left;">BRAND</th>
+                            <th style="padding:18px; text-align:left;">PRODUCT</th>
+                            <th style="padding:18px; text-align:left;">REMARKS</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="statusTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE 2: DETAILS -->
+<div id="detailsPage" style="display:none;">
+    <div class="header-box" style="display: block;">
+        <button class="btn btn-home" onclick="showHome()">⬅ HOME</button>
+        <button class="btn print-hidden" onclick="window.print()" style="position: absolute; right: 20px; top: 20px; background: BLACK; color: white;">
+    🖨️ PRINT SHEET
+</button>
+
+        <h1 style="color: RED; margin: 0; font-size: 2em; text-align: center;">VIMAG INDUSTRIAL SOLUTIONS</h1>
+        <h2 style="color: GREEN; margin: 5px 0; font-size: 2.0em; text-align: center;">Staff Log Sheet</h2>
+        <h3 id="activeDistTitle" style="color: PURPLE; font-size: 1.7em; margin: 5px 0; text-align: center;">Distributor Name</h3>
+        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+            <button class="btn btn-add" onclick="openLogModal()">+ New Entry</button>
+<button class="btn" style="background: ORANGE; color: white;" onclick="openEditModal()">Update</button>
+
+            <button class="btn btn-del" onclick="deleteLogs()">Delete Selected</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th width="40"><input type="checkbox" id="masterCheck" onclick="toggleAllLogs()"></th>
+                <th width="40">S.No</th>
+                <th>Customer Name</th> 
+                <th>Brand Name</th>
+                <th>Product Detail</th>
+                <th>Follow-up</th>
+                 <th>Remarks</th>
+                <th width="160"> <select id="finalStatusFilter" onchange="loadLogs()" 
+                style="width: 100%; border: none; background: #27ae60; color: white; font-weight: bold; font-size: 16px; cursor: pointer; outline: none; appearance: auto; -webkit-appearance: menulist; font-family: Times New Roman; text-align: left;">
+                <option value="ALL">STATUS</option>
+                <option value="ACHIEVED">ACHIEVED</option>
+                <option value="PENDING">PENDING</option>
+            </select>
+        
+</th>
+<th>Target Month</th>
+            </tr>
+        </thead>
+        <tbody id="logTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Modals -->
+<div id="distModal" class="modal"><div class="modal-content">
+    <h2 style="color: #27ae60; text-align: center; margin-top:0;">New Customer</h2>
+    <label>Customer Name:</label>
+    <input type="text" id="newDistName" placeholder="Enter Name">
+    <button class="btn btn-add" style="width:100%; margin-top:20px" onclick="saveDistributor()">SAVE</button>
+    <button class="btn" style="width:100%; margin-top:10px; background:#ddd" onclick="closeModals()">Cancel</button>
+</div></div>
+
+<div id="logModal" class="modal"><div class="modal-content">
+    <h2 style="color: #27ae60; text-align: center; margin-top:0;">New Entry</h2>
+    <label>Customer Name:</label>
+    <input type="text" id="inCustName" placeholder="Enter Customer Name">
+
+    <label>Brand Name:</label>
+    <input type="text" id="inBrand" placeholder="Brand Name">
+
+    <label>Product Details:</label>
+    <input type="text" id="inProduct" placeholder="Product specs">
+
+    <label>Remarks:</label>
+    <input type="text" id="inRemarks" placeholder="Remarks">
+<label>Target Month:</label>
+<select id="inTargetMonth" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: Times New Roman; font-weight: bold;">
+    <option value="JANUARY">JANUARY</option>
+    <option value="FEBRUARY">FEBRUARY</option>
+    <option value="MARCH">MARCH</option>
+    <option value="APRIL">APRIL</option>
+    <option value="MAY">MAY</option>
+    <option value="JUNE">JUNE</option>
+    <option value="JULY">JULY</option>
+    <option value="AUGUST">AUGUST</option>
+    <option value="SEPTEMBER">SEPTEMBER</option>
+    <option value="OCTOBER">OCTOBER</option>
+    <option value="NOVEMBER">NOVEMBER</option>
+    <option value="DECEMBER">DECEMBER</option>
+</select>
+    <label>Follow-up Status:</label>
+    <select id="inStatus">
+        <option value="ENQUIRY">ENQUIRY</option>
+        <option value="TRIAL">TRIAL</option>
+        <option value="TRIAL ORDER">TRIAL ORDER</option>
+        <option value="REGULAR ORDER">REGULAR ORDER</option>
+    </select>
+    <button class="btn btn-add" style="width:100%; margin-top:20px" onclick="saveLog()">SAVE LOG</button>
+    <button class="btn" style="width:100%; margin-top:10px; background:#ddd" onclick="closeModals()">Discard</button>
+</div></div>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+
+  // 1. Local Warehouse (Dexie) Setup
+    const localDB = new Dexie("VimagFollowUpDB");
+    localDB.version(1).stores({ 
+        customers: '++id,name', 
+        logs: '++id,custId,brand,product,status,isDone' 
+    });
+    // 2. Cloud Bridge (Firebase) Setup
+    const firebaseConfig = {
+        apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+        databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+        projectId: "vimag-database",
+        appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const cloudDB = firebase.database();
+    let activeCustId = null;
+let editModeId = null; 
+let currentStatusData = [];
+async function loadCustomers() {
+    // 🛡️ Data Fetch (Local Warehouse)
+    const list = await localDB.customers.toArray();
+    const allLogs = await localDB.logs.toArray();
+
+
+    
+ const enqCount = allLogs.filter(l => l.status === "ENQUIRY").length;
+    const trialCount = allLogs.filter(l => l.status === "TRIAL").length;
+    const trialOrderCount = allLogs.filter(l => l.status === "TRIAL ORDER").length;
+    const regularOrderCount = allLogs.filter(l => l.status === "REGULAR ORDER").length;
+
+// UI-la right side counts-ah update panrom
+    if(document.getElementById('cntEnquiry')) document.getElementById('cntEnquiry').innerText = enqCount;
+    if(document.getElementById('cntTrial')) document.getElementById('cntTrial').innerText = trialCount;
+    if(document.getElementById('cntTrialOrder')) document.getElementById('cntTrialOrder').innerText = trialOrderCount;
+    if(document.getElementById('cntRegular')) document.getElementById('cntRegular').innerText = regularOrderCount;
+
+
+    // 📊 Calculation Logic (Accuracy Fix)
+   const total = allLogs.length;
+const done = allLogs.filter(l => Boolean(l.isDone)).length; // converts any truthy value to true
+const pending = total - done;
+
+    // 🚀 Dashboard UI Update
+    document.getElementById('topTotal').innerText = String(total);
+    document.getElementById('topDone').innerText = String(done);
+    document.getElementById('topPending').innerText = String(pending);
+
+    // 🏢 Customer List Rendering
+    const distContainer = document.getElementById('distributorList');
+    if (distContainer) {
+        distContainer.innerHTML = list.map(c => `
+            <div class="dist-card" onclick="viewDetails(${c.id}, '${c.name}')">
+                <input type="checkbox" class="dist-check" value="${c.id}" onclick="event.stopPropagation()">
+                <div class="dist-name" style="margin-left: 15px;">${c.name.toUpperCase()}</div>
+                <div style="font-size: 12px; color: #27ae60; font-weight:bold;">OPEN LOG SHEET ❯</div>
+            </div>`).join('');
+    }
+}
+function startSync() {
+    // Firebase customers list-ai listen pannum
+    cloudDB.ref('vimag_followup/customers').on('value', async (snap) => {
+        const data = snap.val();
+        if (data) {
+            await localDB.customers.clear();
+            await localDB.customers.bulkPut(Object.values(data));
+            loadCustomers();
+        }
+    });
+
+    // Firebase logs list-ai listen pannum
+    cloudDB.ref('vimag_followup/logs').on('value', async (snap) => {
+        const data = snap.val();
+        if (data) {
+            await localDB.logs.clear();
+            await localDB.logs.bulkPut(Object.values(data));
+            if (activeCustId) loadLogs();
+            loadCustomers();
+        }
+    });
+}
+    async function loadLogs() {
+    // 🛡️ Safe Fetch: activeCustId check panni localDB-la irundhu edukkom
+    if (!activeCustId) return;
+    
+     // 1. Database-la irundhu data fetch panrom
+    let data = await localDB.logs.where('custId').equals(activeCustId).toArray();
+
+     // 2. 🎯 FINAL STATUS DROPDOWN FILTER
+    const filterEl = document.getElementById('finalStatusFilter');
+    const filterVal = filterEl ? filterEl.value : "ALL";
+
+    let filteredData = data;
+    if (filterVal !== "ALL") {
+        if (filterVal === "ACHIEVED") {
+            // isDone true-ah irukura items (Trophy rows)
+            filteredData = data.filter(l => l.isDone === true || l.isDone === "true");
+        } else if (filterVal === "PENDING") {
+            // isDone false-ah irukura items (Pending rows)
+            filteredData = data.filter(l => !l.isDone || l.isDone === false || l.isDone === "false");
+        }
+    }
+  filteredData.sort((a, b) => {
+        const aDone = a.isDone === true || a.isDone === "true";
+        const bDone = b.isDone === true || b.isDone === "true";
+        return (aDone === bDone) ? 0 : aDone ? 1 : -1;
+    });
+ const tbody = document.getElementById('logTableBody');
+    if (tbody) {
+        // 4. ✨ Filter & Sorted data-vai safe literal format layout-il render panrom
+        tbody.innerHTML = filteredData.map((l, index) => {
+            const isDoneChecked = l.isDone === true || l.isDone === "true";
+            const rowClassName = isDoneChecked ? "completed-row" : "";
+            const isCheckedAttr = isDoneChecked ? "checked" : "";
+            const statusTextColor = isDoneChecked ? "#16a34a" : "red";
+            const statusBadgeText = isDoneChecked ? "🏆 ACHIEVED" : "PENDING";
+
+            return `
+            <tr class="${rowClassName}">
+                <td><input type="checkbox" class="log-check" data-id="${l.id}"></td>
+                <td>${index + 1}</td>
+                <td style="color:black;">${l.customerName || '-'}</td>
+                <td class="brand-text">${(l.brand || '').toUpperCase()}</td>
+                <td style="text-align:left;">${l.product || '-'}</td>
+                <td>
+                    <span class="status-badge" style="background:${getStatusColor(l.status)}">
+                        ${l.status}
+                    </span>
+                </td>
+                <td>${l.remarks || '-'}</td>
+                <td>
+                    <div style="display:flex; align-items:center; justify-content:flex-start; gap:8px;">
+                        <input type="checkbox" ${isCheckedAttr} onclick="toggleDone(${l.id}, ${l.isDone})">
+                        <span style="font-size:15px; font-weight:bold; color:${statusTextColor}">
+                            ${statusBadgeText}
+                        </span>
+                    </div>
+                </td>
+                <td style="font-weight:bold; color:PURPLE;">${l.targetMonth || '-'}</td>
+            </tr>`;
+        }).join('');    }
+}
+   function getStatusColor(s) {
+    const colors = {
+        'REGULAR ORDER': '#16a34a',
+        'TRIAL ORDER': 'brown',
+        'TRIAL': 'red'
+    };
+    // Returns the color from the object, or the default blue if not found
+    return colors[s] || '#2980b9';
+}
+
+
+    function showHome() { 
+    document.getElementById('homePage').style.display = 'block'; 
+    document.getElementById('detailsPage').style.display = 'none'; 
+    activeCustId = null; // Safety reset
+    loadCustomers(); 
+}
+
+function viewDetails(id, name) { 
+    activeCustId = id; 
+    document.getElementById('homePage').style.display = 'none'; 
+    document.getElementById('detailsPage').style.display = 'block'; 
+    document.getElementById('activeDistTitle').innerText = name; 
+    loadLogs(); 
+}
+
+// --- Modals ---
+function openDistModal() { 
+    document.getElementById('distModal').style.display = 'flex'; 
+}
+
+function openLogModal() { 
+    document.getElementById('logModal').style.display = 'flex'; 
+    document.querySelector('#logModal .btn-add').innerText = "SAVE LOG"; // Button text-ah reset panrom
+
+}
+
+function closeModals() { 
+    document.getElementById('distModal').style.display = 'none'; 
+    document.getElementById('logModal').style.display = 'none'; 
+    
+    // ✨ Cleanup: Clear inputs so next time modal is fresh
+    document.getElementById('newDistName').value = "";
+    document.getElementById('inBrand').value = "";
+    document.getElementById('inProduct').value = "";
+document.getElementById('inTargetMonth').selectedIndex = 0;
+    document.getElementById('inStatus').selectedIndex = 0;
+}
+  async function saveDistributor() {
+    const nameInput = document.getElementById('newDistName');
+    const n = nameInput.value.trim().toUpperCase();
+    
+    if(!n) return alert("Customer name type pannunga! ⚠️");
+
+    try {
+        // 1. Exact Match Check (Directly from DB)
+        // .toArray() panni check panradha vida direct "where" clause efficient
+        const existing = await localDB.customers.where('name').equals(n).first();
+        
+        if(existing) {
+            return alert(`"${n}" already exists in your list! 🚩`);
+        }
+
+        // 2. Local Save
+        const id = await localDB.customers.add({ name: n });
+        
+        // 3. Cloud Save
+        if (typeof cloudDB !== 'undefined') {
+            await cloudDB.ref(`vimag_followup/customers/${id}`).set({ id, name: n });
+        }
+
+        // 4. Cleanup & Refresh
+        nameInput.value = "";
+        closeModals(); 
+        await loadCustomers();
+        
+        console.log("Saved Successfully! ✅");
+
+    } catch (err) {
+        console.error("Save Error:", err);
+        alert("Error saving! Check console.");
+    }
+}
+  async function deleteDistributors() {
+    const checks = document.querySelectorAll('.dist-check:checked');
+    if (checks.length === 0) return alert("Select customer! 🗑️");
+    
+    if(!confirm("Motha device-layum delete aagidum. OK-va?")) return;
+
+    for(let c of checks) {
+        const id = Number(c.value);
+        
+        // 1. Cloud-la customer-ai thooku
+        await cloudDB.ref(`vimag_followup/customers/${id}`).remove();
+        
+        // 2. Cloud-la andha customer logs-ai thooku (Mukhya Step)
+        const snapshot = await cloudDB.ref('vimag_followup/logs').orderByChild('custId').equalTo(id).once('value');
+        if (snapshot.exists()) {
+            const logs = snapshot.val();
+            for (let logId in logs) {
+                await cloudDB.ref(`vimag_followup/logs/${logId}`).remove();
+            }
+        }
+
+        // 3. Local-la thooku
+        await localDB.customers.delete(id);
+        await localDB.logs.where('custId').equals(id).delete();
+    }
+    loadCustomers();
+}
+async function saveLog() {
+    const cn = document.getElementById('inCustName').value.trim(); // ✨ New
+    const b = document.getElementById('inBrand').value.trim();
+    const p = document.getElementById('inProduct').value.trim();
+    const s = document.getElementById('inStatus').value;
+    const r = document.getElementById('inRemarks').value.trim(); // ✨ New
+const tm = document.getElementById('inTargetMonth').value;
+
+    if(!cn || !b || !p) return alert("Customer, Brand and Product details fill pannunga! 📦");
+
+    let logData = { 
+        custId: activeCustId, 
+        customerName: cn.toUpperCase(), // 👈 Idhu dhaan table-la varanum
+        brand: b.toUpperCase(),
+        product: p, 
+        remarks: r, // 👈 Idhu dhaan table-la varanum
+    targetMonth: tm, // 👈 புது ஃபீல்ட்
+
+        status: s, 
+        isDone: false 
+
+    };
+
+    try {
+        if (editModeId) {
+            logData.id = editModeId;
+            await localDB.logs.put(logData);
+            // .set use pannunga, path correct-ah irukanum
+            await cloudDB.ref('vimag_followup/logs/' + editModeId).set(logData);
+            editModeId = null;
+        } else {
+            const id = await localDB.logs.add(logData);
+            logData.id = id;
+            await cloudDB.ref('vimag_followup/logs/' + id).set(logData);
+        }
+        closeModals();
+        loadLogs();
+        loadCustomers();
+    } catch (err) {
+        console.log("Error details:", err); // Console-la check panna
+        alert("Sync error! Check Firebase Rules.");
+    }
+}
+      async function toggleDone(id, status) { 
+    const newStatus = !status;
+
+    // 1. Local Update (Warehouse)
+    await localDB.logs.update(id, { isDone: newStatus }); 
+
+    // 2. ☁️ Cloud Update (Signal to other devices)
+    cloudDB.ref(`vimag_followup/logs/${id}/isDone`).set(newStatus);
+
+    // 3. UI Refresh
+    loadLogs(); 
+    loadCustomers(); // Dashboard counts refresh aagum
+}
+
+async function deleteLogs() {
+    const checks = document.querySelectorAll('.log-check:checked');
+    if (checks.length === 0) return alert("Select entries first!");
+
+    let hasUnticked = false;
+    for (let c of checks) {
+        // Use localDB instead of db
+        const entry = await localDB.logs.get(Number(c.dataset.id));
+        if (entry && !entry.isDone) {
+            hasUnticked = true;
+            break;
+        }
+    }
+
+    if (!hasUnticked) return alert("Achieved items-ai delete panna mudiyaathu!");
+
+    if (!confirm("Are you sure you want to delete the selected pending items?")) return;
+
+    for (let c of checks) {
+        const logId = Number(c.dataset.id);
+        const logEntry = await localDB.logs.get(logId);
+
+        // ✅ Pending items mattum thaan delete aagum
+        if (logEntry && !logEntry.isDone) {
+            // 1. Local Delete (Dexie)
+            await localDB.logs.delete(logId);
+            
+            // 2. ☁️ Cloud Delete (Firebase) - Idhu dhaan sync-ku mukkiyam
+            cloudDB.ref(`vimag_followup/logs/${logId}`).remove();
+        }
+    }
+
+    await loadLogs();
+    await loadCustomers();
+    console.log("Pending logs purged from Local & Cloud! 🎯");
+}
+async function openEditModal() {
+    const checks = document.querySelector('.log-check:checked'); // Oru check matthum edukkum
+    
+    if (!checks) return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
+
+    const logId = Number(checks.dataset.id);
+    const entry = await localDB.logs.get(logId);
+
+    if (entry) {
+        editModeId = logId; 
+    document.getElementById('inCustName').value = entry.customerName || ""; // ✨ Idhai add pannunga
+
+        document.getElementById('inBrand').value = entry.brand;
+        document.getElementById('inProduct').value = entry.product;
+        document.getElementById('inStatus').value = entry.status;
+          document.getElementById('inRemarks').value = entry.remarks || ""; // ✨ Idhai add pannunga
+document.getElementById('inTargetMonth').value = entry.targetMonth || "JANUARY";         
+ document.getElementById('logModal').style.display = 'flex';
+        document.querySelector('#logModal .btn-add').innerText = "UPDATE LOG 🔄";
+    }
+}
+async function filterByStatus(selectedStatus) {
+    const homeMain = document.getElementById('mainHomeContent');
+    const tableArea = document.getElementById('statusTableArea');
+    const tbody = document.getElementById('statusTableBody');
+    const title = document.getElementById('statusTableTitle');
+    const staffDrop = document.getElementById('statusStaffFilter'); // Filter Dropdown ID
+
+    // 🚀 1. Glass Blur Effect
+    if (homeMain) {
+        homeMain.style.filter = "blur(15px) saturate(160%)";
+        homeMain.style.pointerEvents = "none";
+    }
+
+    tableArea.style.display = 'flex'; // Sharp boxes gaps balanced-ah iruka Flex
+    window.scrollTo(0, 0);
+
+    title.innerText = selectedStatus + " PIPELINE";
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:left; padding:80px;'>Syncing Cloud... ⚡</td></tr>";
+
+    try {
+        const logsSnap = await cloudDB.ref('vimag_followup/logs').once('value');
+        const custSnap = await cloudDB.ref('vimag_followup/customers').once('value');
+        const logs = logsSnap.val() || {};
+        const custs = custSnap.val() || {};
+
+        // Data Fetch & Map
+        currentStatusData = Object.values(logs).filter(l => l.status === selectedStatus).map(log => {
+            const staff = Object.values(custs).find(s => s.id === log.custId);
+            return { ...log, staffName: staff ? staff.name : "Unknown Staff" };
+        });
+
+        // 🚀 2. STAFF NAME FETCH FOR FILTER (^)
+        if (staffDrop) {
+            staffDrop.innerHTML = '<option value="ALL">STAFF NAME</option>'; 
+            const uniqueStaff = [...new Set(currentStatusData.map(r => r.staffName.toUpperCase()))].sort();
+            uniqueStaff.forEach(name => {
+                let opt = document.createElement("option");
+                opt.value = name;
+                opt.text = name;
+                opt.style.color = "black";
+                staffDrop.add(opt);
+            });
+        }
+
+        renderStatusReport(currentStatusData);
+    } catch (e) { 
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:80px; color:red;'>Sync Error!</td></tr>";
+    }
+}
+
+// 🚀 4. COMMON RENDER FUNCTION (Sharp lines, No dark boxes)
+function renderStatusReport(data) {
+    const tbody = document.getElementById('statusTableBody');
+
+    if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:60px; color:red;'>No Records Found!</td></tr>";
+        return;
+    }
+ // 🔄 SORTING ENGINE: isDone false (Pending) mela varum, isDone true (Achieved) keezha pogum
+    const sortedData = [...data].sort((a, b) => {
+        const aDone = a.isDone === true || a.isDone === "true";
+        const bDone = b.isDone === true || b.isDone === "true";
+        return (aDone === bDone) ? 0 : aDone ? 1 : -1;
+    });
+    tbody.innerHTML = data.map((r, i) => `
+
+
+        <tr style="border-bottom: 1px solid #eee; background: white;">
+            <td style="padding:15px; font-weight:bold; text-align:left; border: 1px solid black;">${i + 1}</td>
+            <td style="padding:15px; font-weight:900; color:#c2185b; border: 1px solid black;">${r.staffName.toUpperCase()}</td>
+            <td style="padding:15px; border: 1px font-weight:600;">${r.customerName || '-'}</td>
+            <td style="padding:15px; color:#2980b9; font-weight:bold; border: 1px solid black;">${r.brand.toUpperCase()}</td>
+            <td style="padding:15px; border: 1px solid black;">${r.product}</td>
+            <td style="padding:18px; font-size:14px; color:black; font-family: 'Times New Roman'; border: 1px solid black;">${r.remarks || '-'}</td>
+        </tr>`).join('');
+
+}
+// 🏠 BACK TO HOME Logic
+function closeStatusTable() {
+    const homeMain = document.getElementById('mainHomeContent');
+    const tableArea = document.getElementById('statusTableArea');
+
+    // 1. 🚀 TABLE-ah mothama maraikkiroam
+    if (tableArea) {
+        tableArea.style.display = 'none';
+    }
+
+    // 2. 🚀 HOME CONTENT-ah thirumba kaatturoam (display: block mukhya)
+    if (homeMain) {
+        homeMain.style.display = 'block'; // Headings and Cards thirumba varum
+        homeMain.style.filter = "none";  // Blur-ah thookudhu
+        homeMain.style.pointerEvents = "auto"; // Buttons work aagum
+    }
+
+    window.scrollTo(0, 0); // Page-ah mela reset pannum
+    console.log("Back to Home Success! ✅");
+}function toggleAllLogs() { 
+    const m = document.getElementById('masterCheck').checked; 
+    document.querySelectorAll('.log-check').forEach(c => c.checked = m); 
+}
+function applyStatusStaffFilter() {
+    const filterVal = document.getElementById('statusStaffFilter').value;
+    let filtered = (filterVal === "ALL") 
+        ? currentStatusData 
+        : currentStatusData.filter(r => r.staffName.toUpperCase() === filterVal.toUpperCase());
+    renderStatusReport(filtered);
+}
+
+function showHome() { 
+    document.getElementById('homePage').style.display='block'; 
+    document.getElementById('detailsPage').style.display='none'; 
+    loadCustomers(); 
+}
+cloudDB.ref('vimag_followup/customers').on('child_removed', async (snapshot) => {
+    const id = Number(snapshot.key);
+    await localDB.customers.delete(id);
+    await localDB.logs.where('custId').equals(id).delete();
+    loadCustomers(); // UI refresh
+});
+
+cloudDB.ref('vimag_followup/logs').on('child_removed', async (snapshot) => {
+    const id = Number(snapshot.key);
+    await localDB.logs.delete(id);
+    loadLogs();
+    loadCustomers(); // Counts refresh aagum
+});
+async function loadStaffToPortfolioDropdown() {
+    const dropdown = document.getElementById('portfolioStaffSelect');
+    if (!dropdown) return;
+
+    try {
+        // Master Warehouse (Dexie) DB-ilirundhu entries edukkom
+        // Note: Unga DB name 'VimagMasterDB' nu check pannikonga
+        const vimagDB = new Dexie("VimagMasterDB");
+        vimagDB.version(1).stores({ brands: 'id, brand, customerName, artNo, handledBy' });
+        
+        const allEntries = await vimagDB.brands.toArray();
+        
+        // 11 brands-ilum work panra staff names-ai unique-ah filter panrom
+        const uniqueStaff = [...new Set(allEntries
+            .filter(i => i.handledBy && i.handledBy !== "" && i.id !== "_id_lock")
+            .map(i => i.handledBy.trim().toUpperCase())
+        )].sort();
+
+        // Dropdown-la names flow aagum
+        uniqueStaff.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            opt.style.background = "white";
+            opt.style.color = "black";
+            dropdown.appendChild(opt);
+        });
+        
+        console.log("Portfolio Dropdown: " + uniqueStaff.length + " staff loaded.");
+    } catch (err) {
+        console.error("Staff flow error:", err);
+    }
+}
+
+// 2. Staff name click panna Portfolio.html-kku redirect panna
+function openStaffPortfolio(staffName) {
+    if (!staffName) return;
+    // URL-la staff name-ah anupi Portfolio.html report-ah open panrom
+    window.location.href = `Portfolio.html?name=${encodeURIComponent(staffName)}`;
+}
+// Start the app
+window.onload = function() {
+ 
+ loadStaffToPortfolioDropdown();    // கிளவுட் சிங்க்
+    startSync(); 
+};
+</script>
+</body>
+</html>

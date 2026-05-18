@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vimag - Financial Reports</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+
+    <style>
+body { 
+    font-family: 'Times New Roman', serif; 
+    
+    /* 1. Image Background Set Panniyaachu */
+    background: url('Background2.jpeg') no-repeat center center fixed; 
+    background-size: cover; 
+    
+    /* 2. Full Screen Height & Spacing */
+    margin: 0; 
+    padding: 30px; 
+    text-align: center; 
+    min-height: 100vh;
+    
+    /* 3. Content-ah centre-la vekka */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}        .report-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 1400px; margin: 0 auto; border: 3px solid #27ae60; }
+        h1 { color: #27ae60; margin: 0; font-size: 2.2em; }
+        .filter-section { margin: 25px 0; display: flex; justify-content: center; gap: 15px; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 10px; }
+        select { padding: 10px; border-radius: 8px; border: 2.5px solid #27ae60; font-family: 'Times New Roman'; font-size: 14px; font-weight: bold; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th { background-color: green; color: white; padding: 12px; text-transform: uppercase; font-size: 13px; border: 1px solid #219150; position: relative; }
+        .th-filter { background: #f2f2f2; color: #333; border: 1px solid #ccc; font-size: 12px; margin-top: 5px; width: 100%; border-radius: 4px; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 14px; color: black; }
+        .total-val { color: #2980b9; font-weight: bold; }
+        .achieved-val { color: #27ae60; font-weight: bold; }
+        .balance-val { color: #e74c3c; font-weight: bold; }
+        .grand-total-row { background: #f2f2f2; font-weight: bold; font-size: 16px; }
+        .back-btn { position: absolute; left: 20px; top: 20px; background: #2c3e50; color: white; padding: 12px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+        .print-btn { background: BLACK; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Times New Roman'; }
+@media print {
+    /* 1. பின்னணி பச்சை நிறம் வராமல் முழுமையாக வெள்ளையாக்க */
+    html, body, .report-card {
+        background: white !important;
+        background-image: none !important;
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* 2. பட்டன்கள் மற்றும் பில்டர்களை மறைக்க */
+    .back-btn, .print-btn, .filter-section, .th-filter, header { 
+        display: none !important; 
+    }
+
+    /* 3. 🎯 டேபிள் கோடுகள் - பாக்ஸ் முழுமையாக மூடி வர (Clean Box Fix) */
+    table { 
+        width: 100% !important; 
+        /* 'separate' பயன்படுத்துவதால் கோடுகள் ஒன்றோடொன்று மோதாமல் தெளிவாகத் தெரியும் */
+        border-collapse: separate !important; 
+        border-spacing: 0 !important;
+        /* வெளிப்பக்கக் கோடு - சுற்றிலும் ஒரே சீராக இருக்கும் */
+        border: 1px solid black !important; 
+        margin-top: 20px !important;
+        margin-bottom: 50px !important;
+        background-color: white !important;
+    }
+
+    th, td { 
+        /* இடது பக்கம் மற்றும் கீழ்ப்பக்கம் மட்டும் கோடு கொடுத்தால் 'Double line' வராது */
+        border-left: 1px solid black !important;
+        border-bottom: 1px solid black !important;
+        padding: 10px !important; 
+        color: black !important;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* முதல் காலத்திற்கு (S.No) மட்டும் இடது பக்கக் கோடு தேவையில்லை (ஏற்கனவே table பார்டர் இருக்கும்) */
+    th:first-child, td:first-child {
+        border-left: none !important;
+    }
+
+    th { 
+        font-weight: bold !important;
+        text-transform: uppercase;
+        border-bottom: 1px solid black !important;
+        background-color: white !important;
+    }
+
+    /* 4. கிராண்ட் டோட்டல் வரிசை மற்றும் பாட்டம் லைன் பிக்ஸ் */
+    .grand-total-row td {
+        border-bottom: 1px solid black !important;
+        font-weight: bold !important;
+        background-color: white !important;
+    }
+
+    /* 5. அலைன்மென்ட்: கஸ்டமர் மற்றும் ப்ராடக்ட் பெயர்கள் இடது பக்கம் வர */
+    td:nth-child(3), td:nth-child(5) {
+        text-align: left !important;
+        padding-left: 10px !important;
+    }
+
+    /* மற்ற வேல்யூக்கள் சென்டராக இருக்கட்டும் */
+    td { text-align: center !important; }
+}
+    </style>
+</head>
+<body>
+
+<a href="index.html?view=master" class="back-btn">⬅ BACK TO HUB</a>
+
+<div class="report-card">
+    <img src="Logo.jpeg" width="120"><br>
+    <h1>Financial Performance Report</h1>
+
+    <div class="filter-section">
+        <select id="moSelect" onchange="generateReport('MONTHLY', this.value)">
+            <option value="">-- Choose Month --</option>
+            <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+            <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+            <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+        </select>
+
+        <select id="fySelect" onchange="generateReport('YEARLY', this.value)">
+            <option value="">-- Choose Year --</option>
+        </select>
+
+        <button class="print-btn" onclick="window.print()">🖨️PRINT REPORT</button>
+    </div>
+
+    <h3 id="reportTitle" style="color: RED;">Performance Analysis Report</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Brand <br> <select id="brandDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+                <th>Customer <br> <select id="custDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+                <th>Article No <br> 
+    <select id="artDrop" class="th-filter" onchange="applyTableFilter()"></select> 
+</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th id="dynamicQtyHeader">QTY</th> <!-- 🎯 7-வது காலம் (Dynamic Month Qty) -->
+                <th id="dynamicTargetHeader">TARGET</th>
+                <th id="dynamicAchievedHeader">ACHIEVED</th>
+                <th>Balance</th>
+                <th>Handled By <br> <select id="staffDrop" class="th-filter" onchange="applyTableFilter()"></select> </th>
+            </tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+        <tfoot>
+            <tr class="grand-total-row">
+                <td colspan="7" align="right">GRAND TOTAL:</td>
+                <td id="gT" class="total-val">0.00</td>
+                <td id="gA" class="achieved-val">0.00</td>
+                <td id="gB" class="balance-val">0.00</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+// கூகுள் ஸ்கிரிப்ட் லிங்க்
+const brands = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+    projectId: "vimag-database",
+    appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let CloudData = null;
+let masterData = [];
+window.onload = function() {
+    // 1. FY Dropdown Setup
+    const fySelect = document.getElementById('fySelect');
+    if (fySelect) {
+        for (let y = 2024; y <= 2039; y++) {
+            let option = document.createElement("option");
+            option.value = y;
+            option.text = y + "-" + (y + 1);
+            fySelect.add(option);
+        }
+    }
+
+    db.ref('vimag/brands').on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        console.log("Global Sync: Data from 11 Brands Received! ⚡");
+
+        const monthEl = document.getElementById('moSelect'); // Correct ID check
+        const yearEl = document.getElementById('fySelect');
+
+        const mVal = monthEl ? monthEl.value : "";
+        const yVal = yearEl ? yearEl.value : "";
+
+        // 🚀 Auto-Refresh logic when ANY device updates ANY brand
+        if (mVal !== "") {
+            generateReport('MONTHLY', mVal);
+        } else if (yVal !== "") {
+            generateReport('YEARLY', yVal);
+        }
+    });
+};
+async function syncAllData() {
+    const syncBtn = document.querySelector('.sync-btn') || { innerText: "" };
+    const originalText = syncBtn.innerText;
+    syncBtn.innerText = "Syncing Cloud... ⚡";
+
+    try {
+        // 🚀 OREY CALL-LA 11 BRANDS DATA-VUM VARUM
+        const snapshot = await db.ref('vimag/brands').once('value');
+        const allBrandsData = snapshot.val();
+
+        if (allBrandsData) {
+            // Local memory-ah update pannuvom (Backup and Report-kaga)
+            Object.keys(allBrandsData).forEach(brand => {
+                const brandObj = allBrandsData[brand];
+                const customerNames = Object.keys(brandObj);
+
+                // 1. Customer names panrom
+                localStorage.setItem(brand + '_customers', JSON.stringify(customerNames));
+
+                // 2. Ovvoru customer data-vaiyum save panrom
+                customerNames.forEach(cust => {
+                    const custData = Object.values(brandObj[cust]);
+        const storageKey = `${brand}_data_${cust}`; 
+
+ localStorage.setItem(storageKey, JSON.stringify(custData));                });
+            });
+            alert("Jet Speed Sync Complete! ✅");
+        }
+    } catch (e) {
+        console.error("Firebase Sync Error:", e);
+        alert("Sync Failed! Check connection.");
+    } finally {
+        syncBtn.innerText = originalText;
+    }
+}
+
+async function generateReport(type, value) {
+    if (!value || value === "") return;
+
+    const titleHeader = document.getElementById("reportTitle");
+    const targetCol = document.getElementById("dynamicTargetHeader");
+    const achievedCol = document.getElementById("dynamicAchievedHeader");
+
+    const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+    let selectedMonthName = type === "MONTHLY" ? months[Number(value)] : "";
+  // 🎯 Dynamic Header Update
+    const qtyHeader = document.getElementById("dynamicQtyHeader");
+    if (qtyHeader) {
+        qtyHeader.innerText = type === "MONTHLY" ? selectedMonthName + " QTY" : "QTY";
+    }
+    
+    // 2. Set the Title based on Type
+    if (type === "MONTHLY") {
+        titleHeader.innerText = selectedMonthName + " PERFORMANCE ANALYSIS REPORT";
+        if(targetCol) targetCol.innerText = selectedMonthName + " TARGET";
+        if(achievedCol) achievedCol.innerText = selectedMonthName + " ACHIEVED";
+
+    } else if (type === "YEARLY") {
+        titleHeader.innerText = "FY PERFORMANCE ANALYSIS REPORT";
+const fySelect = document.getElementById('fySelect');
+        const selectedYearText = fySelect.options[fySelect.selectedIndex].text;
+
+        if(targetCol) targetCol.innerText = selectedYearText + " TARGET";
+        if(achievedCol) achievedCol.innerText = selectedYearText + " ACHIEVED";
+    
+    }
+
+
+    const tbody = document.getElementById('reportBody') || document.getElementById('tB');
+    if (tbody) tbody.innerHTML = "<tr><td colspan='10' style='padding:20px;'>Deep Syncing Cloud... ⚡</td></tr>";
+    
+    const sV = Number(value);
+    const reportRef = db.ref('vimag/brands');
+    
+    reportRef.off();
+    reportRef.on('value', (snapshot) => {
+        const allData = snapshot.val();
+        masterData = [];
+        
+        if (allData) {
+            Object.keys(allData).forEach(brand => {
+                Object.keys(allData[brand]).forEach(cust => {
+                    const rawItems = allData[brand][cust];
+                    const entries = Array.isArray(rawItems) ? rawItems : Object.values(rawItems);
+                    
+                    entries.forEach(item => {
+    if (!item || item.id === "_id_lock" || item.artNo === "SYSTEM" || (item.id && item.id.startsWith("CUST-"))) return;
+                        let match = false;
+                        let rawDate = (item.date || item.Date || item.DATE || "").toString();
+
+                        if (rawDate) {
+                            let pts = rawDate.split(/[/|-]/);
+                            let itemMonth = null, itemYear = null;
+
+                            if (pts.length === 3) {
+                                let p1 = parseInt(pts[0]), p2 = parseInt(pts[1]), p3 = parseInt(pts[2]);
+
+                                // 🚀 HYBRID LOGIC: 
+                                // Laptop: 05/04/2026 (p2=4 -> April)
+                                // Mobile: 04/05/2026 (p2=5 -> May)
+                                if (p1 > 1000) { // YYYY-MM-DD
+                                    itemYear = p1; itemMonth = p2;
+                                } else if (p3 > 1000) { // DD/MM/YYYY
+                                    itemYear = p3; itemMonth = p2;
+                                } else { // DD/MM/YY
+                                    itemYear = p3 + 2000; itemMonth = p2;
+                                }
+                            }
+
+                            if (itemMonth && itemYear) {
+                                if (type === 'MONTHLY') {
+                                    // Dropdown starts from 0 (Jan), so Month 4-1 = index 3 (April)
+                                    if ((itemMonth - 1) === sV) match = true;
+                                } else if (type === 'YEARLY' && itemYear === sV) {
+                                    match = true;
+                                }
+                            }
+                        }
+
+                        if (match) {
+                            let p = parseFloat(item.price || 0);
+                            let t = parseInt(item.qty || 0);
+                            let a = parseInt(item.monthQty || item.MonthQty || 0);
+                                let achievedValue = p * a;
+    if (achievedValue > 0) {
+
+                            masterData.push({
+                                brand: brand,
+                                customer: cust,
+                                art: item.artNo || "-",
+                                prod: item.name || "-",
+                                price: p,
+            qty: a, // 🎯 'a' என்ற மதிப்பை 'qty' என்ற பெயரில் இங்கே சேமிக்கிறோம்
+
+                                curr: item.currency || "€",
+                                tV: p * t,
+                                aV: p * a,
+                                bV: (p * t) - (p * a),
+                                staff: (item.handledBy || "Unassigned").trim()
+                            });
+                        }
+}
+                    });
+                });
+            });
+        }
+
+        if (masterData.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='10' style='color:orange; padding:20px;'>No data found for this selection. 🔍</td></tr>";
+   // 2. 🚀 GRAND TOTAL RESET (Data illana ellathayum 0.00 aakiduvom)
+    const resetVal = "€ 0.00";
+    if(document.getElementById('gT')) document.getElementById('gT').innerText = resetVal;
+    if(document.getElementById('gA')) document.getElementById('gA').innerText = resetVal;
+    if(document.getElementById('gB')) document.getElementById('gB').innerText = resetVal;
+
+    // 3. Dropdowns-ah empty aakkiduvom
+    if (typeof initialFillDrops === "function") {
+        masterData = []; // Clear current masterData
+        initialFillDrops(); 
+    }
+} else {
+    // Data iruntha normal-ah table and totals render aagum
+    displayTable(masterData);
+    if (typeof initialFillDrops === "function") initialFillDrops();
+ setTimeout(() => {
+            const mo = document.getElementById('moSelect');
+            const fy = document.getElementById('fySelect');
+            if (mo) mo.selectedIndex = 0;
+            if (fy) fy.selectedIndex = 0;
+            console.log("Filters Reset Successfully ✅");
+        }, 500); 
+}     
+
+});
+}
+function initialFillDrops() {
+    fillDrop('brandDrop', new Set(masterData.map(m => m.brand)));
+    fillDrop('custDrop', new Set(masterData.map(m => m.customer)));
+    fillDrop('staffDrop', new Set(masterData.map(m => m.staff)));
+fillDrop('artDrop', new Set(masterData.map(m => m.art))); 
+}
+
+function fillDrop(id, set) {
+    let d = document.getElementById(id);
+    if (!d) return;
+    let currentVal = d.value; 
+    d.innerHTML = '<option value="">All</option>';
+    Array.from(set).sort().forEach(v => {
+        let opt = new Option(v, v);
+        if (v === currentVal) opt.selected = true;
+        d.add(opt);
+    });
+}
+
+function applyTableFilter() {
+    let b = document.getElementById('brandDrop').value;
+    let c = document.getElementById('custDrop').value;
+    let s = document.getElementById('staffDrop').value;
+    let a = document.getElementById('artDrop')?.value || ""; 
+
+    console.log("Filtering for:", b, c, s, a);
+
+    // 1. Data-வைச் சரியாக Filter செய்கிறோம்
+    let filtered = masterData.filter(item => {
+        return (b === "" || item.brand === b) && 
+               (c === "" || item.customer === c) && 
+               (s === "" || item.staff === s) && // இங்கே செமிகோலனுக்குப் பதில் && இருக்க வேண்டும்
+               (a === "" || String(item.art) === String(a)); 
+    });
+
+    displayTable(filtered); // Table அப்டேட் ஆகும்
+
+    // 2. ✨ DEEP CASCADING LOGIC:
+    // எதையாவது செலக்ட் செய்திருந்தால் மற்ற டிராப்டவுன்கள் மாறும்
+    if (b !== "" || c !== "" || s !== "" || a !== "") {
+        if (b === "") fillDrop('brandDrop', new Set(filtered.map(i => i.brand)));
+        if (c === "") fillDrop('custDrop', new Set(filtered.map(i => i.customer)));
+        if (s === "") fillDrop('staffDrop', new Set(filtered.map(i => i.staff)));
+        if (a === "") fillDrop('artDrop', new Set(filtered.map(i => i.art)));
+    } else {
+        // எல்லாம் காலியாக இருந்தால் பழையபடி எல்லா ஆப்ஷன்களையும் காட்டு
+        initialFillDrops();
+    }
+}
+// 🛑 Table-ஐ திரையில் காட்டும் முக்கியமான பங்க்ஷன்
+function displayTable(data) {
+    const tbody = document.getElementById('reportBody') || document.getElementById('productTableBody') || document.getElementById('tB');
+    if(!tbody) return;
+    
+    let rowsHtml = ""; // Build string to prevent blinking ⚡
+    let gT = 0, gA = 0, gB = 0;
+    let visibleIndex = 1; // 🎯 வரிசை எண் சரியாக வர
+
+
+    data.forEach((item, index) => {
+        if (item.aV > 0) {
+
+        gT += item.tV; 
+        gA += item.aV; 
+        gB += item.bV;
+        
+        rowsHtml += `<tr>
+                <td>${visibleIndex++}</td> 
+            <td style="font-weight:bold; color:#c2185b;">${item.brand}</td>
+            <td>${item.customer}</td>
+            <td>${item.art}</td>
+            <td style="text-align:left;"><strong>${item.prod}</strong></td>
+            <td>${item.curr}${item.price.toFixed(2)}</td>
+    <!-- 🎯 இதோ அந்த 100% சரியான Quantity (10) -->
+    <td style="font-weight:bold; color:#2980b9;">${item.qty}</td> 
+
+            <td style="font-weight:bold;">${item.curr}${item.tV.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="color:#27ae60; font-weight:bold;">${item.curr}${item.aV.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="color:#e74c3c; font-weight:bold;">${item.curr}${item.bV.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="font-size:12px;">${item.staff}</td>
+        </tr>`;
+}    
+});
+
+    tbody.innerHTML = rowsHtml || "<tr><td colspan='10' style='padding:20px;'>No matching records found. 🔍</td></tr>";
+
+    // 💰 கிராண்ட் டோட்டல்G
+ 
+    const fmt = (num) => "€ " + num.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+    
+    if(document.getElementById('gT')) document.getElementById('gT').innerText = fmt(gT);
+    if(document.getElementById('gA')) document.getElementById('gA').innerText = fmt(gA);
+    if(document.getElementById('gB')) document.getElementById('gB').innerText = fmt(gB);
+    
+    console.log("Report Rendered Successfully ✅");
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+

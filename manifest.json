@@ -1,0 +1,22 @@
+{
+  "name": "VIMAG Database",
+  "short_name": "VIMAG",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3498db",
+  "icons": [
+    {
+      "src": "Vimag.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any" 
+    },
+    {
+      "src": "Vimag.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
