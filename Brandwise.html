@@ -274,53 +274,69 @@
             } catch (err) { console.log("Local Database Uninitialized: ", err); }
         }
 function loadUniversalCloudLiveData() {
+    activeMonthHeaders = JSON.parse(localStorage.getItem('vimag_active_report_months')) || ["JAN-26", "FEB-26", "MAR-26"];
+
     const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
-    if (subHeaderRow) subHeaderRow.innerHTML = activeMonthHeaders.map(m => `<th>${m}</th>`).join('');
+    if (subHeaderRow) {
+        subHeaderRow.innerHTML = activeMonthHeaders.map(m => 
+            `<th style="background: #f39c12; color: white; font-size: 13px; padding: 6px 4px; border: 1px solid black !important; min-width: 95px; max-width: 95px; width: 95px; box-sizing: border-box;">${m}</th>`
+        ).join('');
+    }
     
     const mainHeader = document.getElementById('achievedMainHeader');
-    if (mainHeader) mainHeader.setAttribute('colspan', activeMonthHeaders.length);
+    if (mainHeader) {
+        mainHeader.setAttribute('colspan', activeMonthHeaders.length);
+        mainHeader.colSpan = activeMonthHeaders.length;
+    }
 
     db.ref(`vimag/brands/${currentBrandName}`).once('value', async (snapshot) => {
+        if (!snapshot.exists()) return;
         const brandTreeData = snapshot.val() || {};
         let bulkPayload = []; 
 
-        for (const custName of Object.keys(brandTreeData)) {
+        const custNames = Object.keys(brandTreeData);
+        for (let i = 0; i < custNames.length; i++) {
+            const custName = custNames[i];
             const normalizedCustKey = custName.trim().toUpperCase();
             if (normalizedCustKey === "_ID_LOCK" || normalizedCustKey === "SYSTEM_ID") continue;
             
             const customerItems = brandTreeData[custName] || {};
+            const itemKeys = Object.keys(customerItems);
             
-            for (const itemKey of Object.keys(customerItems)) {
+            for (let j = 0; j < itemKeys.length; j++) {
+                const itemKey = itemKeys[j];
                 const item = customerItems[itemKey];
+                
                 if (item && item.id && item.artNo && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
                     
-                    if (item.budgets && item.budgets[activeBudgetId]) {
-                        let price = parseFloat(item.price || 0);
-                        let budgetSpecificData = item.budgets[activeBudgetId];
-                        
-                        let rawAchieved = budgetSpecificData.achieved || new Array(activeMonthHeaders.length).fill(0);
-                        let targetQty = parseInt(budgetSpecificData.qty || 0);
-                        let monthQty = parseInt(budgetSpecificData.monthQty || 0);
-                        let brandwiseTarget = parseFloat(budgetSpecificData.brandwise_target || 0);
-
-                        let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
-
-                        bulkPayload.push({
-                            id: `${item.id}_${activeBudgetId}`, 
-                            baseItemId: item.id,
-                            budgetId: activeBudgetId,
-                            brand: currentBrandName,
-                            customerName: custName, 
-                            artNo: item.artNo,
-                            name: item.name || item.productName || "",
-                            price: price,
-                            currency: item.currency || "€",
-                            targetQty: targetQty,
-                            monthQty: monthQty,
-                            brandwise_target: brandwiseTarget,
-                            achievedQty: qtyAchievedArray
-                        });
+                    let price = parseFloat(item.price || 0);
+                    
+                    // 🎯 FIX 1: புதிய பட்ஜெட் என்பதால் ஃபயர்பேஸில் பட்ஜெட் டேட்டா இல்லை என்றாலும், மாஸ்டர் தயாரிப்பு விபரங்களை (Brand, Art No, Price) 0 டார்கெட்டுடன் டேபிளுக்குள் பலவந்தமாக இழுத்துக் கொண்டு வரும் Fallback Logic!
+                    let budgetSpecificData = (item.budgets && item.budgets[activeBudgetId]) ? item.budgets[activeBudgetId] : { qty: 0, monthQty: 0, brandwise_target: 0, achieved: [] };
+                    
+                    let rawAchieved = budgetSpecificData.achieved || [];
+                    let safeAchieved = new Array(activeMonthHeaders.length).fill(0);
+                    for (let m = 0; m < activeMonthHeaders.length; m++) {
+                        safeAchieved[m] = parseFloat(rawAchieved[m] || 0);
                     }
+
+                    let qtyAchievedArray = safeAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
+
+                    bulkPayload.push({
+                        id: `${item.id}_${activeBudgetId}`, 
+                        baseItemId: item.id,
+                        budgetId: activeBudgetId,
+                        brand: currentBrandName,
+                        customerName: custName, 
+                        artNo: item.artNo,
+                        name: item.name || item.productName || "Industrial Tool Component",
+                        price: price,
+                        currency: item.currency || "€",
+                        targetQty: parseInt(budgetSpecificData.qty || 0),
+                        monthQty: parseInt(budgetSpecificData.monthQty || 0),
+                        brandwise_target: parseFloat(budgetSpecificData.brandwise_target || 0),
+                        achievedQty: qtyAchievedArray
+                    });
                 }
             }
         }
@@ -332,7 +348,7 @@ function loadUniversalCloudLiveData() {
         
         const freshWarehouseItems = await vimagDB.brands.toArray();
         processRawDataToTable(freshWarehouseItems);
-        console.log("Static Database Snapshot Locked Perfectly! 🔐");
+        console.log("Database Snapshot Locked & Loaded with Fresh Item Schemas! 🚀");
     });
 }
 function processRawDataToTable(rawList) {
