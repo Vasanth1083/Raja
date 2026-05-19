@@ -149,7 +149,7 @@
     <!-- ==================== PAGE 1: கார்டுகள் இருக்கும் முதன்மைப் பக்கம் ==================== -->
     <div id="mainHubSection">
         <div class="target-header-box">
-            <button class="btn-back" onclick="window.location.href='Followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
+            <button class="btn-back" onclick="window.location.href='followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
             <div class="center-branding">
                 <img src="Logo.jpeg" alt="Vimag Logo">
                 <h1 style="font-size: 27px;">VIMAG INDUSTRIAL SOLUTIONS</h1>
@@ -233,6 +233,8 @@
             
             <label>Select Plan Duration *</label>
             <select id="tgtDurationSelect" onchange="autoCalculateToMonth()">
+    <option value="1">1 MONTH REPORT</option>
+
                 <option value="3" selected>3 MONTHS REPORT</option>
                 <option value="6">6 MONTHS REPORT</option>
                 <option value="12">1 YEAR REPORT</option>
@@ -246,7 +248,7 @@
                     <label>From Month *</label>
                     <select id="tgtFromMonthSelect" onchange="autoCalculateToMonth()"></select>
                 </div>
-                <div class="month-col">
+    <div class="month-col" id="toMonthWrapper">
                     <label>To Month (Auto-Mark) 🔒</label>
                     <input type="text" id="tgtToMonthInput" class="disabled-input" readonly value="MAR-26">
                 </div>
@@ -327,22 +329,35 @@
             }
         }
 
-        function autoCalculateToMonth() {
-            const duration = parseInt(document.getElementById('tgtDurationSelect').value);
-            const startMonthIndex = parseInt(document.getElementById('tgtFromMonthSelect').value);
-            let baseYear = parseInt(document.getElementById('tgtYearSelect').value);
+       function autoCalculateToMonth() {
+    const durationSelect = document.getElementById('tgtDurationSelect');
+    const duration = parseInt(durationSelect.value);
+    const startMonthIndex = parseInt(document.getElementById('tgtFromMonthSelect').value);
+    let baseYear = parseInt(document.getElementById('tgtYearSelect').value);
 
-            if (isNaN(startMonthIndex) || isNaN(baseYear)) return;
+    const toMonthWrapper = document.getElementById('toMonthWrapper');
+    if (isNaN(startMonthIndex) || isNaN(baseYear)) return;
 
-            let endMonthIndex = startMonthIndex + (duration - 1);
-            if (endMonthIndex >= 12) {
-                baseYear += Math.floor(endMonthIndex / 12);
-                endMonthIndex = endMonthIndex % 12;
-            }
+    // 🎯 FIX 1: 1 மாதம் என்று தேர்ந்தெடுத்தால் 'To Month' கட்டத்தை முழுமையாக மறைத்துவிடும்!
+    if (duration === 1) {
+        if (toMonthWrapper) toMonthWrapper.style.display = "none";
+        const shortYear = String(baseYear).substring(2);
+        document.getElementById('tgtToMonthInput').value = `${monthNamesShort[startMonthIndex]}-${shortYear}`;
+        return;
+    } else {
+        // 3, 6, 12 மாதங்கள் என்றால் 'To Month' மீண்டும் திரையில் தோன்றும்
+        if (toMonthWrapper) toMonthWrapper.style.display = "block";
+    }
 
-            const finalShortYear = String(baseYear).substring(2);
-            document.getElementById('tgtToMonthInput').value = `${monthNamesShort[endMonthIndex]}-${finalShortYear}`;
-        }
+    let endMonthIndex = startMonthIndex + (duration - 1);
+    if (endMonthIndex >= 12) {
+        baseYear += Math.floor(endMonthIndex / 12);
+        endMonthIndex = endMonthIndex % 12;
+    }
+
+    const finalShortYear = String(baseYear).substring(2);
+    document.getElementById('tgtToMonthInput').value = `${monthNamesShort[endMonthIndex]}-${finalShortYear}`;
+}
 
         async function renderBudgetsCards() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -391,38 +406,52 @@
         }
         function closeBudgetModal() { document.getElementById('budgetModal').style.display = 'none'; }
 
-        async function saveSalesBudget() {
-            if (isSaving) return; 
-            isSaving = true;
+       async function saveSalesBudget() {
+    if (isSaving) return; 
+    isSaving = true;
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const staffNameFromUrl = urlParams.get('name') || "GENERAL TARGET";
+    const urlParams = new URLSearchParams(window.location.search);
+    const staffNameFromUrl = urlParams.get('name') || "GENERAL TARGET";
 
-            const duration = document.getElementById('tgtDurationSelect').options[document.getElementById('tgtDurationSelect').selectedIndex].text;
-            const fromMonthText = document.getElementById('tgtFromMonthSelect').options[document.getElementById('tgtFromMonthSelect').selectedIndex].text;
-            const toMonthText = document.getElementById('tgtToMonthInput').value;
+    const durationSelect = document.getElementById('tgtDurationSelect');
+    const durationText = durationSelect.options[durationSelect.selectedIndex].text;
+    const durationValue = parseInt(durationSelect.value);
 
-            const uniqueId = "bud_" + Date.now(); // 🎯 தனித்துவ ஸ்ட்ரிங் ஐடி
-            const displayMonthRange = `${fromMonthText} TO ${toMonthText} (${duration})`;
+    const fromMonthText = document.getElementById('tgtFromMonthSelect').options[document.getElementById('tgtFromMonthSelect').selectedIndex].text;
+    const toMonthText = document.getElementById('tgtToMonthInput').value;
 
-            const budgetItem = { 
-                id: uniqueId, 
-                staffName: staffNameFromUrl.toUpperCase(), 
-                targetMonth: displayMonthRange,
-                allocatedValue: "" 
-            };
+    const uniqueId = "bud_" + Date.now(); // தனித்துவ ஸ்ட்ரிங் ஐடி
+    
+    // 🎯 FIX 2: 1 மாத அறிக்கையாக இருந்தால் 'TO' இல்லாமல் வெறும் 'JAN-26 (1 MONTH REPORT)' எனச் சேமிக்கும்!
+    let displayMonthRange = "";
+    if (durationValue === 1) {
+        displayMonthRange = `${fromMonthText} (${durationText})`;
+    } else {
+        displayMonthRange = `${fromMonthText} TO ${toMonthText} (${durationText})`;
+    }
 
-            try {
-                await localDB.budgets.add(budgetItem);
-                await cloudDB.ref(`vimag_followup/budgets/${uniqueId}`).set(budgetItem);
-                closeBudgetModal();
-                console.log("Target timeline allocation successfully synchronized! 🎯");
-            } catch (err) {
-                console.error("Save error:", err);
-            } finally {
-                isSaving = false; 
-            }
+    const budgetItem = { 
+        id: uniqueId, 
+        staffName: staffNameFromUrl.toUpperCase(), 
+        targetMonth: displayMonthRange,
+        allocatedValue: "" 
+    };
+
+    try {
+        await localDB.budgets.add(budgetItem);
+        await cloudDB.ref(`vimag_followup/budgets/${uniqueId}`).set(budgetItem);
+        closeBudgetModal();
+        
+        if (typeof renderBudgetsCards === "function") {
+            renderBudgetsCards();
         }
+        console.log("Target timeline allocation successfully synchronized! 🎯");
+    } catch (err) {
+        console.error("Save error:", err);
+    } finally {
+        isSaving = false; 
+    }
+}
 
         async function deleteSelectedBudgets() {
             const checks = document.querySelectorAll('.tgt-row-check:checked');
