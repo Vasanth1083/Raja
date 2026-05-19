@@ -149,7 +149,7 @@
     <!-- ==================== PAGE 1: கார்டுகள் இருக்கும் முதன்மைப் பக்கம் ==================== -->
     <div id="mainHubSection">
         <div class="target-header-box">
-            <button class="btn-back" onclick="window.location.href='followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
+            <button class="btn-back" onclick="window.location.href='Followup.html';" style="background: GREEN; font-family: Times NEW ROMAN;">HOME</button>
             <div class="center-branding">
                 <img src="Logo.jpeg" alt="Vimag Logo">
                 <h1 style="font-size: 27px;">VIMAG INDUSTRIAL SOLUTIONS</h1>
@@ -455,8 +455,8 @@
 
         async function deleteSelectedBudgets() {
             const checks = document.querySelectorAll('.tgt-row-check:checked');
-            if (checks.length === 0) return alert("நீக்க வேண்டிய டார்கெட்டை தேர்வு செய்யவும்! 🗑️");
-            if (!confirm("தேர்வு செய்த பட்ஜெட்டுகளை நீக்கலாமா?")) return;
+            if (checks.length === 0) return alert("SELECT ANY! 🗑️");
+            if (!confirm("Are u sure want to delete?")) return;
 
             for (let c of checks) {
                 const id = c.value;
@@ -465,65 +465,91 @@
             }
             renderBudgetsCards();
         }
+async function launchBudgetReportView(budgetId, targetText) {
+    // 🎯 தற்போதைய கார்டின் தனித்துவமான பட்ஜெட் ஐடியை லாக் செய்கிறோம்
+    activeReportBudgetId = budgetId; 
 
-        async function launchBudgetReportView(budgetId, targetText) {
-            // 🎯 தற்போதைய கார்டின் தனித்துவமான ஐடியை லாக் செய்கிறோம்
-            activeReportBudgetId = budgetId; 
+    document.getElementById('corporateReportTitle').innerText = targetText.toUpperCase();
+    document.getElementById('mainHubSection').style.display = 'none';
+    document.getElementById('targetReportPage').style.display = 'block';
 
-            document.getElementById('corporateReportTitle').innerText = targetText.toUpperCase();
-            document.getElementById('mainHubSection').style.display = 'none';
-            document.getElementById('targetReportPage').style.display = 'block';
+    let currentDuration = 3; // Default Fallback
+    let monthHeadersArray = [];
 
-            let currentDuration = 3;
-            let monthHeadersArray = [];
-
-            try {
-                if (targetText.includes('-')) {
-                    const cleanText = targetText.includes('(') ? targetText.split('(')[0] : targetText;
-                    const parts = cleanText.split('TO');
-                    
-                    const startPart = parts[0].trim().split('-');
-                    const startMonthStr = startPart[0].toUpperCase();
-                    const yearShort = startPart[1].replace(/[^0-9]/g, '');
-                    const startMonthIdx = monthNamesShort.indexOf(startMonthStr);
-                    
-                    if (targetText.includes("6 MONTHS")) currentDuration = 6;
-                    else if (targetText.includes("1 YEAR") || targetText.includes("12 MONTHS")) currentDuration = 12;
-
-                    const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
-                    subHeaderRow.innerHTML = "";
-
-                    let currentMonthIdx = startMonthIdx;
-                    let currentYear = parseInt("20" + yearShort);
-
-             for (let i = 0; i < currentDuration; i++) {
-    let mName = monthNamesShort[currentMonthIdx];
-    let yShort = String(currentYear).substring(2);
-    let headerLabel = `${mName}-${yShort}`;
-    monthHeadersArray.push(headerLabel);
-
-    let th = document.createElement('th');
-    // 🎯 width: 70px லாக் மற்றும் white-space: normal மூலம் எழுத்துக்கள் அடுத்த வரியில் மடிந்து கச்சிதமாகத் தெரியும்
-    th.style.cssText = "background: #f39c12; color: white; font-size: 13px; padding: 8px 4px; border: 1px solid black !important; width: 70px; min-width: 70px; max-width: 70px; box-sizing: border-box; text-align: center; vertical-align: middle; white-space: normal !important; word-wrap: break-word; line-height: 1.2;";
-    th.innerText = headerLabel;
-    if(subHeaderRow) subHeaderRow.appendChild(th);
-
-    currentMonthIdx++;
-    if (currentMonthIdx >= 12) {
-        currentMonthIdx = 0;
-        currentYear++;
-    }
-}
-                    localStorage.setItem('vimag_active_report_months', JSON.stringify(monthHeadersArray));
-                    const mainHeader = document.getElementById('achievedMainHeader');
-                    if (mainHeader) mainHeader.colSpan = currentDuration;
-                }
-            } catch (e) { console.error("Month Loop Error:", e); }
-
-            await calculateCorporateReportMetrics(monthHeadersArray, currentDuration, activeReportBudgetId);
+    try {
+        // கார்டின் உரையிலிருந்து கால அளவை மிகத் துல்லியமாகக் கண்டறிகிறது
+        if (targetText.toUpperCase().includes("1 MONTH")) {
+            currentDuration = 1;
+        } else if (targetText.toUpperCase().includes("6 MONTHS")) {
+            currentDuration = 6;
+        } else if (targetText.toUpperCase().includes("1 YEAR") || targetText.toUpperCase().includes("12 MONTHS")) {
+            currentDuration = 12;
+        } else if (targetText.toUpperCase().includes("3 MONTHS")) {
+            currentDuration = 3;
         }
 
-        async function calculateCorporateReportMetrics(monthHeadersArray, duration, budgetId) {
+        // உரையிலிருந்து தொடக்க மாதத்தைக் கண்டறிதல்
+        let cleanText = targetText.includes('(') ? targetText.split('(')[0].trim() : targetText.trim();
+        let startMonthStr = "";
+        let yearShort = "";
+
+        if (cleanText.includes('TO')) {
+            let parts = cleanText.split('TO');
+            let startPart = parts[0].trim().split('-');
+            startMonthStr = startPart[0].toUpperCase().trim();
+            yearShort = startPart[1].replace(/[^0-9]/g, '').trim();
+        } else {
+            let startPart = cleanText.split('-');
+            startMonthStr = startPart[0].toUpperCase().trim();
+            yearShort = startPart[1].replace(/[^0-9]/g, '').trim();
+        }
+
+        let startMonthIdx = monthNamesShort.indexOf(startMonthStr);
+        if (startMonthIdx === -1) startMonthIdx = 0; 
+
+        const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
+        if (subHeaderRow) subHeaderRow.innerHTML = "";
+
+        let currentMonthIdx = startMonthIdx;
+        let currentYear = parseInt("20" + yearShort);
+
+        // 🎯 FIX 1: சப்-ஹெடர் ரோவில் இருக்கும் பழைய 3 பத்திகளையும் முழுமையாகத் துடைத்துவிட்டு, தேர்ந்தெடுக்கப்பட்ட கால அளவிற்கு ஏற்ப (duration / 1 month) கச்சிதமாக உருவாக்குகிறது
+        for (let i = 0; i < currentDuration; i++) {
+            let mName = monthNamesShort[currentMonthIdx];
+            let yShort = String(currentYear).substring(2);
+            let headerLabel = `${mName}-${yShort}`;
+            monthHeadersArray.push(headerLabel);
+
+            let th = document.createElement('th');
+            // 🎯 பிராண்ட்வைஸ் பாணி: சப்-ஹெடர் பத்திகள் கச்சிதமாக 95px அகலத்துடன் பார்டர் லாக் செய்யப்படுகிறது
+            th.style.cssText = "background: #f39c12; color: white; font-size: 13px; padding: 8px 4px; border: 1px solid black !important; text-align: center; vertical-align: middle; white-space: normal !important; word-wrap: break-word; line-height: 1.2; width: 95px; min-width: 95px; max-width: 95px; box-sizing: border-box;";
+            th.innerText = headerLabel;
+            if (subHeaderRow) subHeaderRow.appendChild(th);
+
+            currentMonthIdx++;
+            if (currentMonthIdx >= 12) {
+                currentMonthIdx = 0;
+                currentYear++;
+            }
+        }
+        
+        localStorage.setItem('vimag_active_report_months', JSON.stringify(monthHeadersArray));
+        
+        // 🎯 FIX 2: மெயின் ஹெடரின் (ACHIEVED VALUE / MONTH) colspan-ஐ மாதங்களின் எண்ணிக்கைக்கு ஏற்ப (உதாரணமாக 1) கச்சிதமாக மாற்றிப் பூட்டுகிறது
+        const mainHeader = document.getElementById('achievedMainHeader');
+        if (mainHeader) {
+            mainHeader.setAttribute('colspan', currentDuration);
+            mainHeader.colSpan = currentDuration;
+        }
+
+    } catch (e) { 
+        console.error("Month Dynamic Allocation Fault:", e); 
+    }
+
+    // புதிய 1 மாதக் கட்டமைப்பிற்கு ஏற்ப டேபிளை ரெண்டர் செய்ய அனுப்புகிறது
+    await calculateCorporateReportMetrics(monthHeadersArray, currentDuration, activeReportBudgetId);
+}
+async function calculateCorporateReportMetrics(monthHeadersArray, duration, budgetId) {
     const tbody = document.getElementById('corporateBrandTableBody');
     if (!tbody) return;
 
@@ -534,7 +560,7 @@
     try { allMasterProducts = await masterDB.brands.toArray(); } catch(e) {}
     const allActivityLogs = await localDB.logs.toArray();
 
-    // 1. Initial Quick Load from local Dexie Cache
+    // 1. மெமரியில் இருக்கும் லோக்கல் தரவை உடனடியாக 0.1 நொடியில் டேபிளில் காட்டுகிறது
     let localBrandsList = [...new Set(allMasterProducts.map(p => (p.brand || "").toUpperCase().trim()))]
                             .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
 
@@ -544,28 +570,42 @@
         tbody.innerHTML = `<tr><td colspan="${5 + duration}" style="padding:25px; font-weight:bold; color:#7f8c8d; text-align:center;">ஆரம்ப நிலை தரவுகள் சேகரிக்கப்படுகிறது... ⏳</td></tr>`;
     }
 
-    // 2. ⚡ LIVE BACKGROUND CLOUD SYNC: Directly reads from Firebase across all 11 brands to sync targets instantly
+    // 2. ⚡ FAST BACKGROUND LIGHTWEIGHT SYNC: ஃபயர்பேஸிலிருந்து ஒட்டுமொத்த மரத்தையும் லோடு செய்யாமல், மிக லேசான எடையில் டார்கெட்டுகளை மட்டும் சின்க் செய்கிறது
     cloudDB.ref('vimag/brands').once('value', async (snapshot) => {
-        const cloudBrandsTree = snapshot.val() || {};
+        if (!snapshot.exists()) return;
+        const cloudBrandsTree = snapshot.val();
         let bulkPayload = [];
 
-        // Loop through all customer branches in the cloud tree to update local cache parameters
-        for (const brandKey of Object.keys(cloudBrandsTree)) {
+        const brandKeys = Object.keys(cloudBrandsTree);
+        for (let i = 0; i < brandKeys.length; i++) {
+            const brandKey = brandKeys[i];
             const customerBranches = cloudBrandsTree[brandKey] || {};
             
-            for (const customerKey of Object.keys(customerBranches)) {
+            const customerKeys = Object.keys(customerBranches);
+            for (let j = 0; j < customerKeys.length; j++) {
+                const customerKey = customerKeys[j];
                 if (customerKey === "_id_lock" || customerKey === "SYSTEM_ID") continue;
+                
                 const itemsMap = customerBranches[customerKey] || {};
-
-                for (const itemKey of Object.keys(itemsMap)) {
+                const itemKeys = Object.keys(itemsMap);
+                
+                for (let k = 0; k < itemKeys.length; k++) {
+                    const itemKey = itemKeys[k];
                     const itemData = itemsMap[itemKey] || {};
                     
                     if (itemData && itemData.id && itemData.artNo && itemData.artNo !== "SYSTEM") {
                         let price = parseFloat(itemData.price || 0);
-                        let budgetSpecificData = (itemData.budgets && itemData.budgets[budgetId]) ? itemData.budgets[budgetId] : {};
-                        let rawAchieved = budgetSpecificData.achieved || new Array(monthHeadersArray.length).fill(0);
                         
-                        let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
+                        // 🎯 FIX 2: புதிய டார்கெட் பட்ஜெட்டாக இருந்தாலும், 11 பிராண்டுகளின் மாஸ்டர் லிஸ்ட்டை 0 கணக்குடன் மாஸ்டர் டேபிளில் காட்டும் Fallback!
+                        let budgetSpecificData = (itemData.budgets && itemData.budgets[budgetId]) ? itemData.budgets[budgetId] : { qty: 0, monthQty: 0, brandwise_target: 0, achieved: [] };
+                        
+                        let rawAchieved = budgetSpecificData.achieved || [];
+                        let safeAchieved = new Array(duration).fill(0);
+                        for (let m = 0; m < duration; m++) {
+                            safeAchieved[m] = parseFloat(rawAchieved[m] || 0);
+                        }
+                        
+                        let qtyAchievedArray = safeAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
 
                         bulkPayload.push({
                             id: `${itemData.id}_${budgetId}`,
@@ -587,20 +627,19 @@
             }
         }
 
-        // Save fresh cloud target states back to Dexie cache arrays synchronously
         if (bulkPayload.length > 0) {
             await masterDB.brands.bulkPut(bulkPayload);
         }
 
-        // Re-read local cache parameters and draw the table instantly with up-to-date data
         const freshProductsList = await masterDB.brands.toArray();
         let updatedBrandsList = [...new Set(freshProductsList.map(p => (p.brand || "").toUpperCase().trim()))]
                                 .filter(b => b !== "" && b !== "_ID_LOCK" && b !== "SYSTEM" && b !== "SYSTEM_ID");
 
         processAndRenderMetrics(updatedBrandsList, freshProductsList, allActivityLogs, monthHeadersArray, duration, budgetId);
+        console.log("Master Budget Grid Seeding Engine Online! 🚀");
     });
 }
-        // 📊 தரவுகளைக் கணக்கிட்டு மெயின் பட்ஜெட் டேபிளில் தனித்துவமாகப் பொருத்தும் சப்-இன்ஜின்
+         // 📊 தரவுகளைக் கணக்கிட்டு மெயின் பட்ஜெட் டேபிளில் தனித்துவமாகப் பொருத்தும் சப்-இன்ஜின்
 function processAndRenderMetrics(brandsList, allMasterProducts, allActivityLogs, monthHeadersArray, duration, budgetId) {
     const tbody = document.getElementById('corporateBrandTableBody');
     if (!tbody) return;
