@@ -273,279 +273,336 @@
                 processRawDataToTable(allWarehouseItems);
             } catch (err) { console.log("Local Database Uninitialized: ", err); }
         }
+function loadUniversalCloudLiveData() {
+    const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
+    if (subHeaderRow) subHeaderRow.innerHTML = activeMonthHeaders.map(m => `<th>${m}</th>`).join('');
+    
+    const mainHeader = document.getElementById('achievedMainHeader');
+    if (mainHeader) mainHeader.setAttribute('colspan', activeMonthHeaders.length);
 
-        function loadUniversalCloudLiveData() {
-            const subHeaderRow = document.getElementById('corporateMonthSubHeaderRow');
-            if (subHeaderRow) subHeaderRow.innerHTML = activeMonthHeaders.map(m => `<th>${m}</th>`).join('');
+    db.ref(`vimag/brands/${currentBrandName}`).once('value', async (snapshot) => {
+        const brandTreeData = snapshot.val() || {};
+        let bulkPayload = []; 
+
+        for (const custName of Object.keys(brandTreeData)) {
+            const normalizedCustKey = custName.trim().toUpperCase();
+            if (normalizedCustKey === "_ID_LOCK" || normalizedCustKey === "SYSTEM_ID") continue;
             
-            const mainHeader = document.getElementById('achievedMainHeader');
-            if (mainHeader) mainHeader.setAttribute('colspan', activeMonthHeaders.length);
-
-            db.ref(`vimag/brands/${currentBrandName}`).on('value', async (snapshot) => {
-                const brandTreeData = snapshot.val() || {};
-
-                for (const custName of Object.keys(brandTreeData)) {
-                    if (custName === "_id_lock" || custName === "SYSTEM_ID") continue;
-                    const customerItems = brandTreeData[custName] || {};
+            const customerItems = brandTreeData[custName] || {};
+            
+            for (const itemKey of Object.keys(customerItems)) {
+                const item = customerItems[itemKey];
+                if (item && item.id && item.artNo && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
                     
-                    for (const itemKey of Object.keys(customerItems)) {
-                        const item = customerItems[itemKey];
-                        if (item && item.id && item.artNo && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
-                            
-                            let price = parseFloat(item.price || 0);
-                            
-                            // Query entries belonging to our uniquely active budget ID path exclusively
-                            let budgetSpecificData = (item.budgets && item.budgets[activeBudgetId]) ? item.budgets[activeBudgetId] : {};
-                            let rawAchieved = budgetSpecificData.achieved || new Array(activeMonthHeaders.length).fill(0);
-                            let targetQty = parseInt(budgetSpecificData.qty || 0);
-                            let monthQty = parseInt(budgetSpecificData.monthQty || 0);
-                            let brandwiseTarget = parseFloat(budgetSpecificData.brandwise_target || 0);
-
-                            let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
-
-                            await vimagDB.brands.put({
-                                id: `${item.id}_${activeBudgetId}`, // Form compound tracking key to avoid overwriting items
-                                baseItemId: item.id,
-                                budgetId: activeBudgetId,
-                                brand: currentBrandName,
-                                customerName: custName,
-                                artNo: item.artNo,
-                                name: item.name || item.productName || "",
-                                price: price,
-                                currency: item.currency || "€",
-                                targetQty: targetQty,
-                                monthQty: monthQty,
-                                brandwise_target: brandwiseTarget,
-                                achievedQty: qtyAchievedArray
-                            });
-                        }
-                    }
-                }
-                
-                const freshWarehouseItems = await vimagDB.brands.toArray();
-                processRawDataToTable(freshWarehouseItems);
-            });
-        }
-
-        function processRawDataToTable(rawList) {
-            filteredArticles = [];
-            const seenArticles = new Set();
-
-            if (!rawList || !Array.isArray(rawList)) return;
-
-            rawList.forEach(item => {
-                if (!item || !item.brand || !item.artNo || item.artNo === "SYSTEM" || item.artNo === "_id_lock") return;
-                
-                // Match items belonging ONLY to this specific open budget session ID
-                if (item.brand.toUpperCase().trim() === currentBrandName.toUpperCase().trim() && item.budgetId === activeBudgetId) {
-                    const articleKey = item.artNo.toUpperCase().trim();
-                    
-                    if (!seenArticles.has(articleKey)) {
-                        seenArticles.add(articleKey);
+                    if (item.budgets && item.budgets[activeBudgetId]) {
+                        let price = parseFloat(item.price || 0);
+                        let budgetSpecificData = item.budgets[activeBudgetId];
                         
-                        let qtyAchievedArr = item.achievedQty || [];
-                        if(qtyAchievedArr.length < activeMonthHeaders.length) {
-                            let diff = activeMonthHeaders.length - qtyAchievedArr.length;
-                            qtyAchievedArr = qtyAchievedArr.concat(new Array(diff).fill(0));
-                        }
+                        let rawAchieved = budgetSpecificData.achieved || new Array(activeMonthHeaders.length).fill(0);
+                        let targetQty = parseInt(budgetSpecificData.qty || 0);
+                        let monthQty = parseInt(budgetSpecificData.monthQty || 0);
+                        let brandwiseTarget = parseFloat(budgetSpecificData.brandwise_target || 0);
 
-                        filteredArticles.push({
-                            id: item.id,
-                            baseItemId: item.baseItemId,
+                        let qtyAchievedArray = rawAchieved.map(val => price > 0 ? Math.round(val / price) : 0);
+
+                        bulkPayload.push({
+                            id: `${item.id}_${activeBudgetId}`, 
+                            baseItemId: item.id,
+                            budgetId: activeBudgetId,
                             brand: currentBrandName,
-                            customerName: item.customerName,
-                            articleNo: item.artNo.trim(),
-                            description: item.name || "Industrial Tool Component",
-                            price: parseFloat(item.price || 0),
+                            customerName: custName, 
+                            artNo: item.artNo,
+                            name: item.name || item.productName || "",
+                            price: price,
                             currency: item.currency || "€",
-                            targetValue: parseFloat(item.brandwise_target || 0), 
-                            targetQty: parseInt(item.targetQty || 0),
-                            monthQty: item.monthQty || 0,
-                            achievedQtyValues: qtyAchievedArr
+                            targetQty: targetQty,
+                            monthQty: monthQty,
+                            brandwise_target: brandwiseTarget,
+                            achievedQty: qtyAchievedArray
                         });
                     }
                 }
-            });
-            renderTableRows();
+            }
         }
+        
+        await vimagDB.brands.clear();
+        if (bulkPayload.length > 0) {
+            await vimagDB.brands.bulkPut(bulkPayload);
+        }
+        
+        const freshWarehouseItems = await vimagDB.brands.toArray();
+        processRawDataToTable(freshWarehouseItems);
+        console.log("Static Database Snapshot Locked Perfectly! 🔐");
+    });
+}
+function processRawDataToTable(rawList) {
+    filteredArticles = [];
+    const consolidatedArticlesMap = new Map();
 
-        function renderTableRows() {
-            const tbody = document.getElementById("brandwiseTableBody");
-            if (!tbody) return;
-            tbody.innerHTML = "";
+    if (!rawList || !Array.isArray(rawList)) return;
 
-            let globalTargetValue = 0, globalAchievedValue = 0;
-            let globalMonthTotals = new Array(activeMonthHeaders.length).fill(0);
-
-            if (filteredArticles.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${7 + activeMonthHeaders.length}" style="padding: 15px; font-weight: bold; color: #7f8c8d;">No Product Records Found for ${currentBrandName.toUpperCase()}</td></tr>`;
-                return;
+    rawList.forEach(item => {
+        if (!item || !item.brand || !item.artNo || item.artNo === "SYSTEM" || item.artNo === "_id_lock") return;
+        
+        if (item.brand.toUpperCase().trim() === currentBrandName.toUpperCase().trim() && item.budgetId === activeBudgetId) {
+            const articleKey = item.artNo.toUpperCase().trim();
+            
+            let qtyAchievedArr = Array.isArray(item.achievedQty) ? item.achievedQty : [];
+            if(qtyAchievedArr.length < activeMonthHeaders.length) {
+                let diff = activeMonthHeaders.length - qtyAchievedArr.length;
+                qtyAchievedArr = qtyAchievedArr.concat(new Array(diff).fill(0));
             }
 
-            filteredArticles.forEach((item, index) => {
-                const tr = document.createElement("tr");
-                const sym = getCurrencySymbol(item.currency);
+            if (consolidatedArticlesMap.has(articleKey)) {
+                let existing = consolidatedArticlesMap.get(articleKey);
                 
-                let totalVal = item.targetValue; 
-                let rowMonthlyValues = new Array(activeMonthHeaders.length).fill(0);
+                existing.targetQty += parseInt(item.targetQty || 0);
+                existing.targetValue += parseFloat(item.brandwise_target || 0);
+                existing.monthQty += parseInt(item.monthQty || 0);
                 
                 for (let i = 0; i < activeMonthHeaders.length; i++) {
-                    let qVal = parseInt(item.achievedQtyValues[i] || 0);
-                    rowMonthlyValues[i] = qVal * item.price;
+                    existing.achievedQtyValues[i] += parseInt(qtyAchievedArr[i] || 0);
                 }
+            } else {
+                consolidatedArticlesMap.set(articleKey, {
+                    id: item.id,
+                    baseItemId: item.baseItemId,
+                    brand: currentBrandName,
+                    customerName: item.customerName,
+                    articleNo: item.artNo.trim(),
+                    description: item.name || "Industrial Tool Component",
+                    price: parseFloat(item.price || 0),
+                    currency: item.currency || "€",
+                    targetValue: parseFloat(item.brandwise_target || 0), 
+                    targetQty: parseInt(item.targetQty || 0),
+                    monthQty: item.monthQty || 0,
+                    achievedQtyValues: [...qtyAchievedArr]
+                });
+            }
+        }
+    });
 
-                let rowTotalAchieved = rowMonthlyValues.reduce((a, b) => a + b, 0);
-                let execPercent = totalVal > 0 ? ((rowTotalAchieved / totalVal) * 100).toFixed(1) : "0.0";
+    filteredArticles = Array.from(consolidatedArticlesMap.values());
+    renderTableRows();
+}
 
-                globalTargetValue += totalVal;
-                globalAchievedValue += rowTotalAchieved;
-                rowMonthlyValues.forEach((v, i) => { globalMonthTotals[i] += v; });
+function renderTableRows() {
+    const tbody = document.getElementById("brandwiseTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
 
-                let monthlyCellsHtml = rowMonthlyValues.map(v => `<td class="currency-cell green-text-live">${sym} ${v.toFixed(2)}</td>`).join('');
+    let globalTargetValue = 0;
+    let globalAchievedValue = 0;
+    let globalMonthTotals = new Array(activeMonthHeaders.length).fill(0);
 
-                tr.innerHTML = `
-                    <td class="col-pick"><input type="radio" name="pickRowRadio" class="radio-custom" onclick="openInputModal(${index})"></td>
-                    <td class="col-sno">${index + 1}</td>
-                    <td class="col-art" style="font-weight: bold;">${item.articleNo}</td>
-                    <td class="col-desc">${item.description}</td>
-                    <td class="col-price">${sym} ${item.price.toFixed(2)}</td>
-                    <td class="col-target blue-text">${sym} ${totalVal.toFixed(2)}</td>
-                    ${monthlyCellsHtml}
-                    <td class="col-achieved Green-text">${sym} ${rowTotalAchieved.toFixed(2)}</td>
-                    <td class="col-exec red-text">${execPercent}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
+    if (filteredArticles.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${7 + activeMonthHeaders.length}" style="padding: 15px; font-weight: bold; color: #7f8c8d; text-align: center;">No Product Records Found for ${currentBrandName.toUpperCase()}</td></tr>`;
+        return;
+    }
 
-            const tfoot = document.getElementById("corporateTableFoot");
-            if (!tfoot) return;
-            
-            let footHtml = `
-                <tr style="background: #ffffff; font-weight: bold; border-top: 1px solid black; border-bottom: 1px solid black;">
-                    <td colspan="2" style="border: 1px solid black !important; COLOR: RED; font-size: 19px;">Σ</td>
-                    <td colspan="2" style="text-align: left; padding-left: 15px; font-size: 16px; color: RED">CONSOLIDATED LEDGER:</td>
-                    <td style="border: 1px solid black !important;"></td>
-                    <td class="currency-cell blue-text" style="border: 1px solid black !important;">€ ${globalTargetValue.toFixed(2)}</td>
-            `;
-
-            globalMonthTotals.forEach(mSum => {
-                footHtml += `<td class="currency-cell green-text-live" style="border: 1px solid black !important;">€ ${mSum.toFixed(2)}</td>`;
-            });
-
-            let overallExec = globalTargetValue > 0 ? ((globalAchievedValue / globalTargetValue) * 100).toFixed(1) : "0.0";
-            footHtml += `
-                    <td class="currency-cell Green-text" style="border: 1px solid black !important;">€ ${globalAchievedValue.toFixed(2)}</td>
-                    <td class="currency-cell red-text" style="text-align: center; padding-right: 4px; border: 1px solid black !important; background-color: #fdf2f2;">
-                        <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; width: 100%;">
-                            <span>${overallExec}%</span> <span style="font-size: 12px; filter: grayscale(0.2);">🚀</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            tfoot.innerHTML = footHtml;
-
-            document.getElementById("overviewTurnover").textContent = `${mainSymbol}${globalAchievedValue.toFixed(2)}`;
-            document.getElementById("overviewPortfolio").textContent = `${mainSymbol}${globalTargetValue.toFixed(2)}`;
-            document.getElementById("overviewConversion").textContent = `${overallExec}%`;
+    filteredArticles.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        const sym = getCurrencySymbol(item.currency);
+        
+        let totalVal = parseFloat(item.targetValue || 0); 
+        let rowMonthlyValues = new Array(activeMonthHeaders.length).fill(0);
+        
+        for (let i = 0; i < activeMonthHeaders.length; i++) {
+            let qVal = parseInt(item.achievedQtyValues[i] || 0);
+            rowMonthlyValues[i] = qVal * item.price;
         }
 
-        function openInputModal(index) {
-            const item = filteredArticles[index];
-            document.getElementById("modalRowIndex").value = index;
-            document.getElementById("modalProductTitle").textContent = `Fix Target Qty: ${item.articleNo}`;
-            
-            document.getElementById("inputTargetQty").value = item.targetQty || "";
-            
-            const container = document.getElementById("dynamicMonthlyInputContainer");
-            if (!container) return;
-            container.innerHTML = "";
+        let rowTotalAchieved = rowMonthlyValues.reduce((a, b) => a + b, 0);
+        let execPercent = totalVal > 0 ? ((rowTotalAchieved / totalVal) * 100).toFixed(1) : "0.0";
 
-            activeMonthHeaders.forEach((monthLabel, i) => {
-                let currentMonthQty = item.achievedQtyValues[i] || 0;
-                
-                container.innerHTML += `
-                    <div class="month-input-row">
-                        <span style="font-size: 11px; font-weight: bold; color: #2c3e50;">📅 ${monthLabel}:</span>
-                        <input type="number" class="monthly-modal-input" data-month-idx="${i}" value="${currentMonthQty}" placeholder="Qty">
-                    </div>
-                `;
+        globalTargetValue += totalVal;
+        globalAchievedValue += rowTotalAchieved;
+        rowMonthlyValues.forEach((v, i) => { globalMonthTotals[i] += v; });
+
+        let monthlyCellsHtml = rowMonthlyValues.map(v => 
+            `<td class="currency-cell green-text-live" style="padding:10px 12px; border: 1px solid black !important; color: #27ae60; text-align: right !important; padding-right: 14px !important; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums;">${sym} ${v.toFixed(2)}</td>`
+        ).join('');
+
+        tr.innerHTML = `
+            <td class="col-pick" style="text-align:center; border: 1px solid black !important; padding: 10px 4px;"><input type="radio" name="pickRowRadio" class="radio-custom" onclick="openInputModal(${index})"></td>
+            <td class="col-sno" style="text-align:center; border: 1px solid black !important; padding: 10px 4px; font-weight:bold; color: black;">${index + 1}</td>
+            <td class="col-art" style="text-align:center; border: 1px solid black !important; padding: 10px 6px; font-weight: bold; color: black; white-space: nowrap;">${item.articleNo}</td>
+            <td class="col-desc" style="text-align: left !important; padding-left: 14px !important; border: 1px solid black !important; padding: 10px 12px; color: black; font-size: 14px; white-space: normal !important; word-wrap: break-word;">${item.description}</td>
+            <td class="col-price currency-cell" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 10px 12px; font-variant-numeric: tabular-nums; color: black;">${sym} ${item.price.toFixed(2)}</td>
+            <td class="col-target currency-cell blue-text" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 10px 12px; font-variant-numeric: tabular-nums; color: #1d609c;">${sym} ${totalVal.toFixed(2)}</td>
+            ${monthlyCellsHtml}
+            <td class="col-achieved currency-cell Green-text" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 10px 12px; font-variant-numeric: tabular-nums; color: green;">${sym} ${rowTotalAchieved.toFixed(2)}</td>
+            <td class="col-exec red-text" style="text-align: center; border: 1px solid black !important; padding: 10px 4px; color: ${parseFloat(execPercent) >= 100 ? 'green' : '#d94556'}; background-color: #fdf2f2; font-size: 14px; white-space: nowrap;">${execPercent}%</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const tfoot = document.getElementById("corporateTableFoot");
+    if (!tfoot) return;
+    
+    let footHtml = `
+        <tr style="background: #fcf8f2; font-weight: bold; border-top: 2px solid #2c3e50; border-bottom: 2px solid black;">
+            <td colspan="2" style="border: 1px solid black !important; color: black; font-size: 16px; text-align: center; padding: 15px 4px;">Σ</td>
+            <td colspan="2" style="text-align: left !important; padding-left: 15px; border: 1px solid black !important; color: RED; font-size: 14px; text-transform: uppercase; white-space: nowrap; vertical-align: middle;">CONSOLIDATED LEDGER:</td>
+            <td style="border: 1px solid black !important;"></td>
+            <td class="currency-cell blue-text" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 12px; font-size: 14px; color: #1d609c; font-variant-numeric: tabular-nums;">€ ${globalTargetValue.toFixed(2)}</td>
+    `;
+
+    globalMonthTotals.forEach(mSum => {
+        footHtml += `<td class="currency-cell green-text-live" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 12px; font-size: 14px; color: #27ae60; font-variant-numeric: tabular-nums;">€ ${mSum.toFixed(2)}</td>`;
+    });
+
+    let overallExec = globalTargetValue > 0 ? ((globalAchievedValue / globalTargetValue) * 100).toFixed(1) : "0.0";
+    footHtml += `
+            <td class="currency-cell Green-text" style="text-align: right !important; padding-right: 14px !important; border: 1px solid black !important; padding: 12px; font-size: 14px; color: green; font-variant-numeric: tabular-nums;">€ ${globalAchievedValue.toFixed(2)}</td>
+            <td class="currency-cell red-text" style="text-align: center; border: 1px solid black !important; background-color: #fdf2f2; font-size: 14px; vertical-align: middle; padding: 12px 4px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%;">
+                    <span style="color: ${parseFloat(overallExec) >= 100 ? 'green' : '#d94556'}; font-weight: bold;">${overallExec}%</span> <span style="font-size: 12px;">🚀</span>
+                </div>
+            </td>
+        </tr>
+    `;
+    tfoot.innerHTML = footHtml;
+
+    const turnoverEl = document.getElementById("overviewTurnover");
+    const portfolioEl = document.getElementById("overviewPortfolio");
+    const conversionEl = document.getElementById("overviewConversion");
+
+    if (turnoverEl) turnoverEl.textContent = `€ ${globalAchievedValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (portfolioEl) portfolioEl.textContent = `€ ${globalTargetValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (conversionEl) conversionEl.textContent = `${overallExec}%`;
+}
+
+function openInputModal(index) {
+    const item = filteredArticles[index];
+    document.getElementById("modalRowIndex").value = index;
+    document.getElementById("modalProductTitle").textContent = `Fix Target Qty: ${item.articleNo}`;
+    
+    document.getElementById("inputTargetQty").value = item.targetQty || "";
+    
+    const container = document.getElementById("dynamicMonthlyInputContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    activeMonthHeaders.forEach((monthLabel, i) => {
+        let currentMonthQty = item.achievedQtyValues[i] || 0;
+        
+        container.innerHTML += `
+            <div class="month-input-row">
+                <span style="font-size: 11px; font-weight: bold; color: #2c3e50;">📅 ${monthLabel}:</span>
+                <input type="number" class="monthly-modal-input" data-month-idx="${i}" value="${currentMonthQty}" placeholder="Qty">
+            </div>
+        `;
+    });
+
+    document.getElementById("inputModal").style.display = "flex";
+}
+
+function closeModal() { 
+    document.getElementById("inputModal").style.display = "none"; 
+    const checkedRadio = document.querySelector('input[name="pickRowRadio"]:checked');
+    if(checkedRadio) checkedRadio.checked = false;
+}
+async function saveRowValuesFirebase() {
+    const index = document.getElementById("modalRowIndex").value;
+    if (index === "" || !filteredArticles[index]) return;
+
+    const updatedQty = parseInt(document.getElementById("inputTargetQty").value) || 0;
+    const targetItem = filteredArticles[index];
+    const targetArticleNo = targetItem.articleNo.toUpperCase().trim();
+    const computedTargetVal = updatedQty * targetItem.price;
+    
+    let updatedAchievedValueArray = new Array(activeMonthHeaders.length).fill(0);
+    let updatedAchievedQtyArray = new Array(activeMonthHeaders.length).fill(0);
+    const inputElements = document.querySelectorAll(".monthly-modal-input");
+    
+    let computed_aV = 0; 
+    let computed_monthQty = 0; 
+
+    inputElements.forEach(input => {
+        const mIdx = parseInt(input.getAttribute("data-month-idx"));
+        const qVal = parseInt(input.value) || 0;
+        let computedMonthVal = qVal * targetItem.price;
+        
+        updatedAchievedQtyArray[mIdx] = qVal;
+        updatedAchievedValueArray[mIdx] = computedMonthVal;
+        
+        computed_aV += computedMonthVal;
+        computed_monthQty += qVal;
+    });
+
+    try {
+        const masterDB = new Dexie("VimagMasterDB");
+        masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+        await masterDB.open();
+
+        const allCachedItems = await masterDB.brands.toArray();
+        const matchingEntries = allCachedItems.filter(p => 
+            p.artNo && p.artNo.toUpperCase().trim() === targetArticleNo && p.budgetId === activeBudgetId
+        );
+
+        if (matchingEntries.length === 0) {
+            matchingEntries.push({
+                id: targetItem.id,
+                baseItemId: targetItem.baseItemId,
+                customerName: targetItem.customerName,
+                brand: targetItem.brand
             });
-
-            document.getElementById("inputModal").style.display = "flex";
         }
 
-        function closeModal() { 
-            document.getElementById("inputModal").style.display = "none"; 
-            const checkedRadio = document.querySelector('input[name="pickRowRadio"]:checked');
-            if(checkedRadio) checkedRadio.checked = false;
-        }
-
-        function saveRowValuesFirebase() {
-            const index = document.getElementById("modalRowIndex").value;
-            if (index === "" || !filteredArticles[index]) return;
-
-            const updatedQty = parseInt(document.getElementById("inputTargetQty").value) || 0;
-            const targetItem = filteredArticles[index];
+        // இந்த பல்க் பிராட்காஸ்ட் லூப் தான் அனைத்து வாடிக்கையாளர்களின் ஃபயர்பேஸ் பாட்களையும் ஒரே நேரத்தில் பூட்டுகிறது
+        for (const entry of matchingEntries) {
+            const nodePath = `vimag/brands/${entry.brand}/${entry.customerName}/${entry.baseItemId}/budgets/${activeBudgetId}`;
             
-            // Calculate total financial weight target
-            const computedTargetVal = updatedQty * targetItem.price;
-            
-            let updatedAchievedValueArray = new Array(activeMonthHeaders.length).fill(0);
-            let updatedAchievedQtyArray = new Array(activeMonthHeaders.length).fill(0);
-            const inputElements = document.querySelectorAll(".monthly-modal-input");
-            
-            let computed_aV = 0; 
-            let computed_monthQty = 0; 
-
-            inputElements.forEach(input => {
-                const mIdx = parseInt(input.getAttribute("data-month-idx"));
-                const qVal = parseInt(input.value) || 0;
-                
-                let computedMonthVal = qVal * targetItem.price;
-                
-                updatedAchievedQtyArray[mIdx] = qVal;
-                updatedAchievedValueArray[mIdx] = computedMonthVal;
-                
-                computed_aV += computedMonthVal;
-                computed_monthQty += qVal;
-            });
-
-            // Target the safe isolated database node map
-            const nodePath = `vimag/brands/${targetItem.brand}/${targetItem.customerName}/${targetItem.baseItemId}/budgets/${activeBudgetId}`;
-            
-            // Update cloud database node structures synchronously
-            db.ref(nodePath).update({
+            await db.ref(nodePath).update({
                 qty: updatedQty,                        
                 monthQty: computed_monthQty,            
                 aV: computed_aV,                        
                 brandwise_target: computedTargetVal,    
                 achieved: updatedAchievedValueArray     
-            }).then(() => {
-                return vimagDB.brands.update(targetItem.id, {
-                    targetQty: updatedQty,
-                    monthQty: computed_monthQty,
-                    brandwise_target: computedTargetVal,
-                    achievedQty: updatedAchievedQtyArray
-                });
-            }).then(() => {
-                // Refresh local caching array blocks
-                targetItem.targetQty = updatedQty;
-                targetItem.targetValue = computedTargetVal;
-                targetItem.monthQty = computed_monthQty;
-                targetItem.achievedQtyValues = updatedAchievedQtyArray;
+            });
 
-                closeModal();
-                renderTableRows(); // Re-draw interface immediately
-                console.log("Timeline Quantities Tracked & Multiplied! 🚀");
-            }).catch(err => alert("Cloud Sync Failed: " + err.message));
+            await masterDB.brands.put({
+                id: entry.id,
+                baseItemId: entry.baseItemId,
+                budgetId: activeBudgetId,
+                brand: entry.brand,
+                customerName: entry.customerName,
+                artNo: targetItem.articleNo,
+                name: targetItem.description,
+                price: targetItem.price,
+                currency: targetItem.currency,
+                targetQty: updatedQty,
+                monthQty: computed_monthQty,
+                brandwise_target: computedTargetVal,
+                achievedQty: updatedAchievedQtyArray
+            });
         }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById("inputModal");
-            if (event.target === modal) {
-                closeModal();
-            }
-        };
-    </script>
+        targetItem.targetQty = updatedQty;
+        targetItem.targetValue = computedTargetVal;
+        targetItem.monthQty = computed_monthQty;
+        targetItem.achievedQtyValues = updatedAchievedQtyArray;
+
+        closeModal();
+        
+        const freshWarehouseItems = await masterDB.brands.toArray();
+        processRawDataToTable(freshWarehouseItems);
+        
+        console.log("Broadcast Sync Lock Complete across all instances! 🚀");
+
+    } catch (err) {
+        console.error("Critical Save Loop Error: ", err);
+        alert("தரவு ஒத்திசைவில் தோல்வி: " + err.message);
+    }
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("inputModal");
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+</script>
 </body>
 </html>
