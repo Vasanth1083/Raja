@@ -16,125 +16,220 @@
     <!-- 3. Manifest file link (Idhu dhaan mukhya logic) -->
     <link rel="manifest" href="manifest.json">
 <style>
-        @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
-        .logo-item img { animation: float 4s ease-in-out infinite; transition: all 0.4s ease; }
-body { 
-    font-family: 'Times New Roman', serif; 
-    /* Yellow-ku badhula unga image-ah inga link pannunga */
-    background-image: url('Background1.jpeg'); 
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    height: 100vh;
-    margin: 0; 
-    padding: 20px; 
-    text-align: center; 
-}        .vimag-header { background: white; border: 2px solid Yellow; border-radius: 15px; padding: 25px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-width: 500px; cursor: pointer; }
+ @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+        
+        /* 🎯 BRAND LOGO LINKS - மவுஸை மேலே வைக்கும் போது மென்மையாக எழும்பிப் பெரிதாகும் */
+        .logo-item img { 
+            animation: float 4s ease-in-out infinite; 
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
+        }
+        .logo-item:hover img {
+            transform: scale(1.12) translateY(-5px); /* 12% பெரிதாகி மேலே எழும்பும் */
+            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.18)); /* அழகான நிழல் விழும் */
+        }
+
+        body { 
+            font-family: 'Times New Roman', serif; 
+            background-image: url('Background1.jpeg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            height: 100vh;
+            margin: 0; 
+            padding: 20px; 
+            text-align: center; 
+        }        
+        
+        /* 🏢 MAIN HEADER BOX - மவுஸை வைக்கும் போது பார்டர் மற்றும் நிழல் மாறும் */
+        .vimag-header { 
+            background: white; 
+            border: 2px solid Yellow; 
+            border-radius: 15px; 
+            padding: 25px; 
+            display: inline-block; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            min-width: 500px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+        }
+        .vimag-header:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-color: #f1c40f;
+        }
+
         .logo-showcase { display: flex; flex-wrap: wrap; gap: 40px; padding: 25px; justify-content: center; align-items: center; background: white; border-radius: 10px; margin-top: 20px; }
         .logo-item img { width: 175px; transition: 0.2s; }
         .report-view { display: none; max-width: 1200px; margin: 0 auto; position: relative; }
-        .card { background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        /* 🗂️ DATA CARDS - மிதப்பது போன்ற 3D எஃபெக்ட் */
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 10px; }
         th { background-color: green; color: white; padding: 15px; text-transform: uppercase; border: 1px solid #219150; font-size: 13px; }
-        td { border: 1px solid #ddd; padding: 12px; font-size: 14px; color: black; }
+        
+        /* 📊 TABLE ROWS - மவுஸ் வரிசை மீது நகரும் போது லேசான சாம்பல் நிறத்தில் ஒளிரும் */
+        td { border: 1px solid #ddd; padding: 12px; font-size: 14px; color: black; transition: background 0.2s ease; }
+        tr:hover td {
+            background-color: #f7fafc !important;
+        }
+
         .top-right-btns { position: absolute; top: 10px; right: 20px; display: flex; gap: 10px; z-index: 100; }
         .top-left-home { position: absolute; top: 10px; left: 5px; z-index: 100; }
-        .tool-btn { padding: 10px 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.3s; font-family: 'Times New Roman'; }
+        
+        /* 🛠️ TOOL BUTTONS - மவுஸை வைக்கும் போது பிரகாசமாகி நிழல் விழும் */
+        .tool-btn { 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 8px; 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 11px; 
+            transition: all 0.2s ease-in-out; 
+            font-family: 'Times New Roman'; 
+        }
+        .tool-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.35);
+            filter: brightness(1.1); /* லேசாகப் பிரகாசமாகும் */
+        }
+
         .b1 { background: #3498db; }
-        .home-btn { background: #2c3e50; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; }
+        .b1:hover { box-shadow: 0 5px 15px rgba(52, 152, 219, 0.45); }
+
+        /* 🏠 HOME BUTTON HOVER */
+        .home-btn { 
+            background: #2c3e50; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-family: 'Times New Roman'; 
+            transition: all 0.25s ease;
+        }
+        .home-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:25px; border-radius:15px; width:700px; text-align:left; max-height: 90vh; overflow-y: auto; position: relative; }
-        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; font-family: 'Times New Roman'; box-sizing: border-box;}
+        
+        /* 📝 MODAL INPUT LINES - கிளிக் செய்யும் போது பார்டர் பச்சையாக மாறும் */
+        .modal-content input, .modal-content select { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 8px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            font-family: 'Times New Roman'; 
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .modal-content input:focus, .modal-content select:focus {
+            border-color: #27ae60;
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.25);
+            outline: none;
+        }
+
         #pieChartCanvas { width: 250px; height: 250px; border-radius: 50%; border: 5px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.1); margin: 20px auto; }
         .legend-box { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
         .legend-item { display: flex; align-items: center; font-size: 11px; font-weight: bold; }
         .color-sq { width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; }
         #artSearchContainer { position: absolute; top: 20px; right: 20px; background: white; padding: 15px; border-radius: 12px; border: 2px solid #27ae60; width: 220px; text-align: left; }
-  #loginOverlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #27ae60; z-index: 10000; display: flex;
-    justify-content: center; align-items: center;
-}
-.login-box {
-    background: white; padding: 30px; border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 300px;
-}
-.login-box input {
-    width: 100%; padding: 12px; margin: 15px 0;
-    border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-} @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-#modalBrandList li:hover {
-    background: #f1f8ff;
-    color: #007bff;
-}
-@media print {
-    /* 1. முழு பக்க பின்னணியையும் சுத்தமான வெள்ளையாக மாற்ற */
-    html, body, .report-view, .card, #samplesPage, #distPage, #masterReportPage, #indexPage {
-        background: white !important;
-        background-image: none !important;
-        background-color: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        height: auto !important;
-        box-shadow: none !important;
-        /* வளைந்த ஓரங்களை நீக்க */
-        border-radius: 0 !important; 
-    }
+        
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #27ae60; z-index: 10000; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 30px; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 300px;
+        }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 15px 0;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        } 
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
-    /* 2. பட்டன்கள் மற்றும் சர்ச் பாக்ஸ்களை மறைக்க */
-    button, .tool-btn, .home-btn, .top-left-home, .top-right-btns, header, 
-    #networkSearch, #artSearchContainer, #sBox, #distSearchBox, #distNameFilter { 
-        display: none !important; 
-    }
+        /* 📋 MODAL BRAND LIST HOVER */
+        #modalBrandList li {
+            transition: all 0.2s ease;
+        }
+        #modalBrandList li:hover {
+            background: #f1f8ff;
+            color: #007bff;
+            padding-left: 10px; /* லேசாக வலதுபுறம் நகரும் */
+        }
 
-    /* 3. 🎯 டேபிள் பாக்ஸ் பிக்ஸ் (வளைவுகள் இல்லாத நேரான கோடுகள்) */
-    table { 
-        width: 100% !important; 
-        border-collapse: collapse !important; 
-        /* வளைவுகளை நீக்கி பெட்டி போல மாற்ற */
-        border-radius: 0 !important; 
-        border: 1px solid black !important; 
-        margin-top: 20px !important;
-        margin-bottom: 50px !important;
-        background-color: white !important;
-    }
-
-    th, td { 
-        /* எல்லா பக்கமும் மெல்லிய 1px கருப்பு கோடு */
-        border: 1px solid black !important; 
-        padding: 8px !important; 
-        color: black !important;
-        background-color: white !important;
-        text-align: inherit; 
-        /* வளைந்த ஓரங்களை நீக்க */
-        border-radius: 0 !important; 
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    th { 
-        font-weight: bold !important;
-        text-transform: uppercase;
-        background-color: white !important;
-    }
-
-    /* 4. கடைசி வரிசைக்கு கீழ்ப்பக்கக் கோடு கண்டிப்பாக விழ உறுதி செய்தல் */
-    tr:last-child td {
-        border-bottom: 1px solid black !important;
-    }
-
-    /* 5. எழுத்துக்களின் கலர் அப்படியே இருக்க */
-    td { color: inherit !important; }
-    
-    a { text-decoration: none !important; color: black !important; pointer-events: none !important; }
-
-    /* டேபிள் ரோ கட் ஆகாமல் இருக்க */
-    tr { page-break-inside: avoid !important; }
-}
+        /* 🖨️ CLEAN HARDWARE PRINT OUTLINE PRESETS (பிரிண்ட் லேஅவுட் மாறாது) */
+        @media print {
+            html, body, .report-view, .card, #samplesPage, #distPage, #masterReportPage, #indexPage {
+                background: white !important;
+                background-image: none !important;
+                background-color: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+                box-shadow: none !important;
+                border-radius: 0 !important; 
+            }
+            button, .tool-btn, .home-btn, .top-left-home, .top-right-btns, header, 
+            #networkSearch, #artSearchContainer, #sBox, #distSearchBox, #distNameFilter { 
+                display: none !important; 
+            }
+            table { 
+                width: 100% !important; 
+                border-collapse: collapse !important; 
+                border-radius: 0 !important; 
+                border: 1px solid black !important; 
+                margin-top: 20px !important;
+                margin-bottom: 50px !important;
+                background-color: white !important;
+            }
+            th, td { 
+                border: 1px solid black !important; 
+                padding: 8px !important; 
+                color: black !important;
+                background-color: white !important;
+                text-align: inherit; 
+                border-radius: 0 !important; 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            th { 
+                font-weight: bold !important;
+                text-transform: uppercase;
+                background-color: white !important;
+            }
+            tr:last-child td {
+                border-bottom: 1px solid black !important;
+            }
+            td { color: inherit !important; }
+            a { text-decoration: none !important; color: black !important; pointer-events: none !important; }
+            tr { page-break-inside: avoid !important; }
+        }
  </style>
 </head>
 <body>
@@ -539,22 +634,30 @@ async function sendToCloud(payload) {
     let folder = "";
     if (String(payload.id).startsWith("S-")) folder = "samples";
     else if (String(payload.id).startsWith("D-")) folder = "distributors";
-    else folder = `brands/${payload.brand}/${payload.customerName}`;
+    else {
+        // 🔥 CRITICAL FIX: Valid Brand & Customer irundha mattum thaan path assignment nadakanum
+        let currentBrand = payload.brand;
+        let currentCust = payload.customerName || payload.name;
+
+        if (!currentBrand || currentBrand === "undefined" || !currentCust || currentCust === "undefined") {
+            console.error("⛔ Sync Blocked! Invalid Data Format detected to prevent Lessmann overwrite.", payload);
+            window.lastSentId = null;
+            return; 
+        }
+        folder = `brands/${currentBrand}/${currentCust}`;
+    }
 
     const fbPath = `vimag/${folder}/${payload.id}`;
 
     if (payload.action === 'delete') {
-        // 🔥 DOUBLE SAFETY 1: Local Dexie-la instant delete (Device A-kaga)
         if (folder === "samples") await vimagDB.samples.delete(payload.id);
         else if (folder === "distributors") await vimagDB.distributors.delete(payload.id);
         else await vimagDB.brands.where('id').equals(payload.id).delete();
 
-        // 🔥 DOUBLE SAFETY 2: Cloud-la thookurom (Matha devices-ku signal pogum)
-        db.ref(fbPath).remove()
-            .then(() => {
-                console.log("Deleted Cloud & Local 🗑️");
-                if (typeof filter === 'function') filter(); // Screen-la row maraiyum
-            });
+        db.ref(fbPath).remove().then(() => {
+            console.log("Deleted Cloud & Local 🗑️");
+            if (typeof filter === 'function') filter();
+        });
     } else {
         db.ref(fbPath).set(payload);
     }
@@ -563,77 +666,66 @@ async function sendToCloud(payload) {
     fetch(`${G_SHEET_URL}&${params}`, { mode: 'no-cors' });
     setTimeout(() => { window.lastSentId = null; }, 2000);
 }
-
 async function syncEverything() {
     console.log("Master Sync Engine: Jet Speed Delta Active ⚡");
-    isSyncing = false; // Initial Unlock
 
     const brandsRef = db.ref('vimag/brands');
-
-    // 📥 1. DATA ADD/UPDATE (Blink-Free & Accurate)
-    // Child level-la listen panradhala changes mattum sync aagum
     brandsRef.on('child_added', handleDeltaSync);
     brandsRef.on('child_changed', handleDeltaSync);
+    
+    // 🎯 FIXED: Single row-kaga motha brand database-um purge aavadhu thadukapatadhu
+    brandsRef.on('child_removed', async (snap) => {
+        const brandName = snap.key;
+        if(brandName && brands.includes(brandName)) {
+            await vimagDB.brands.where('brand').equals(brandName).delete();
+            if (typeof renderMasterTable === "function") await renderMasterTable();
+        }
+    });
 
     async function handleDeltaSync(snap) {
         const brandName = snap.key;
+        const brandData = snap.val() || {};
         if (!brands.includes(brandName)) return;
 
-        const brandData = snap.val() || {};
-        
         for (const custName of Object.keys(brandData)) {
             const rawItems = Object.values(brandData[custName] || {});
-            
-            // 🛡️ Identity Lock & Zombie Filter
-            const cleanItems = rawItems.filter(i => 
-                i.id && i.artNo !== "SYSTEM" && i.id !== "_id_lock"
-            );
+            const cleanItems = rawItems.filter(i => i.id && i.artNo !== "SYSTEM" && i.id !== "_id_lock");
 
-            // Dexie Warehouse Update (Silent background process)
             for (const item of cleanItems) {
-                await vimagDB.brands.put({ ...item, brand: brandName, customerName: custName });
+                if(item.id && (item.customerName || item.CustomerName)) {
+                    let sanitizedCust = (item.customerName || item.CustomerName).trim();
+                    await vimagDB.brands.put({ ...item, brand: brandName, customerName: sanitizedCust });
+                }
             }
         }
-        // 🖥️ UI Update (Only if needed, Blink thadukka)
-        if (typeof renderMasterTable === "function") renderMasterTable();
+        if (typeof renderMasterTable === "function") await renderMasterTable();
     }
 
-    // 🗑️ 2. INSTANT REMOTE DELETE (Accuracy for Device B, C, D)
-    brandsRef.on('child_removed', async (snap) => {
-        const brandName = snap.key;
-        // Device A-la delete panna udane, Device B/C/D-la intha line local-ah clean pannum
-        await vimagDB.brands.where('brand').equals(brandName).delete();
-        if (typeof renderMasterTable === "function") renderMasterTable();
-        console.log(`🗑️ Brand ${brandName} purged. No Zombies!`);
-    });
-
-     // 📦 3. SAMPLES & DISTRIBUTORS REAL-TIME SYNC (The Fix)
-    const syncPaths = [
+    // Samples & Distributors Sync
+    const syncConfigs = [
         { folder: 'samples', table: vimagDB.samples, refresh: () => typeof loadSamples === 'function' && loadSamples() },
         { folder: 'distributors', table: vimagDB.distributors, refresh: () => typeof loadDist === 'function' && loadDist() }
     ];
 
-    syncPaths.forEach(item => {
-        // Path check: vimag/samples or samples? Make sure it matches your save path.
-        const ref = db.ref(`vimag/${item.folder}`);
+    syncConfigs.forEach(conf => {
+        const ref = db.ref(`vimag/${conf.folder}`);
+        ref.on('child_added', async (snap) => { if(snap.val()?.id) { await conf.table.put(snap.val()); conf.refresh(); } });
+        ref.on('child_changed', async (snap) => { if(snap.val()?.id) { await conf.table.put(snap.val()); conf.refresh(); } });
+        ref.on('child_removed', async (snap) => { if(snap.key) { await conf.table.delete(snap.key); conf.refresh(); } });
+    });
 
-        // 📥 FORCE UPDATE: Any change in folder will refresh local Dexie
-        ref.on('value', async (snap) => {
-            const data = snap.val();
-            if (data) {
-                const items = Object.values(data);
-                // bulkPut will update existing and add new ones
-                await item.table.bulkPut(items);
-                item.refresh();
-                console.log(`✅ ${item.folder} synced from cloud.`);
-            }
-        });
+    // Deep Zombie Purge Layer with Loop Protection
+    brandsRef.on('value', async (snap) => {
+        const cloudData = snap.val() || {};
+        const localData = await vimagDB.brands.toArray();
+        let deletedAny = false;
 
-        // 🗑️ DELETE SYNC
-        ref.on('child_removed', async (snap) => {
-            await item.table.delete(snap.key);
-            item.refresh();
-        });
+        for (let localItem of localData) {
+            if(localItem.id === "_id_lock" || localItem.artNo === "SYSTEM") continue;
+            const stillExists = cloudData[localItem.brand] && cloudData[localItem.brand][localItem.customerName] && cloudData[localItem.brand][localItem.customerName][localItem.id];
+            if (!stillExists) { await vimagDB.brands.delete(localItem.id); deletedAny = true; }
+        }
+        if (deletedAny && typeof renderMasterTable === "function") await renderMasterTable();
     });
 }
 function toggleTrialDropdown() {
@@ -1735,65 +1827,38 @@ async function prepareDistUpdate() {
     }
 }
 function openSampleModal() {
-    // 1. ✨ ID RESET (Zombie Preventer)
     sampleEditId = null;
-
-    // 2. 🧹 CLEAR ALL INPUTS
-    // Idhunaala pazhaya edit panna data thirumba theriyaadhu (Accuracy)
     const modal = document.getElementById('sampleModal');
     if (!modal) return;
 
     modal.querySelectorAll('input, textarea, select').forEach(field => {
-        if (field.tagName === 'SELECT') {
-            field.selectedIndex = 0;
-        } else {
-            field.value = "";
-        }
+        if (field.id === 'sampBrand') return; // 🔥 Dropdown target dynamic reset-a bypass panrom
+        if (field.tagName === 'SELECT') field.selectedIndex = 0;
+        else field.value = "";
     });
 
-    // 3. 📝 HEADER UPDATE
-    const header = modal.querySelector('h2');
+    const header = modal.querySelector('h3');
     if (header) header.innerText = "Add New Sample 📦";
-
-    // 4. 🚀 UI LOGIC
-    // Type selection-ku etha madhiri extra fields-ah hide/show pannum
     if (typeof handleSampleTypeChange === "function") handleSampleTypeChange();
-
-    // 5. OPEN MODAL
     modal.style.display = 'flex';
-    
-    console.log("Sample Modal Ready for New Entry ✅");
 }
-function openDistModal() {
-    // 1. ✨ ID RESET (Zombie Preventer)
-    distEditId = null;
 
-    // 2. 🧹 CLEAR ALL INPUTS
+function openDistModal() {
+    distEditId = null;
     const modal = document.getElementById('distModal');
     if (!modal) return;
 
     modal.querySelectorAll('input, select').forEach(field => {
-        if (field.tagName === 'SELECT') {
-            field.selectedIndex = 0;
-        } else {
-            field.value = "";
-        }
+        if (field.id === 'distBrand') return; // 🔥 Reset guard activated
+        if (field.tagName === 'SELECT') field.selectedIndex = 0;
+        else field.value = "";
     });
 
-    // 3. 📝 HEADER UPDATE
-    const header = modal.querySelector('h2');
+    const header = modal.querySelector('h3');
     if (header) header.innerText = "Add New Distributor 🚛";
-
-    // 4. 🛡️ UI RESET
-    // Local Purchase fields-ah hide panna indha logic-ah trigger panrom
     if (typeof handleDistSourceChange === "function") handleDistSourceChange();
-
-    // 5. OPEN MODAL
     modal.style.display = 'flex';
-    
-    console.log("Distributor Modal Ready ✅");
 }
-
 function handleSampleTypeChange() {
     const sampType = document.getElementById('sampType');
     const extraBox = document.getElementById('extraSampleBox');
@@ -2157,51 +2222,55 @@ async function syncCloudToWarehouse() {
 
 // 2. 🏗️ STARTUP LOGIC
 window.onload = async function() {
-    console.log("Vimag Master System: Booting... 🏗️");
+    console.log("Vimag Master Hub: Booting Up Safe Serialized Pipeline... 🏗️");
 
-    // Sync start pannuvaom
-    syncCloudToWarehouse();
+    localStorage.removeItem('isSyncing');
+    isSyncing = false; 
 
-    // Default-ah local-la irukkura data-va udanae kaatta
-    if (typeof fetchUniqueNames === 'function') fetchUniqueNames();
-    if (typeof showIndex === 'function') showIndex();
-};
-async function showBrands(name, list) {
-    const modal = document.getElementById('brandModal');
-    const listElement = document.getElementById('modalBrandList');
-    if(!modal || !listElement) return;
-
-    // 🚀 STEP 1: FRESH DATA CHECK (Zombie Killer)
-    // Pass panna 'list'-ah nambaama, direct-ah Warehouse-la indha customer-ku
-    // ippo current-ah enna brands irukku nu check panrom.
-    const allItems = await vimagDB.brands.toArray();
-    const currentBrands = [...new Set(allItems
-        .filter(i => i.customerName === name && i.id !== "_id_lock" && i.artNo !== "SYSTEM")
-        .map(i => i.brand)
-    )].sort();
-
-    if (currentBrands.length === 0) {
-        return alert("Intha customer-ku ippo brands ethuvum illai! 🗑️ (Auto-Updated)");
+    if (typeof showIndex === 'function') {
+        showIndex(); 
+    } else {
+        const idxPage = document.getElementById('indexPage');
+        if(idxPage) idxPage.style.display = 'block';
+        ['masterReportPage', 'samplesPage', 'distPage'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
     }
 
-    document.getElementById('modalCustName').innerText = name;
-    
-    // 🏢 2. DYNAMIC BRAND LIST RENDERING
-    listElement.innerHTML = currentBrands.map(b => `
-        <li style="padding:15px 20px; border-bottom:1px solid #f1f1f1; cursor:pointer; display:flex; align-items:center; gap:12px; transition:0.3s; border-radius:8px;" 
-            onmouseover="this.style.background='#f0f7ff'; this.style.paddingLeft='25px';" 
-            onmouseout="this.style.background='transparent'; this.style.paddingLeft='20px';"
-            onclick="window.location.href='${b} Customer Status.html?name=${encodeURIComponent(name)}'">
-            
-            <img src="${logoMap[b] || 'Logo.jpeg'}" 
-                 style="width:28px; height:28px; object-fit:contain; border-radius:4px; background:#fff; padding:2px; box-shadow:0 1px 3px rgba(0,0,0,0.1);" 
-                 onerror="this.src='Logo.jpeg'">
-            
-            <span style="color:#2c3e50; font-weight:600; font-size:15px; flex-grow:1;">${b}</span>
-            <span style="color:#bdc3c7; font-size:14px;">➔</span>
-        </li>`).join('');
-    
-    modal.style.display = 'flex';
+    // Pehla Local warehouse render data-va kaaturom
+    if (typeof renderMasterTable === 'function') await renderMasterTable();
+    if (typeof filter === 'function') await filter();
+
+    // Conflict variable crash thaduka 600ms delay vachu delta listen-a trigger panrom
+    setTimeout(() => {
+        if (typeof syncEverything === 'function') {
+            syncEverything();
+            console.log("⚡ De-duplicated Engine Connected to Cloud.");
+        }
+    }, 600);
+
+    window.addEventListener('online', () => {
+        if (typeof syncEverything === 'function') syncEverything();
+    });
+
+    window.onclick = function(event) {
+        const modalIds = ['brandModal', 'progressModal', 'pieModal', 'sampleModal', 'distModal'];
+        modalIds.forEach(id => {
+            const m = document.getElementById(id);
+            if (m && event.target == m) {
+                m.style.display = "none";
+                sampleEditId = null;
+                distEditId = null;
+            }
+        });
+    };
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => {
+    console.log("Service Worker Registered");
+  });
 }
 async function openBrandNetwork() {
     document.getElementById('brandNetworkPage').style.display = 'block';
