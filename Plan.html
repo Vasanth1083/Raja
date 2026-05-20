@@ -7,7 +7,7 @@
     <link rel="icon" href="Vimag.png" type="image/png">
 
     <style>
-        * { box-sizing: border-box; transition: 0.3s; }
+          * { box-sizing: border-box; transition: 0.3s; }
         body {
             font-family: 'Times New Roman', serif;
             padding: 20px;
@@ -33,6 +33,8 @@
             margin-bottom: 25px;
             position: relative;
         }
+        
+        /* 🎯 சாதாரண நிலையில் பட்டன்களின் அசல் ஸ்டைல் */
         .btn {
             padding: 10px 20px;
             border: none;
@@ -44,9 +46,32 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.25s ease-in-out;
+            text-decoration: none;
         }
         .btn-back { background: GREEN; color: white; text-decoration: none; }
         .btn-print { background: RED; color: white; }
+
+        /* 🏠 HOME HUB BUTTON HOVER - நிறம் மாறாமல் லேசாக மேலே எழும்பி நிழல் விழும் */
+        .btn-back:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 10px 20px rgba(0, 128, 0, 0.4); 
+        }
+
+        /* 🖨️ PRINT BUTTON HOVER - நிறம் மாறாமல் லேசாக மேலே எழும்பி நிழல் விழும் */
+        .btn-print:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4); 
+        }
+
+        /* ⚙️ TABLE EDIT BUTTON HOVER - நிறம் மாறாமல் லேசாக மேலே எழும்பும் */
+        table .btn { transition: all 0.2s ease-in-out; background: #2980b9; color: white; }
+        table .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(41, 128, 185, 0.4);
+        }
+
         .search-box {
             padding: 10px 15px;
             border: 2px solid #27ae60;
@@ -55,7 +80,13 @@
             font-size: 15px;
             width: 250px;
             outline: none;
+            transition: all 0.2s ease;
         }
+        .search-box:focus {
+            border-color: #1e7e34;
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.3);
+        }
+
         .table-container {
             background: white;
             padding: 20px;
@@ -70,6 +101,7 @@
         tr:nth-child(even) { background: #f9f9f9; }
         tr:hover { background: #f1f2f6; }
         .completed-row td { background-color: #dcfce7 !important; color: #14532d !important; }
+        
         .counter-wrapper { display: inline-flex; align-items: center; gap: 12px; justify-content: center; width: 100%; }
         .btn-count {
             background: transparent;
@@ -86,11 +118,23 @@
             padding: 0;
             margin: 0;
             outline: none;
+            transition: all 0.2s ease;
         }
+        
+        /* ➖ MINUS COUNTER HOVER */
         .btn-count.btn-minus { color: #e74c3c; }
-        .btn-count.btn-minus:hover { transform: scale(1.3); color: #c0392b; }
+        .btn-count.btn-minus:hover { 
+            transform: scale(1.35); 
+            text-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* ➕ PLUS COUNTER HOVER */
         .btn-count.btn-plus { color: #27ae60; }
-        .btn-count.btn-plus:hover { transform: scale(1.3); color: #218838; }
+        .btn-count.btn-plus:hover { 
+            transform: scale(1.35); 
+            text-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+        }
+        
         .count-display { font-weight: bold; font-size: 16px; min-width: 25px; text-align: center; color: black; }
         table input[type="checkbox"] { accent-color: #27ae60; cursor: pointer; width: 16px; height: 16px; }
         
@@ -141,9 +185,10 @@
             font-family: 'Times New Roman';
         }
         
+        /* 🖨️ PERFECT PRINT ENGINE PRESETS FIXED */
         @media print {
             .btn, .search-box, th:first-child, td:first-child, .btn-count { display: none !important; }
-            .hdr-select { display: none !important; } /* ✨ PRINT HIDE DROPDOWN */
+            .hdr-select { display: none !important; } 
             div.print-hidden-block:has(.btn-back) { display: none !important; }
             div.print-hidden-block:has(#countTotal) {
                 display: block !important;
@@ -159,8 +204,6 @@
                 box-shadow: none !important;
                 margin-bottom: 15px !important;
             }
-            padding: 12px !important;
-            background: white !important;
             .counter-wrapper { display: block !important; text-align: left !important; }
             .count-display { color: black !important; }
             tr { background: white !important; color: black !important; }
@@ -171,7 +214,12 @@
                 print-color-adjust: exact;
             }
             body { background: white !important; background-image: none !important; padding: 0; margin: 0; }
-            th, td { border: 1px solid black !important; padding: 8px !important; color: black !important; }
+            th, td { 
+                border: 1px solid black !important; 
+                padding: 12px !important; 
+                color: black !important; 
+                background: white !important;
+            }
         }
     </style>
 </head>
@@ -181,7 +229,7 @@
         <div class="header-box">
             <div style="position: absolute; left: 20px; top: 20px;" class="print-hidden-block">
 
-                <a href="Followup.html" class="btn btn-back">🏠HOME</a>
+                <a href="followup.html" class="btn btn-back">🏠HOME</a>
             </div>
             <!-- 📊 VISITS STATUS SUMMARY BOX -->
             <div class="print-hidden-block" style="position: absolute; right: 20px; top: 20px; background: white; border: 2px solid #27ae60; border-radius: 10px; padding: 8px 15px; font-family: 'Times New Roman'; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; font-size: 13px; line-height: 1.4; min-width: 130px; z-index: 10;">
