@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributor Summary - VIMAG</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+    <style>
+        /* 🌌 BACKGROUND AND BASE STYLES */
+        body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 30px 20px;
+            position: relative;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* பின்னணி மற்றும் ப்ளர் எஃபெக்ட் */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('Background11.jpg') no-repeat center center fixed;
+            background-size: cover;
+            filter: blur(8px); 
+            z-index: -1;
+        }
+
+        .main-wrapper { 
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* 🏢 PICTURE ACCURATE LARGE HEADER BOX AND BUTTONS */
+        .master-header-box {
+            max-width: 900px;
+            margin: 0 auto 25px auto;
+            background: white;
+            border: 2px solid #27ae60; /* பச்சை நிற அவுட்லைன் பார்டர் */
+            border-radius: 25px; /* பெரிய வளைந்த ஓரங்கள் */
+            padding: 25px 35px;
+            text-align: center;
+            position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            font-family: 'Times New Roman', serif;
+        }
+
+        /* இடது ஓரத்தில் இருக்கும் ஹோம்/பேக் பட்டன் */
+        .top-left-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+        }
+        .home-hub-btn {
+            background: #008000 !important; /* அசல் பச்சை நிறம் */
+            color: white !important;
+            border: 2px solid black !important; /* கருப்பு பார்டர் அவுட்லைன் */
+            border-radius: 10px !important;
+            font-family: 'Times New Roman', serif;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            height: 42px;
+            padding: 0 22px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .home-hub-btn:hover {
+            background: #006400 !important;
+            transform: scale(1.03);
+        }
+
+        /* வலது ஓரத்தில் இருக்கும் பிரிண்ட் பட்டன் */
+        .top-right-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+        }
+        .print-hub-btn {
+            background: black !important; /* அசல் பிளாக் கலர் */
+            color: white !important;
+            border: 2px solid black !important;
+            border-radius: 10px !important;
+            font-family: 'Times New Roman', serif;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            height: 42px;
+            padding: 0 22px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        .print-hub-btn:hover {
+            background: #222 !important;
+            transform: scale(1.03);
+        }
+
+        /* மையப் பகுதி டைட்டில்கள் அடுக்கு */
+        .header-center-engine {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .main-company-title {
+            margin: 8px 0 0 0;
+            font-size: 26px;
+            color: #006064; 
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .sub-distributor-title {
+            margin: 6px 0 0 0;
+            font-size: 19px;
+            color: #e67e22; /* பிரகாசமான ஆரஞ்சு/மஞ்சள் கலந்த நிறம் */
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 🎯 THE TARGET GLASSMORPHISM PRESENTATION CONTAINER */
+        .table-container {
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 35px; 
+            overflow: hidden; 
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%; 
+            border-collapse: collapse;
+            table-layout: fixed;    
+            background: transparent;
+        }
+
+        /* பிரகாசமான மஞ்சள் நிற ஹெடர் பாக்ஸ் */
+        th { 
+            background: #ffea00; 
+            color: black; 
+            padding: 18px; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid rgba(0,0,0,0.1) !important;
+            border-right: 1px solid rgba(0,0,0,0.08) !important;
+            font-weight: bold;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        th:last-child { border-right: none !important; }
+
+        .glass-brand-row {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .glass-brand-row:last-child {
+            border-bottom: none;
+        }
+
+        /* இடதுபுற விநியோகஸ்தர் கட்டம் */
+        .glass-distributor-cell { 
+            padding: 25px 20px; 
+            font-weight: bold; 
+            width: 30%; 
+            background: rgba(255, 255, 255, 0.25);
+            text-align: left;
+            padding-left: 25px;
+            font-size: 17px;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            vertical-align: top;
+            border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* ]வலதுபுற கஸ்டமர் லிஸ்ட் கட்டம் */
+        .glass-customer-list-cell { 
+            padding: 20px 30px; 
+            background: transparent;
+            width: 70%;
+            vertical-align: top;
+        }
+
+        .glass-cust-item-row { 
+            display: flex; 
+            align-items: center; 
+            padding: 6px 0; 
+        }
+
+        /* பச்சை நிற எண்கள் (01, 02...) */
+        .glass-cust-sno { 
+            color: #27ae60; 
+            font-weight: bold; 
+            min-width: 40px; 
+            font-size: 16px; 
+            font-variant-numeric: tabular-nums;
+        }
+
+        .glass-cust-link-text { 
+            text-decoration: none; 
+            color: #000000; 
+            font-weight: bold; 
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        .glass-cust-link-text:hover { 
+            color: #2980b9; 
+            text-decoration: underline; 
+        }
+
+        /* 🖨️ PERFECT PORTRAIT PRINT CONFIGURATION ENGINE */
+        @media print {
+            /* 1. ஹோம் மற்றும் பிரிண்ட் பட்டன்களை மட்டும் பிரிண்டில் முழுமையாக மறைக்க */
+            .top-left-btn, .top-right-btn, button, .home-hub-btn, .print-hub-btn {
+                display: none !important;
+            }
+
+            /* 2. பெரிய ஹெடர் பாக்ஸை பிரிண்டிற்கு ஏற்றவாறு எளிய பெட்டியாக மாற்றுதல் (ஹெடிங்ஸ் அப்படியே வரும்) */
+            .master-header-box {
+                border: 2px solid black !important; /* காகிதத்தில் அச்சு தெளிவாக விழ நேரான கருப்பு அவுட்லைன் */
+                border-radius: 15px !important;
+                box-shadow: none !important;
+                margin-bottom: 20px !important;
+                padding: 15px !important;
+                background: white !important;
+            }
+
+            /* தலைப்பு எழுத்துக்கள் மற்றும் லோகோ பிரிண்டில் தெளிவாக விழச் செய்தல் */
+            .main-company-title {
+                color: black !important; 
+                font-size: 22px !important;
+                margin-top: 5px !important;
+            }
+
+            .sub-distributor-title {
+                color: black !important;
+                font-size: 16px !important;
+                margin-top: 4px !important;
+            }
+            
+            .sub-distributor-title span {
+                color: black !important; 
+            }
+
+            /* 3. பாடி அமைப்புகளை பிரிண்டர் பேப்பர் அளவுக்கு லாக் செய்தல் */
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body::before {
+                display: none !important; /* பின்னணி ப்ளர் இமேஜை முற்றிலும் மறைக்கிறது */
+            }
+
+            .main-wrapper {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 10mm !important;
+                box-sizing: border-box;
+            }
+
+            /* 4. டேபிள் பாக்ஸ் அமைப்புகள் */
+            .table-container {
+                background: white !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                box-shadow: none !important;
+                border: 2px solid black !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
+                background: white !important;
+            }
+
+            th, td {
+                border: 1px solid black !important;
+                color: black !important;
+                padding: 8px 12px !important;
+                font-size: 13px !important;
+                word-wrap: break-word !important;
+            }
+
+            th {
+                background-color: #ffea00 !important; /* மஞ்சள் நிறம் பிரிண்ட்/PDF-லும் அப்படியே விழும் */
+                font-weight: bold !important;
+                text-transform: uppercase !important;
+            }
+
+            .glass-distributor-cell {
+                background-color: #fcfcfc !important;
+                font-weight: bold !important;
+                width: 30% !important;
+            }
+
+            .glass-customer-list-cell {
+                background-color: white !important;
+                width: 70% !important;
+                padding: 8px 15px !important;
+            }
+
+            tr {
+                page-break-inside: avoid !important;
+            }
+
+            .glass-cust-item-row {
+                padding: 3px 0 !important;
+            }
+
+            @page {
+                size: portrait;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper"> 
+
+        <!-- 🏢 PICTURE ACCURATE LARGE HEADER BOX WITH DYNAMIC LAYERED TITLES -->
+        <div class="master-header-box">
+            
+            <!-- 🏠 இடது ஓரம்: ஹோம் / பேக் பட்டன் பகுதி -->
+            <div class="top-left-btn">
+                <button class="home-hub-btn" onclick="window.history.back()">🏠 HOME</button>
+            </div>
+
+            <!-- 🖨️ வலது ஓரம்: பிரிண்ட் பட்டன் பகுதி -->
+            <div class="top-right-btn">
+                <button class="print-hub-btn" onclick="window.print()">🖨️ PRINT</button>
+            </div>
+
+            <!-- 🎯 மையப் பகுதி: லோகோ இமேஜ் மற்றும் அடுக்கப்பட்ட தலைப்புகள் -->
+            <div class="header-center-engine">
+                <!-- 1st: VIMAG லோகோ இமேஜ் -->
+                <img src="Logo.jpeg" alt="Vimag Logo" width="130" style="height: auto; margin-bottom: 2px;">
+                
+                <!-- 2nd: கம்பெனி முதன்மை தலைப்பு -->
+                <h1 class="main-company-title">Vimag Industrial Solutions</h1>
+                
+                <!-- 3rd: நீங்கள் கேட்ட மாற்றுப் பெயருடன் கூடிய லைவ் சப்-டைட்டில் -->
+                <h2 class="sub-distributor-title" id="syncStatus">⚡ LIVE DISTRIBUTOR PIPELINES : Syncing... ☁️</h2>
+            </div>
+        </div>
+
+        <!-- Main Glass Table Container -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">DISTRIBUTOR</th>
+                        <th style="width: 70%; text-align: left; padding-left: 30px;">📋 CUSTOMER LIST</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 50px; color: #2c3e50; font-weight: bold; background: white; font-size: 15px;">Syncing 11 brands distribution network... ⚡</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div> 
+
+    <!-- Firebase SDK Infrastructure Links -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config Matrix
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+            projectId: "vimag-database",
+            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 🚀 LIVE STREAM DATA SYNC CORE ENGINE
+        function loadLiveDistributorSummaryPage() {
+            db.ref("vimag/brands").on('value', (snapshot) => {
+                const brandsTree = snapshot.val() || {};
+                const distributorToCustomersMap = new Map();
+
+                // பிராண்டுகளின் கிளைகளை ஆராய்கிறது
+                Object.keys(brandsTree).forEach(brand => {
+                    const customersNode = brandsTree[brand] || {};
+                    
+                    Object.keys(customersNode).forEach(companyName => {
+                        if (companyName === "SYSTEM" || companyName === "_id_lock" || companyName === "_identity") return;
+
+                        const productsList = customersNode[companyName] || {};
+                        
+                        // தயாரிப்புகளின் கீ-களை (pKey) லூப் செய்கிறது (பிழைகள் முற்றிலும் நீக்கப்பட்டுள்ளது)
+                        Object.keys(productsList).forEach(pKey => {
+                            const item = productsList[pKey];
+                            
+                            // கஸ்டமர் ஸ்டேட்டஸ் பக்கத்தில் உள்ள 'distributor' தகவலை வடிகட்டுகிறது
+                            if (item && item.distributor && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
+                                const rawDist = item.distributor.trim();
+                                const rawComp = companyName.trim();
+
+                                if (!distributorToCustomersMap.has(rawDist)) {
+                                    distributorToCustomersMap.set(rawDist, new Set());
+                                }
+                                
+                                // டூப்ளிகேட்களை வராமல் தடுக்க Set-க்குள் சேர்க்கிறது
+                                distributorToCustomersMap.get(rawDist).add(rawComp);
+                            }
+                        });
+                    });
+                });
+
+                // விநியோகஸ்தர் பெயர்களை அகரவரிசைப்படி அடுக்கிறது
+                const sortedDistributors = Array.from(distributorToCustomersMap.keys()).sort((a, b) => a.localeCompare(b));
+                const tbody = document.getElementById("summaryTableBody");
+
+                if (sortedDistributors.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 40px; color: #2c3e50; font-weight:bold; background: white;">No active distributor links allocated in system data status maps.</td></tr>`;
+                    document.getElementById("syncStatus").textContent = "⚡ LIVE DISTRIBUTOR PIPELINES : 0 LOGISTICS HUBS";
+                    return;
+                }
+
+                let htmlRowsBuffer = "";
+
+                sortedDistributors.forEach(distName => {
+                    const customerSet = distributorToCustomersMap.get(distName);
+                    const sortedCustomersList = Array.from(customerSet).sort((a, b) => a.localeCompare(b));
+
+                    let customersHTML = "";
+                    sortedCustomersList.forEach((company, idx) => {
+                        const padIndex = (idx + 1).toString().padStart(2, '0');
+                        customersHTML += `
+                            <div class="glass-cust-item-row">
+                                <span class="glass-cust-sno">${padIndex}.</span>
+                                <a href="Sales Report.html?name=${encodeURIComponent(company)}" class="glass-cust-link-text">${company}</a>
+                            </div>
+                        `;
+                    });
+
+                    htmlRowsBuffer += `
+                        <tr class="glass-brand-row">
+                            <td class="glass-distributor-cell">
+                                📍 ${distName.toUpperCase()}
+                            </td>
+                            <td class="glass-customer-list-cell">
+                                ${customersHTML || "<span style='color:#bdc3c7;'>No active customers</span>"}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = htmlRowsBuffer;
+                
+                // டிராக்கிங் ஸ்டேட்டஸ்: நீங்கள் கேட்ட கௌரவமான பெயருடன் லைவ் எண்ணிக்கை இங்கே அப்டேட் ஆகிறது!
+                document.getElementById("syncStatus").innerHTML = `⚡ LIVE DISTRIBUTOR PIPELINES : <span style="color:#27ae60;">${sortedDistributors.length} LOGISTICS HUBS</span>`;
+                console.log("Standalone Distributor Summary Page: Live Sync Done! 🚀");
+            });
+        }
+
+        window.onload = function() {
+            loadLiveDistributorSummaryPage();
+        };
+    </script>
+</body>
+</html>
