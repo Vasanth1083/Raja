@@ -8,19 +8,18 @@
 
     <style>
 
-        * { box-sizing: border-box; transition: 0.3s; }
-body { 
-    font-family: 'Times New Roman', serif; 
-    padding: 20px; 
-    /* 🟠 Orange-ah thookittu image-ah inga poduvom */
-    background-image: url('Background8.jpeg');
-    background-size: cover;      /* Screen full-ah cover pannum */
-    background-position: center;  /* Image-ah center pannum */
-    background-repeat: no-repeat; 
-    background-attachment: fixed; /* Scroll pannunaalum image move aagadhu, professional-ah irukkum */
-    margin: 0; 
-    min-height: 100vh; 
-}
+      * { box-sizing: border-box; transition: 0.3s; }
+        body { 
+            font-family: 'Times New Roman', serif; 
+            padding: 20px; 
+            background-image: url('Background8.jpeg');
+            background-size: cover;      
+            background-position: center;  
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+            margin: 0; 
+            min-height: 100vh; 
+        }
         /* ✨ Header Box with Side Dashboard */
         .header-box { 
             border: 3px solid #27ae60; 
@@ -32,7 +31,7 @@ body {
             align-items: center; 
             margin-bottom: 20px; 
             position: relative; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); /* ஹெடருக்கும் நிழல் கூட்டப்பட்டுள்ளது */
         }
 
         .header-content { text-align: left; flex: 1; }
@@ -50,17 +49,60 @@ body {
         .stat-line:last-child { margin-bottom: 0; }
         .stat-val { color: #27ae60; font-size: 16px; }
 
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; font-family: serif; }
+        /* 🎯 பட்டன்களின் அசல் ஸ்டைல் மற்றும் மைக்ரோ அனிமேஷன் */
+        .btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 14px; 
+            font-family: serif;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* அசைவு இன்னும் மிருதுவாக இருக்க */
+        }
         .btn-add { background: #27ae60; color: white; }
         .btn-del { background: #e74c3c; color: white; }
         .btn-home { background: GREEN; color: white; position: absolute; left: 20px; top: 20px; }
 
-        .dist-card { background: white; padding: 18px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #27ae60; cursor: pointer; }
-        .dist-card:hover { transform: scale(1.01); background: #f0fdf4; }
+        /* 🏠 பட்டன்கள் ஹோவர் - கரும் பின்னணியிலும் மிகத் தெளிவாகத் தெரியக்கூடிய அடர்த்தியான GLOW SHADOW பிக்ஸ் */
+        .btn-add:hover {
+            transform: translateY(-5px) scale(1.03); /* 5 பிக்சல் மேலே எழும்பும் */
+            box-shadow: 0 12px 24px rgba(39, 174, 96, 0.7); /* தடிமனான பிரகாசமான பச்சை நிழல் */
+        }
+        .btn-del:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 12px 24px rgba(231, 76, 60, 0.7); /* தடிமனான பிரகாசமான சிவப்பு நிழல் */
+        }
+        .btn-home:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 12px 24px rgba(0, 128, 0, 0.7); /* தடிமனான கரும் பச்சை நிழல் */
+        }
+
+        /* 📦 DISTRIBUTOR CARDS HOVER - தூக்கியடிக்கக்கூடிய அடர்த்தியான 3D கருப்பு/பச்சை கலந்த நிழல் */
+        .dist-card { 
+            background: white; 
+            padding: 18px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            border: 2px solid #27ae60; 
+            cursor: pointer; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .dist-card:hover { 
+            transform: translateY(-6px); /* 6 பிக்சல் பிரம்மாண்டமாக மேலே எழும்பும் */
+            /* 🎯 கரும் பின்னணியிலும் கார்டு தனியாகத் தெரிய 3D கருப்பு மற்றும் பச்சை கலந்த அடர்த்தியான நிழல் */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(39, 174, 96, 0.4); 
+            background: white; /* பின்னணி தூய வெள்ளையாகவே இருக்கும் */
+        }
         .dist-name { font-size: 18px; font-weight: bold; text-transform: uppercase; color: #333; flex: 1; }
 
-        /* 📊 Table with Full Borders */
-        table { width: 100%; border-collapse: collapse; background: white; border: 1px; solid black; margin-top: 0px; }
+        /* 📊 Table Configuration */
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid black; margin-top: 0px; }
         th, td { border: 1px solid black; padding: 12px; text-align: left; }
         th { background: #27ae60; color: white; text-transform: uppercase; font-size: 16px; }
         .brand-text { color: black; font-size: 16px; }
@@ -72,118 +114,142 @@ body {
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 350px; border: 3px solid #27ae60; }
         .modal-content label { font-size: 12px; display: block; margin-top: 10px; }
         .modal-content input, .modal-content select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: Times New Roman; }
-@media print {
-    /* 1. டேபிளுக்கு வெளியே உள்ள பட்டன்கள் மற்றும் பில்டர்களை முழுமையாக மறைக்க */
-    button, .home-link, .top-btns, #addBtn, #updBtn, #delBtn, #printBtn, 
-    header, .nav-bar, .filter-section, .th-filter, .top-left-home { 
-        display: none !important; 
-    }
-#printHeaderBox {
-        border: 2px solid #27ae60 !important; /* பிரிண்டில் கருப்பு பார்டர் நேர்த்தியாக இருக்கும் */
-        display: flex !important;
-        margin-bottom: 20px !important;
-    }
-    /* 1. பின்னணியில் உள்ள ஹோம் பேஜை முழுமையாக மறைக்க */
-    #mainHomeContent { 
-        display: none !important; 
-    }
-    /* 2. முழு பக்க பின்னணியை சுத்தமான வெள்ளையாக்க (பச்சை நிறம் வராது) */
-    html, body, .container, .card, .report-card {
-        background: white !important;
-        background-image: none !important;
-        margin: 0 !important;
-        padding: 10px !important;
-        box-shadow: none !important;
-display: block !important; /* Flex-ஐ நீக்க இது கட்டாயம் */
-        overflow: visible !important;
-    }
 
-span[onclick="closeStatusTable()"] {
-        display: none !important;
-    }
+        /* 🖨️ PERFECT PRINT ENGINE PRESETS FIXED */
+        @media print {
+            button, .home-link, .top-btns, #addBtn, #updBtn, #delBtn, #printBtn, 
+            header, .nav-bar, .filter-section, .th-filter, .top-left-home { 
+                display: none !important; 
+            }
+            #printHeaderBox {
+                border: 2px solid #27ae60 !important; 
+                display: flex !important;
+                margin-bottom: 20px !important;
+            }
+            #mainHomeContent { 
+                display: none !important; 
+            }
+            html, body, .container, .card, .report-card {
+                background: white !important;
+                background-image: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                box-shadow: none !important;
+                display: block !important; 
+                overflow: visible !important;
+            }
 
-    /* 3. 🎯 அலைன்மென்ட் பிக்ஸ்: ஸ்கிரீனில் உள்ளபடியே (Left/Center) அப்படியே வரும் */
-    th, td { 
-        border: 1px solid black !important; 
-        padding: 10px !important; 
-        color: black !important;
-        background-color: white !important;
-        /* --- 🎯 கட்டாயமாக சென்டர் செய்யாது, ஸ்கிரீன் அலைன்மென்ட்டை அப்படியே பின்பற்றும் --- */
-        text-align: inherit !important; 
-        vertical-align: middle !important;
-        -webkit-print-color-adjust: exact !important;
-    }
+            span[onclick="closeStatusTable()"] {
+                display: none !important;
+            }
 
-    /* 4. செக்பாக்ஸ்கள் அப்படியே தெரிய வேண்டும் */
-    input[type="checkbox"] {
-        display: inline-block !important;
-        visibility: visible !important;
-        accent-color: black !important;
-    }
+            th, td { 
+                border: 1px solid black !important; 
+                padding: 10px !important; 
+                color: black !important;
+                background-color: white !important;
+                text-align: inherit !important; 
+                vertical-align: middle !important;
+                -webkit-print-color-adjust: exact !important;
+            }
 
-    /* 5. டேபிள் பாக்ஸ் - 1px மெல்லிய நேரான கோடுகள் */
-    table { 
-        width: 100% !important; 
-        border-collapse: collapse !important; 
-        border: 1px solid black !important;
-        table-layout: auto !important;
-        margin-top: 10px !important;
- page-break-inside: auto;
-    }
+            input[type="checkbox"] {
+                display: inline-block !important;
+                visibility: visible !important;
+                accent-color: black !important;
+            }
 
-    /* 6. STATUS ஹெடர் மங்கலாகத் தெரிவதைத் தடுத்து கருகருவென மாற்ற */
-    th, th *, .f-icon {
-        color: black !important;
-        opacity: 1 !important;
-        font-weight: bold !important;
-        text-transform: uppercase;
-    }
+            table { 
+                width: 100% !important; 
+                border-collapse: collapse !important; 
+                border: 1px solid black !important;
+                table-layout: auto !important;
+                margin-top: 10px !important;
+                page-break-inside: auto;
+            }
 
-    /* டிராப்டவுன் அம்புக்குறியை மட்டும் நீக்க */
-    th select {
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        border: none !important;
-        background: transparent !important;
-    }
+            th, th *, .f-icon {
+                color: black !important;
+                opacity: 1 !important;
+                font-weight: bold !important;
+                text-transform: uppercase;
+            }
 
-    /* 7. FOLLOW-UP பேட்ஜ்கள் மற்றும் STATUS சாதாரண கருப்பு எழுத்தாக மாற */
-    table .badge, table .status-btn, table span, table b, table i {
-        background: transparent !important;
-        color: black !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        font-weight: bold !important;
-    }
-  #statusTableArea {
-        position: absolute !important; /* Fixed-ஐ மாற்றவும் */
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
-        background: white !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-.print-hidden, 
-    #statusTableArea span[onclick="closeStatusTable()"] {
-        display: none !important;
-    }
+            th select {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                border: none !important;
+                background: transparent !important;
+            }
 
-    /* 8. கடைசி வரிசைக்கு பாட்டம் லைன் கண்டிப்பாக வர */
-    tr:last-child td {
-        border-bottom: 1px solid black !important;
-    }
-  tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
+            table .badge, table .status-btn, table span, table b, table i {
+                background: transparent !important;
+                color: black !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                font-weight: bold !important;
+            }
+            #statusTableArea {
+                position: absolute !important; 
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-hidden, 
+            #statusTableArea span[onclick="closeStatusTable()"] {
+                display: none !important;
+            }
 
-    /* லிங்குகளை சாதாரண எழுத்தாக மாற்ற */
-    a { text-decoration: none !important; color: black !important; }
-}    </style>
+            tr:last-child td {
+                border-bottom: 1px solid black !important;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            a { text-decoration: none !important; color: black !important; }
+        }
+   </style>
+<!-- 🏢 DYNAMIC CONTROLS TOOLBAR STYLES HOVER EXTENSION -->
+    <style>
+        .my-hover-btn {
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
+        .my-hover-btn.add-btn:hover {
+            transform: translateY(-5px) scale(1.02) !important;
+            box-shadow: 0 12px 24px rgba(39, 174, 96, 0.7) !important;
+        }
+        .my-hover-btn.target-btn:hover {
+            transform: translateY(-5px) scale(1.02) !important;
+            box-shadow: 0 12px 24px rgba(230, 126, 34, 0.7) !important;
+        }
+        .my-dropdown-wrapper {
+            position: relative; 
+            display: inline-block;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+        .my-dropdown-wrapper:hover {
+            transform: translateY(-5px) scale(1.02) !important;
+            box-shadow: 0 12px 24px rgba(44, 62, 80, 0.6) !important;
+            border-radius: 10px;
+        }
+        .my-hover-btn.visit-btn:hover {
+            transform: translateY(-5px) scale(1.02) !important;
+            box-shadow: 0 12px 24px rgba(142, 68, 173, 0.7) !important;
+        }
+        .my-hover-btn.del-btn:hover {
+            transform: translateY(-5px) scale(1.02) !important;
+            box-shadow: 0 12px 24px rgba(231, 76, 60, 0.7) !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -192,7 +258,7 @@ span[onclick="closeStatusTable()"] {
     
     <!-- 🟢 1. WRAPPER ADD PANNIYACHU (Headings and Cards hide panna idhu mukhya) -->
     <div id="mainHomeContent">
-        <div class="header-box" style="padding: 40px 20px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f7f6df; min-height: 60px; margin-bottom: 20px;">
+        <div class="header-box" style="padding: 40px 20px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; min-height: 60px; margin-bottom: 20px;">
             
             <!-- 🏠 HOME BUTTON -->
             <a href="index.html" class="btn btn-home" style="text-decoration: none; position: absolute; left: 30px; top: 30px; padding: 12px 20px; background: green; color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🏠 HOME</a>
@@ -216,6 +282,8 @@ span[onclick="closeStatusTable()"] {
 
             <!-- 🎯 CENTER HEADINGS -->
             <div style="text-align: center; margin-top: 5px;">
+            <img src="Logo.jpeg" style="width: 150px; height: auto; margin-bottom: 10px;" alt="Logo" onerror="this.style.display='none'">
+
                 <h1 style="color: red; margin: 0; font-size: 2.2em; font-weight: 900;">VIMAG FOLLOW-UP</h1>
                 <div style="margin-top: 10px;">
                     <h2 style="color: GREEN; margin: 0; font-size: 1.8em; font-weight: bold;">Staff Activity Tracker</h2>
@@ -225,26 +293,20 @@ span[onclick="closeStatusTable()"] {
             <!-- 🛠️ ACTION BUTTONS -->
             <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center; width: 100%;">
                 <button class="btn btn-add" onclick="openDistModal()" style="padding: 10px 15px; background: #27ae60; color: white; border-radius: 10px;"> + Add Staff </button>
-<!-- 🎯 TARGET BUTTON (Directs to separate Target.html page) -->
-<button class="btn" onclick="window.location.href='Sales Budget.html'" style="padding: 10px 15px; background: #e67e22; color: white; border-radius: 10px; font-weight: bold; cursor: pointer;">
-    🎯 TARGET
-</button>
+  <button class="btn my-hover-btn target-btn" onclick="window.location.href='Sales Budget.html'" style="background: #e67e22; color: white;"> 🎯 TARGET </button>
 
 <!-- 👤 Staff Portfolio Dropdown Style Button -->
-    <div style="position: relative; display: inline-block;">
-        <select id="portfolioStaffSelect" onchange="if(this.value) openStaffPortfolio(this.value)" 
-            style="padding: 11px 15px; background: #2c3e50; color: white; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; outline: none; appearance: none; -webkit-appearance: none; min-width: 180px; text-align: center;">
-            <option value="" style="background: white; color: black;">👤 STAFF PORTFOLIO</option>
-            <!-- Staff names will flow here -->
-        </select>
-        <!-- Dropdown arrow icon -->
-        <span style="position: absolute; right: 10px; top: 13px; color: white; pointer-events: none; font-size: 10px;">▼</span>
-    </div>
+            <div class="my-dropdown-wrapper">
+                <select id="portfolioStaffSelect" onchange="if(this.value) openStaffPortfolio(this.value)" 
+                    style="padding: 11px 25px 11px 15px; background: #2c3e50; color: white; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; outline: none; appearance: none; -webkit-appearance: none; min-width: 180px; text-align: center;">
+                    <option value="" style="background: white; color: black;">👤 STAFF PORTFOLIO</option>
+                </select>
+                <span style="position: absolute; right: 10px; top: 13px; color: white; pointer-events: none; font-size: 10px;">▼</span>
+            </div>
 
 <!-- 📅 VISIT PLAN BUTTON DIRECTS TO VISIT SHEET -->
-<button class="btn" onclick="window.location.href='Plan.html'" style="padding: 10px 15px; background: #8e44ad; color: white; border-radius: 10px; font-weight: bold; cursor: pointer;">
-    🚗 VISIT PLAN
-</button>
+            <button class="btn my-hover-btn visit-btn" onclick="window.location.href='Plan.html'" style="background: #8e44ad; color: white;"> 🚗 VISIT PLAN </button>
+
                 <button class="btn btn-del" onclick="deleteDistributors()" style="padding: 10px 15px; background: #e74c3c; color: white; border-radius: 10px;"> 🗑️ Delete Selected </button>
             </div>
         </div>
