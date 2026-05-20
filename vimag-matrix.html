@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIMAG Industrial Matrix Workspace</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .matrix-header {
+            background: #1d609c;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .matrix-header h1 { margin: 0; font-size: 24px; }
+        .matrix-header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
+        
+        .workspace-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+        tr { border-bottom: 1px solid #e0e0e0; }
+        td { padding: 15px 12px; vertical-align: middle; font-size: 14px; }
+        
+        input[type="radio"] { transform: scale(1.3); cursor: pointer; }
+        .company-title { font-weight: bold; color: #2c3e50; }
+        .loc-text { font-size: 12px; color: #27ae60; font-weight: bold; display: block; margin-top: 2px; }
+        
+        .brand-badge {
+            background: #fff0f6;
+            color: #c91a25;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            display: inline-block;
+        }
+        
+        .btn-action {
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.9; }
+        
+        .btn-view { background: #2ecc71; font-size: 14px; padding: 10px 24px; }
+        .action-bar-top {
+            display: flex;
+            justify-content: flex-end;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Modal Popup Design with Scrollbar */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 580px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .modal-header {
+            border-bottom: 2px solid #1d609c;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #1d609c;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 24px; font-weight: bold; color: #7f8c8d;
+            cursor: pointer;
+        }
+        .info-row { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
+        .info-label { font-weight: bold; color: #34495e; }
+        
+        .highlight-box {
+            background: #fff9db;
+            border-left: 4px solid #f59f00;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .btn-modal-close {
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-modal-close:hover { background: #95a5a6; }
+    </style>
+</head>
+<body>
+
+    <div class="matrix-header">
+        <h1>🏭 VIMAG Tooling Demand Matrix</h1>
+<p>Industrial Accounts Directory & Machinery Use-Cases Across Tamil Nadu & Renigunta</p>
+    </div>
+
+    <div class="workspace-card">
+        <div class="action-bar-top">
+            <button class="btn-action btn-view" onclick="openViewMorePopup()">🔍 View Profile</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 8%; text-align: center;">Pick</th>
+                    <th style="width: 32%;">Industry & Location</th>
+                    <th style="width: 40%;">Operation / Use Case</th>
+                    <th style="width: 12%;">Required Solution</th>
+                    <th style="width: 8%; text-align: center;">Ignore</th>
+                </tr>
+            </thead>
+            <tbody id="vimagGkTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Scrollable History Popup Modal -->
+    <div id="historyPopupModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeViewMorePopup()">&times;</span>
+            <h3 id="popCompanyTitle" class="modal-header">🏭 Company Name</h3>
+            
+            <div class="info-row"><span class="info-label">📍 Plant Location: </span><span id="popLocation"></span></div>
+            <div class="info-row"><span class="info-label">⚙️ Machinery / System: </span><span id="popMachine"></span></div>
+            <div class="info-row"><span class="info-label">🛠️ Target Operation: </span><span id="popOperation"></span></div>
+            <div class="info-row"><span class="info-label">🔴 Recommended VIMAG Brand: </span><span id="popBrand" class="brand-badge"></span></div>
+            
+            <div class="info-row highlight-box">
+                <span class="info-label" style="color: #d9480f;">📊 Maximum Annual Quantity Needed: </span>
+                <span id="popQuantity" style="font-weight: bold; color: #d9480f;"></span>
+            </div>
+
+            <div class="info-row" style="background: #fff5f5; border-left: 4px solid #c91a25; padding: 10px; border-radius: 4px; margin-top: 8px;">
+                <span class="info-label" style="color: #c91a25;">🛒 Currently Buying From (Alternative Supplier): </span>
+                <span id="popCurrentSupplier" style="font-weight: bold; color: #c91a25;"></span>
+            </div>
+            
+            <h4 style="border-top: 1px dashed #ccc; padding-top: 12px; color: #2c3e50; margin-bottom: 8px;">👤 Plant Procurement Contact Details</h4>
+            <div class="info-row"><span class="info-label">Manager Name: </span><span id="popContactName"></span></div>
+            <div class="info-row"><span class="info-label">Designation: </span><span id="popContactRole"></span></div>
+            
+            <h4 style="border-top: 1px dashed #ccc; padding-top: 12px; color: #2c3e50; margin-bottom: 8px;">📜 Current Status & Audit Logs</h4>
+            <div class="info-row" id="popHistory" style="color: #555; background: #fdfefe; padding: 10px; border-radius: 4px; border: 1px solid #e0e0e0; max-height: 100px; overflow-y: auto;"></div>
+            
+            <button class="btn-modal-close" onclick="closeViewMorePopup()">Close Window</button>
+        </div>
+    </div>
+
+    <script>
+        var vimagDisplayedNews = [];
+
+        var aiPrefixes = ["Tata", "Larsen & Toubro", "Mahindra", "Maruti", "Ashok Leyland", "JSW", "Reliance", "Adani", "Vedanta", "Bajaj", "TVS", "Hero", "Eicher", "Kirloskar", "Godrej", "Bharat Forge", "Sundram Fasteners", "Jindal", "Caterpillar", "Tesla", "Boeing", "Ford", "Bosch", "Siemens", "L&T Heavy", "Murugappa", "Amara Raja", "Tubes India", "Lucas TVS", "Brakes India"];
+        var aiSectors = ["Steel", "Aerospace", "Heavy Machinery", "Automotive", "Shipbuilding", "Structural Steel", "Automation", "Tooling", "Fabrication", "Gigafactory", "Nuclear Engineering", "Petrochemical", "Metallurgy", "Hydraulics", "Casting", "Forging", "CNC Machining", "Precision Engineering", "Industrial Hardware", "Metal Forming", "Pipeline", "Boiler", "Foundry", "Turbine", "Chassis", "Alloy Steel", "Robot Welder", "Laser Profile", "Die Casting", "Sheet Metal"];
+        var aiSuffixes = ["Limited", "Manufacturing", "Engineering", "Solutions", "Global", "Industries", "Systems", "Complex", "Foundry", "Works", "Plant", "Division", "Labs", "Enterprises", "Corporation", "Tech", "Ventures", "Dynamics", "Allies", "Group", "Hub", "Sector", "Station", "Yard"];
+
+        var aiLocations = [
+            "Chennai, Tamil Nadu 📍", "Coimbatore, Tamil Nadu 📍", "Trichy, Tamil Nadu 📍", "Hosur, Tamil Nadu 📍", "Renigunta, Andhra Pradesh 📍", 
+            "Sriperumbudur, Chennai 📍", "Ambattur Industrial Estate, Chennai 📍", "Guindy IE, Chennai 📍", "Ranipet Industrial Area 📍", "Salem Steel Hub, TN 📍", 
+            "Madurai Engineering Cluster 📍", "Tuticorin Heavy Industries, TN 📍", "Erode Textile & Engineering, TN 📍", "Tiruppur Manufacturing Zone, TN 📍", "Karur Coach Building Hub, TN 📍"
+        ];
+
+        var aiMachineActions = [
+            { machine: "⚙️ CNC Plasma / Laser Machine", text: "Targeting edge burr cleaning lines after heavy profile steel blanks setup.", brand: "Rhodius", unit: "Discs" },
+            { machine: "⚙️ Automatic Welding Boom", text: "Polishing weld joints and heavy slag layers before quality ultrasound tests.", brand: "Lessmann", unit: "Brushes" },
+            { machine: "⚙️ Cylinder Block Boring System", text: "Deburring internal engine cross-holes inside block assembly units.", brand: "Lessmann", unit: "Brushes" },
+            { machine: "⚙️ CNC Turning & Milling Lathe", text: "Tracking high-precision mickron-level gaps on turbine shafts rotation logs.", brand: "Starrett", unit: "Units" },
+            { machine: "⚙️ Pipe Threading Heavy Lathe", text: "Milling high-speed screw threads onto industrial custom heavy alloy pipelines.", brand: "Voelkel", unit: "Sets (Taps/Dies)" },
+            { machine: "⚙️ Robotic MIG/TIG Welding Cell", text: "Preventing high-pressure weld spatter inside automated gas shroud assemblies.", brand: "Capital Weld", unit: "Torch Spares" },
+            { machine: "⚙️ Oxy-Fuel Structural Torch", text: "Layout marking on heavy steel beams with weather-resistant paint crayons.", brand: "Laco (Markal)", unit: "Boxes (Crayons)" },
+            { machine: "⚙️ Radial Heavy Drilling Machine", text: "Re-threading stripped engine gear casing blocks with repair tool inserts.", brand: "Voelkel", unit: "Kits" },
+            { machine: "⚙️ Angle Grinder Hand Tool", text: "Polishing heavy stainless steel pipelines to zero friction mirror look surface.", brand: "Rhodius", unit: "Flap Discs" },
+            { machine: "⚙️ Heavy Castings Grinding Bench", text: "Snagging and cleaning raw flash lines off heavy iron casting moldings.", brand: "Rhodius", unit: "Grinding Wheels" }
+        ];
+
+        var industrialSuppliers = ["Local Multi-Brand Hardware Distributors", "Unbranded Wholesale Commodity Traders (Local Market)", "Third-Party Industrial Consumables Stockists", "Cheap Imported Brand Vendors (Direct Port Sourcing)", "Regional General Hardware & Fabrication Supplies"];
+        var firstNames = ["Rajesh", "Suresh", "Arun", "Vijay", "Anand", "Senthil", "Karthik", "Ramesh", "Prabhu", "Mani"];
+        var lastNames = ["Kumar", "Sharma", "Rao", "Pillai", "Joshi", "Nair", "Reddy", "Murugan", "Patel", "Singh"];
+        var roles = ["Plant Head", "Procurement Manager", "Chief Tooling Engineer", "Quality Control Supervisor", "Maintenance Lead"];
+
+        function generateSingleAICompany() {
+            var randomPrefix = aiPrefixes[Math.floor(Math.random() * aiPrefixes.length)];
+            var randomSector = aiSectors[Math.floor(Math.random() * aiSectors.length)];
+            var randomSuffix = aiSuffixes[Math.floor(Math.random() * aiSuffixes.length)];
+            var randomLocation = aiLocations[Math.floor(Math.random() * aiLocations.length)];
+            var randomAction = aiMachineActions[Math.floor(Math.random() * aiMachineActions.length)];
+            var currentSupplier = industrialSuppliers[Math.floor(Math.random() * industrialSuppliers.length)];
+            
+            var fullCompanyName = randomPrefix + " " + randomSector + " " + randomSuffix;
+            var contact = firstNames[Math.floor(Math.random() * firstNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)];
+            var role = roles[Math.floor(Math.random() * roles.length)];
+            var maxQty = (Math.floor(Math.random() * 8) + 2) * 250; 
+            var qtyString = maxQty.toLocaleString('en-IN') + " " + randomAction.unit + " / Per Annum";
+            
+            var currentYear = new Date().getFullYear();
+            var historyLog = "• [" + (currentYear - 1) + "]: Currently buying standard alternatives from open market vendors.<br>• [Active Audit]: High operational downtime logged due to sub-standard tool life cycle.<br>• [VIMAG Target]: Perfect prospect for transitioning line setups into optimized " + randomAction.brand + " packages.";
+
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                company: "🏭 " + fullCompanyName,
+                location: randomLocation,
+                machine: randomAction.machine,
+                description: randomAction.text,
+                brand: randomAction.brand,
+                contactName: contact,
+                contactRole: role,
+                maxQuantity: qtyString,
+                supplier: currentSupplier,
+                history: historyLog
+            };
+        }
+
+        // 🎯 100% strict verification process to lock data across popup exits
+        function initWorkspaceTable() {
+            var savedData = localStorage.getItem("vimagPersistentProspects");
+            if (savedData) {
+                vimagDisplayedNews = JSON.parse(savedData);
+            } else {
+                vimagDisplayedNews = [];
+                for (var i = 0; i < 5; i++) { 
+                    vimagDisplayedNews.push(generateSingleAICompany()); 
+                }
+                localStorage.setItem("vimagPersistentProspects", JSON.stringify(vimagDisplayedNews));
+            }
+            renderMatrixWorkspace();
+        }
+
+        function ignoreRowAndReplace(companyId) {
+            for (var i = 0; i < vimagDisplayedNews.length; i++) {
+                if (vimagDisplayedNews[i].id === companyId) { 
+                    vimagDisplayedNews[i] = generateSingleAICompany(); 
+                    break; 
+                }
+            }
+            localStorage.setItem("vimagPersistentProspects", JSON.stringify(vimagDisplayedNews));
+            renderMatrixWorkspace();
+        }
+
+        function renderMatrixWorkspace() {
+            const tbody = document.getElementById("vimagGkTableBody");
+            if (!tbody) return;
+            
+            // 🎯 Read active picked state before updating rows to keep layout steady
+            var checkedValue = null;
+            const radios = document.getElementsByName("selectedMatrixClient");
+            for(var i = 0; i < radios.length; i++) {
+                if(radios[i].checked) { checkedValue = radios[i].value; break; }
+            }
+
+            tbody.innerHTML = "";
+
+            vimagDisplayedNews.forEach((item, index) => {
+                let workDescText = item.description;
+                const highlightWords = ["cutting", "marking", "discs", "tools", "welding", "precision", "brushes", "steel", "machinery", "taps", "dies", "production"];
+                highlightWords.forEach(word => {
+                    const regex = new RegExp('\\b' + word + '\\b', 'gi');
+                    workDescText = workDescText.replace(regex, '<strong style="color:#1d609c; font-weight:bold;">$&</strong>');
+                });
+
+                // Auto fallback to index zero choice if popup closed or none chosen
+                var isChecked = checkedValue ? (item.id === checkedValue) : (index === 0);
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="text-align: center;"><input type="radio" name="selectedMatrixClient" value="${item.id}" ${isChecked ? 'checked' : ''}></td>
+                    <td><span class="company-title">${item.company}</span><span class="loc-text">${item.location}</span></td>
+                    <td class="desc-text"><span style="font-size:11.5px; color:#555; font-weight:500; display:block; margin-bottom:2px;">${item.machine}</span>${workDescText}</td>
+                    <td><span class="brand-badge">${item.brand}</span></td>
+                    <td style="text-align: center;"><button class="btn-action btn-ignore" onclick="ignoreRowAndReplace('${item.id}')">❌</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openViewMorePopup() {
+            const radios = document.getElementsByName("selectedMatrixClient");
+            var selectedId = null;
+            for(var i = 0; i < radios.length; i++) {
+                if(radios[i].checked) { selectedId = radios[i].value; break; }
+            }
+            if(!selectedId) return;
+            
+            var pickedClient = vimagDisplayedNews.find(x => x.id === selectedId);
+            if(!pickedClient) return;
+            
+            document.getElementById("popCompanyTitle").innerHTML = pickedClient.company;
+            document.getElementById("popLocation").innerHTML = pickedClient.location;
+            document.getElementById("popMachine").innerHTML = pickedClient.machine;
+            document.getElementById("popOperation").innerHTML = pickedClient.description;
+            document.getElementById("popBrand").innerHTML = pickedClient.brand;
+            document.getElementById("popContactName").innerHTML = pickedClient.contactName;
+            document.getElementById("popContactRole").innerHTML = pickedClient.contactRole;
+            document.getElementById("popQuantity").innerHTML = pickedClient.maxQuantity;
+            document.getElementById("popCurrentSupplier").innerHTML = pickedClient.supplier;
+            document.getElementById("popHistory").innerHTML = pickedClient.history;
+            
+            document.getElementById("historyPopupModal").style.display = "flex";
+        }
+
+        // 🎯 Enforces strict persistent table redraw on closing popup window
+        function closeViewMorePopup() { 
+            document.getElementById("historyPopupModal").style.display = "none"; 
+            renderMatrixWorkspace(); 
+        }
+        window.onload = initWorkspaceTable;
+    </script>
+</body>
+</html>
