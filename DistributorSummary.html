@@ -409,85 +409,96 @@
 
         // 🚀 LIVE STREAM DATA SYNC CORE ENGINE
         function loadLiveDistributorSummaryPage() {
-            db.ref("vimag/brands").on('value', (snapshot) => {
-                const brandsTree = snapshot.val() || {};
-                const distributorToCustomersMap = new Map();
+    db.ref("vimag/brands").on('value', (snapshot) => {
+        const brandsTree = snapshot.val() || {};
+        
+        // டூப்ளிகேட்களை முழுமையாக நீக்கப் பயன்படும் உன்னதமான வரைபடம்
+        const distributorToCustomersMap = new Map();
 
-                // பிராண்டுகளின் கிளைகளை ஆராய்கிறது
-                Object.keys(brandsTree).forEach(brand => {
-                    const customersNode = brandsTree[brand] || {};
-                    
-                    Object.keys(customersNode).forEach(companyName => {
-                        if (companyName === "SYSTEM" || companyName === "_id_lock" || companyName === "_identity") return;
+        Object.keys(brandsTree).forEach(brand => {
+            const customersNode = brandsTree[brand] || {};
+            
+            Object.keys(customersNode).forEach(companyName => {
+                if (companyName === "SYSTEM" || companyName === "_id_lock" || companyName === "_identity") return;
 
-                        const productsList = customersNode[companyName] || {};
-                        
-                        // தயாரிப்புகளின் கீ-களை (pKey) லூப் செய்கிறது (பிழைகள் முற்றிலும் நீக்கப்பட்டுள்ளது)
-                        Object.keys(productsList).forEach(pKey => {
-                            const item = productsList[pKey];
-                            
-                            // கஸ்டமர் ஸ்டேட்டஸ் பக்கத்தில் உள்ள 'distributor' தகவலை வடிகட்டுகிறது
-                            if (item && item.distributor && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
-                                const rawDist = item.distributor.trim();
-                                const rawComp = companyName.trim();
-
-                                if (!distributorToCustomersMap.has(rawDist)) {
-                                    distributorToCustomersMap.set(rawDist, new Set());
-                                }
-                                
-                                // டூப்ளிகேட்களை வராமல் தடுக்க Set-க்குள் சேர்க்கிறது
-                                distributorToCustomersMap.get(rawDist).add(rawComp);
-                            }
-                        });
-                    });
-                });
-
-                // விநியோகஸ்தர் பெயர்களை அகரவரிசைப்படி அடுக்கிறது
-                const sortedDistributors = Array.from(distributorToCustomersMap.keys()).sort((a, b) => a.localeCompare(b));
-                const tbody = document.getElementById("summaryTableBody");
-
-                if (sortedDistributors.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 40px; color: #2c3e50; font-weight:bold; background: white;">No active distributor links allocated in system data status maps.</td></tr>`;
-                    document.getElementById("syncStatus").textContent = "⚡ LIVE DISTRIBUTOR PIPELINES : 0 LOGISTICS HUBS";
-                    return;
-                }
-
-                let htmlRowsBuffer = "";
-
-                sortedDistributors.forEach(distName => {
-                    const customerSet = distributorToCustomersMap.get(distName);
-                    const sortedCustomersList = Array.from(customerSet).sort((a, b) => a.localeCompare(b));
-
-                    let customersHTML = "";
-                    sortedCustomersList.forEach((company, idx) => {
-                        const padIndex = (idx + 1).toString().padStart(2, '0');
-                        customersHTML += `
-                            <div class="glass-cust-item-row">
-                                <span class="glass-cust-sno">${padIndex}.</span>
-                                <a href="Sales Report.html?name=${encodeURIComponent(company)}" class="glass-cust-link-text">${company}</a>
-                            </div>
-                        `;
-                    });
-
-                    htmlRowsBuffer += `
-                        <tr class="glass-brand-row">
-                            <td class="glass-distributor-cell">
-                                📍 ${distName.toUpperCase()}
-                            </td>
-                            <td class="glass-customer-list-cell">
-                                ${customersHTML || "<span style='color:#bdc3c7;'>No active customers</span>"}
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                tbody.innerHTML = htmlRowsBuffer;
+                const productsList = customersNode[companyName] || {};
                 
-                // டிராக்கிங் ஸ்டேட்டஸ்: நீங்கள் கேட்ட கௌரவமான பெயருடன் லைவ் எண்ணிக்கை இங்கே அப்டேட் ஆகிறது!
-                document.getElementById("syncStatus").innerHTML = `⚡ LIVE DISTRIBUTOR PIPELINES : <span style="color:#27ae60;">${sortedDistributors.length} LOGISTICS HUBS</span>`;
-                console.log("Standalone Distributor Summary Page: Live Sync Done! 🚀");
+                Object.keys(productsList).forEach(pKey => {
+                    const item = productsList[pKey];
+                    
+                    if (item && item.distributor && item.artNo !== "SYSTEM" && item.id !== "_id_lock") {
+                        // 🎯 பிக்ஸ்: ஸ்பேஸ் மற்றும் சிறிய/பெரிய எழுத்துக்களை ஒரே சீராக்குகிறோம்
+                        const cleanDistName = item.distributor.trim();
+                        const cleanCompName = companyName.trim();
+
+                        const normalizedDistKey = cleanDistName.toUpperCase();
+
+                        // விநியோகஸ்தர் பெயர் புதியது எனில் வரைபடத்தில் புதிய நோட் ஓப்பன் செய்கிறோம்
+                        if (!distributorToCustomersMap.has(normalizedDistKey)) {
+                            distributorToCustomersMap.set(normalizedDistKey, {
+                                originalDistName: cleanDistName, // அசல் எழுத்து வடிவத்தைப் பாதுகாக்க
+                                customerSet: new Set(),
+                                normalizedCustomerSet: new Set()
+                            });
+                        }
+
+                        const distNode = distributorToCustomersMap.get(normalizedDistKey);
+                        const normalizedCompKey = cleanCompName.toUpperCase();
+
+                        // கம்பெனி பெயரும் டூப்ளிகேட் ஆகாமல் இருக்கச் சோதிக்கிறோம் (சரவம் சேஃப்டி டூப்ளிகேட் பிக்ஸ்)
+                        if (!distNode.normalizedCustomerSet.has(normalizedCompKey)) {
+                            distNode.normalizedCustomerSet.add(normalizedCompKey);
+                            distNode.customerSet.add(cleanCompName);
+                        }
+                    }
+                });
             });
+        });
+
+        // அகரவரிசைப்படி அடுக்கப்படுகிறது
+        const sortedDistKeys = Array.from(distributorToCustomersMap.keys()).sort();
+        const tbody = document.getElementById("summaryTableBody");
+
+        if (sortedDistKeys.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 40px; color: #2c3e50; font-weight:bold; background: white;">No active distributor links allocated in system maps.</td></tr>`;
+            document.getElementById("syncStatus").textContent = "⚡ LIVE DISTRIBUTOR PIPELINES : 0 LOGISTICS HUBS";
+            return;
         }
+
+        let htmlRowsBuffer = "";
+
+        sortedDistKeys.forEach(distKey => {
+            const distNode = distributorToCustomersMap.get(distKey);
+            const sortedCustomersList = Array.from(distNode.customerSet).sort((a, b) => a.localeCompare(b));
+
+            let customersHTML = "";
+            sortedCustomersList.forEach((company, idx) => {
+                const padIndex = (idx + 1).toString().padStart(2, '0');
+                customersHTML += `
+                    <div class="glass-cust-item-row">
+                        <span class="glass-cust-sno">${padIndex}.</span>
+                        <a href="Sales Report.html?name=${encodeURIComponent(company)}" class="glass-cust-link-text">${company}</a>
+                    </div>
+                `;
+            });
+
+            htmlRowsBuffer += `
+                <tr class="glass-brand-row">
+                    <td class="glass-distributor-cell">
+                        📍 ${distNode.originalDistName.toUpperCase()}
+                    </td>
+                    <td class="glass-customer-list-cell">
+                        ${customersHTML || "<span style='color:#bdc3c7;'>No active customers</span>"}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = htmlRowsBuffer;
+        document.getElementById("syncStatus").innerHTML = `⚡ LIVE DISTRIBUTOR PIPELINES : <span style="color:#27ae60;">${sortedDistKeys.length} LOGISTICS HUBS</span>`;
+        console.log("Standalone Distributor Summary Page: Duplicate Protection Complete! 🚀");
+    });
+}
 
         window.onload = function() {
             loadLiveDistributorSummaryPage();
