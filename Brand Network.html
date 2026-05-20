@@ -235,7 +235,9 @@ table {
     <!-- 🔍 📍 TOOLS SECTION (Titles-ku keezha) -->
     <div class="tool-row">
         <input type="text" id="search" placeholder="🔍 Search" onkeyup="filterNetwork()">
-        
+<button class="action-btn" id="allDistributorsMasterBtn" onclick="window.location.href='DistributorSummary.html'" style="background-color: #8e44ad; color: white; border: none; font-weight: bold; cursor: pointer; height: 40px; padding: 0 20px; border-radius: 8px; font-family:'Times New Roman'; font-size:13px;">
+    🚛 Distributor Summary
+</button>
         <select id="territoryFilter" onchange="openTerritoryView(this.value)">
             <option value="ALL">📍TERRITORY NETWORK</option>
         </select>
@@ -249,7 +251,42 @@ table {
             <p style="text-align: center; color: white; padding: 50px;">Fetching Warehouse Data... ⚡</p>
         </div>
  </div>
+<div id="distributorSummaryOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index:999999; overflow-y:auto; padding:20px; box-sizing: border-box;">
+    <div style="max-width:900px; margin: 30px auto; background:rgba(255,255,255,0.95); border-radius:25px; padding:30px; box-shadow:0 15px 35px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3); box-sizing: border-box;">
+        
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #8e44ad; padding-bottom:15px;">
+            <div>
+                <h2 style="color:#8e44ad; margin:0; font-family:'Times New Roman', serif; font-size: 24px; font-weight: bold; text-transform: uppercase;">运输 🚛 Live Distributor Summary Ledger</h2>
+                <p style="margin:5px 0 0 0; font-size:12px; font-weight:bold; color:#555;" id="distSyncStatus">Connecting Central Cloud Data Stacks... ☁️</p>
+            </div>
+            <button onclick="closeDistributorSummaryInline()" style="background:#e74c3c; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold; font-family:'Times New Roman'; font-size:13px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">✕ CLOSE</button>
+        </div>
+        
+        <!-- Search -->
+        <input type="text" id="distSummarySearch" placeholder="🔍 Search Distributor Name or Company Name..." 
+               style="width:100%; padding:12px 20px; border-radius:12px; border:2px solid #8e44ad; margin-bottom:20px; font-family:'Times New Roman'; font-size: 15px; font-weight: bold; box-sizing: border-box; outline: none;" 
+               onkeyup="filterDistSummaryInline()">
 
+        <!-- Table Grid Container -->
+        <div style="background: white; border-radius: 15px; overflow: hidden; border: 1px solid black; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <table style="width:100% !important; border-collapse:collapse; table-layout:fixed; background:white;">
+                <thead>
+                    <tr style="background:#8e44ad; color:white; font-family:'Times New Roman'; font-weight:bold;">
+                        <th style="border: 1px solid black !important; padding:15px; width:10%; text-align:center; color: white;">S.No</th>
+                        <th style="border: 1px solid black !important; padding:15px; width:45%; text-align:center; color: white;">Distributor Name (விநியோகஸ்தர்)</th>
+                        <th style="border: 1px solid black !important; padding:15px; width:45%; text-align:center; color: white;">Company Name (வாடிக்கையாளர் நிறுவனம்)</th>
+                    </tr>
+                </thead>
+                <tbody id="distSummaryTableBody">
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px; color: gray; font-weight: bold;">Syncing 11 brands customer status tables... ⚡</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
@@ -375,6 +412,8 @@ function openTerritoryView(selectedLoc) {
     // Puthu page-ku region pera URL-la anupuroam
     window.location.href = `Territory.html?region=${encodeURIComponent(selectedLoc)}`;
 }
+
+
 // ⚠️ மிக முக்கியமான திருத்தம்: கடைசியில் இருக்கும் window.onload-ஐ இப்படி மாற்றவும்
 window.onload = function() {
     loadNetwork();    // கஸ்டமர் லிஸ்ட்டை லோட் செய்ய
