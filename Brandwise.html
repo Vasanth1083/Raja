@@ -523,16 +523,22 @@ async function saveRowValuesFirebase() {
     const index = document.getElementById("modalRowIndex").value;
     if (index === "" || !filteredArticles[index]) return;
 
+    // 🛡️ பாதுகாப்பு செக் 1: Budget ID இல்லை என்றால் கோடை உடனடியாக நிறுத்து! (Leak Prevention)
+    if (!activeBudgetId || activeBudgetId.trim() === "") {
+        alert("பாதுகாப்பு எச்சரிக்கை: Budget ID கண்டறியப்படவில்லை! தரவு சேமிப்பு ரத்து செய்யப்பட்டது.");
+        return;
+    }
+
     const updatedQty = parseInt(document.getElementById("inputTargetQty").value) || 0;
     const targetItem = filteredArticles[index];
     const targetArticleNo = targetItem.articleNo.toUpperCase().trim();
     const computedTargetVal = updatedQty * targetItem.price;
     
-    let updatedAchievedValueArray = new Array(activeMonthHeaders.length).fill(0);
     let updatedAchievedQtyArray = new Array(activeMonthHeaders.length).fill(0);
+    let updatedAchievedValueArray = new Array(activeMonthHeaders.length).fill(0);
     const inputElements = document.querySelectorAll(".monthly-modal-input");
     
-    let computed_aV = 0; 
+    let computed_aV = 0;
     let computed_monthQty = 0; 
 
     inputElements.forEach(input => {
@@ -548,37 +554,45 @@ async function saveRowValuesFirebase() {
     });
 
     try {
-        const masterDB = new Dexie("VimagMasterDB");
-        masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
-        await masterDB.open();
-
-        const allCachedItems = await masterDB.brands.toArray();
+        const allCachedItems = await vimagDB.brands.toArray();
         const matchingEntries = allCachedItems.filter(p => 
             p.artNo && p.artNo.toUpperCase().trim() === targetArticleNo && p.budgetId === activeBudgetId
         );
 
         if (matchingEntries.length === 0) {
-            matchingEntries.push({
-                id: targetItem.id,
-                baseItemId: targetItem.baseItemId,
-                customerName: targetItem.customerName,
-                brand: targetItem.brand
-            });
+            alert("தரவு பிழை: இந்த Article Number லோக்கல் மெமரியில் கண்டறியப்படவில்லை.");
+            return;
         }
 
-        // இந்த பல்க் பிராட்காஸ்ட் லூப் தான் அனைத்து வாடிக்கையாளர்களின் ஃபயர்பேஸ் பாட்களையும் ஒரே நேரத்தில் பூட்டுகிறது
-        for (const entry of matchingEntries) {
+        // 🚀 அதிவேக அப்டேட்டிற்கான கன்டெய்னர்கள்
+        const updatesContainer = {};
+        const localDbBulkPayload = [];
+
+        // 🎯 முதலாவது என்ட்ரிக்கு மட்டும் அசல் மதிப்பு, மற்றவை 0 (Anti-Multiplication Logic)
+        for (let i = 0; i < matchingEntries.length; i++) {
+            const entry = matchingEntries[i];
+            
+            const finalQty = (i === 0) ? updatedQty : 0;
+            const finalMonthQty = (i === 0) ? computed_monthQty : 0;
+            const finalTargetVal = (i === 0) ? computedTargetVal : 0;
+            const final_aV = (i === 0) ? computed_aV : 0;
+            const finalAchievedArray = (i === 0) ? updatedAchievedValueArray : new Array(activeMonthHeaders.length).fill(0);
+            const finalAchievedQtyArray = (i === 0) ? updatedAchievedQtyArray : new Array(activeMonthHeaders.length).fill(0);
+
+            // 🛡️ பாதுகாப்பு செக் 2: பாத்-க்குள் பிராண்ட் மற்றும் பட்ஜெட் ஐடி லாக் செய்யப்படுகிறது
             const nodePath = `vimag/brands/${entry.brand}/${entry.customerName}/${entry.baseItemId}/budgets/${activeBudgetId}`;
             
-            await db.ref(nodePath).update({
-                qty: updatedQty,                        
-                monthQty: computed_monthQty,            
-                aV: computed_aV,                        
-                brandwise_target: computedTargetVal,    
-                achieved: updatedAchievedValueArray     
-            });
+            // ஃபயர்பேஸ் சிங்கிள் ரெக்வஸ்ட் ஆப்ஜெக்ட் தயாரிப்பு
+            updatesContainer[nodePath] = {
+                qty: finalQty,                        
+                monthQty: finalMonthQty,            
+                aV: final_aV,                        
+                brandwise_target: finalTargetVal,    
+                achieved: finalAchievedArray     
+            };
 
-            await masterDB.brands.put({
+            // லோக்கல் டேட்டாபேஸ் பல்க் பேலோடு தயாரிப்பு
+            localDbBulkPayload.push({
                 id: entry.id,
                 baseItemId: entry.baseItemId,
                 budgetId: activeBudgetId,
@@ -588,13 +602,20 @@ async function saveRowValuesFirebase() {
                 name: targetItem.description,
                 price: targetItem.price,
                 currency: targetItem.currency,
-                targetQty: updatedQty,
-                monthQty: computed_monthQty,
-                brandwise_target: computedTargetVal,
-                achievedQty: updatedAchievedQtyArray
+                targetQty: finalQty,
+                monthQty: finalMonthQty,
+                brandwise_target: finalTargetVal,
+                achievedQty: finalAchievedQtyArray
             });
         }
 
+        // 🚀 ஒரே ஒரு நெட்வொர்க் கால் மூலம் ஃபயர்பேஸில் அத்தனை கஸ்டமர் நோட்களும் ஒரே மில்லிசெகண்டில் அப்டேட் ஆகும்!
+        await db.ref().update(updatesContainer);
+
+        // 🚀 லோக்கல் டேட்டாபேஸிலும் ஒரே முறையில் பல்க் ரைட்டிங் (Bulk Put) நடக்கும்
+        await vimagDB.brands.bulkPut(localDbBulkPayload);
+
+        // UI-ல் உடனடியாக மாற்றங்களை பிரதிபலிக்க வைக்கிறோம்
         targetItem.targetQty = updatedQty;
         targetItem.targetValue = computedTargetVal;
         targetItem.monthQty = computed_monthQty;
@@ -602,17 +623,17 @@ async function saveRowValuesFirebase() {
 
         closeModal();
         
-        const freshWarehouseItems = await masterDB.brands.toArray();
+        // ஸ்கிரீனில் இருக்கும் டேபிளை உடனடியாக ரிஃப்ரெஷ் செய்ய
+        const freshWarehouseItems = await vimagDB.brands.toArray();
         processRawDataToTable(freshWarehouseItems);
         
-        console.log("Broadcast Sync Lock Complete across all instances! 🚀");
+        console.log(`Blazing Fast Broadcast Sync Lock Complete for Budget Profile: ${activeBudgetId} ⚡🔐`);
 
     } catch (err) {
         console.error("Critical Save Loop Error: ", err);
-        alert("தரவு ஒத்திசைவில் தோல்வி: " + err.message);
+        alert("ERROR(Network/DB Error): " + err.message);
     }
 }
-
 window.onclick = function(event) {
     const modal = document.getElementById("inputModal");
     if (event.target === modal) {
