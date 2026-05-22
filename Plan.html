@@ -181,7 +181,7 @@
         <div class="header-box">
             <div style="position: absolute; left: 20px; top: 20px;" class="print-hidden-block">
 
-                <a href="Followup.html" class="btn btn-back">🏠HOME</a>
+                <a href="followup.html" class="btn btn-back">🏠HOME</a>
             </div>
             <!-- 📊 VISITS STATUS SUMMARY BOX -->
             <div class="print-hidden-block" style="position: absolute; right: 20px; top: 20px; background: white; border: 2px solid #27ae60; border-radius: 10px; padding: 8px 15px; font-family: 'Times New Roman'; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; font-size: 13px; line-height: 1.4; min-width: 130px; z-index: 10;">
@@ -292,80 +292,47 @@
         }
 
       function startVisitSync() {
-    const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
+            const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
 
-    // ஃபர்ஸ்ட் டைம் லோடு ஆகும்போது மட்டும் மொத்தமாக எடுக்கும் (Optimized once load)
-    visitsRef.once('value', async (snap) => {
-        const data = snap.val();
-        const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
-        let verifiedArrayPayload = [];
+            // 📥 ஃபயர்பேஸில் இருந்து மட்டுமே டேட்டாவை எடுக்கும். ஆன்லைனில் எதையும் தானாக அப்லோட்/டெலீட் செய்யாது!
+            visitsRef.once('value', async (snap) => {
+                const data = snap.val();
+                let verifiedArrayPayload = [];
 
-        if (data) {
-            const rawCloudList = Object.keys(data).map(key => {
-                return { ...data[key], id: isNaN(key) ? key : Number(key) };
+                if (data) {
+                    // ஃபயர்பேஸில் என்ன இருக்கோ அதை அப்படியே 100% லோக்கலுக்கு மாற்றுகிறது
+                    verifiedArrayPayload = Object.keys(data).map(key => {
+                        return { ...data[key], id: isNaN(key) ? key : Number(key) };
+                    });
+                    console.log(`📊 [Cloud Read] ஃபயர்பேஸில் உள்ள அத்தனை விசிட்களும் லோடு செய்யப்படுகின்றன: ${verifiedArrayPayload.length}`);
+                }
+
+                // லோக்கல் டேட்டாபேஸை மட்டும் புதுப்பிக்கிறது
+                await visitDB.visits.clear();
+                if (verifiedArrayPayload.length > 0) {
+                    await visitDB.visits.bulkPut(verifiedArrayPayload);
+                }
+
+                // ⚠️ ஆன்லைன் ஃபயர்பேஸுக்கு தானாக என்ட்ரிகளை புஷ் செய்யும் ஆபத்தான லூப் இங்கிருந்து நீக்கப்பட்டுள்ளது!
+                loadVisitsTable();
             });
 
-            let matchedSeenNames = new Set();
-            rawCloudList.forEach(item => {
-                let normCustName = (item.customer || "").toString().trim().toUpperCase();
-                if (uniqueMasterCustomers.includes(normCustName) && !matchedSeenNames.has(normCustName)) {
-                    matchedSeenNames.add(normCustName);
-                    verifiedArrayPayload.push(item);
-                } else {
-                    visitsRef.child(item.id).remove();
+            // லைவ் கிளவுட் அப்டேட்ஸ்
+            visitsRef.on('child_changed', async (snap) => {
+                const updatedVisit = snap.val();
+                if (updatedVisit) {
+                    updatedVisit.id = isNaN(snap.key) ? snap.key : Number(snap.key);
+                    await visitDB.visits.put(updatedVisit);
+                    loadVisitsTable();
                 }
             });
+            
+            visitsRef.on('child_removed', async (snap) => {
+                const removedKey = isNaN(snap.key) ? snap.key : Number(snap.key);
+                await visitDB.visits.delete(removedKey);
+                loadVisitsTable();
+            });
         }
-
-        await visitDB.visits.clear();
-        if (verifiedArrayPayload.length > 0) {
-            await visitDB.visits.bulkPut(verifiedArrayPayload);
-        }
-
-        const currentLocalVisits = await visitDB.visits.toArray();
-        const currentLocalNames = new Set(currentLocalVisits.map(v => v.customer.trim().toUpperCase()));
-        let bulkInsertArray = [];
-
-        for (let cust of uniqueMasterCustomers) {
-            if (!currentLocalNames.has(cust)) {
-                const generatedId = Date.now() + Math.floor(Math.random() * 10000);
-                const insertPayload = {
-                    id: generatedId,
-                    customer: cust,
-                    remarks: "",
-                    frequency: 0,
-                    date: "-",
-                    status: "PENDING",
-                    isDone: false
-                };
-                bulkInsertArray.push(insertPayload);
-                visitsRef.child(generatedId).set(insertPayload);
-            }
-        }
-
-        if (bulkInsertArray.length > 0) {
-            await visitDB.visits.bulkPut(bulkInsertArray);
-        }
-
-        loadVisitsTable();
-    });
-
-    // 🚀 மாறும் ஒரு குறிப்பிட்ட டேட்டாவை மட்டும் லோக்கலில் அப்டேட் செய்யும் லைவ் லாஜிக்
-    visitsRef.on('child_changed', async (snap) => {
-        const updatedVisit = snap.val();
-        if (updatedVisit) {
-            updatedVisit.id = isNaN(snap.key) ? snap.key : Number(snap.key);
-            await visitDB.visits.put(updatedVisit);
-            loadVisitsTable();
-        }
-    });
-    
-    visitsRef.on('child_removed', async (snap) => {
-        const removedKey = isNaN(snap.key) ? snap.key : Number(snap.key);
-        await visitDB.visits.delete(removedKey);
-        loadVisitsTable();
-    });
-}
 
 
         async function getStrictUniqueMasterCustomers() {
@@ -543,10 +510,9 @@ async function saveVisitEntry() {
             const masterCheck = document.getElementById('masterVisitCheck').checked;
             document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = masterCheck);
         }
-
-        window.onload = function() {
-            initializeWarehouseConnection();
-        };
+window.addEventListener('DOMContentLoaded', () => {
+    initializeWarehouseConnection();
+});
     </script>
 </body>
 </html>
