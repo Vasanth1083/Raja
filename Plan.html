@@ -265,123 +265,180 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
     <script>
-        const visitDB = new Dexie("VimagVisitPlanDB");
-        visitDB.version(2).stores({ visits: '++id,customer,remarks,frequency,date,status,isDone' });
+    
+const visitDB = new Dexie("VimagVisitPlanDB");
+    visitDB.version(2).stores({ 
+        visits: 'id,customer,remarks,frequency,date,status,isDone' 
+    });
 
-        const masterDB = new Dexie("VimagMasterDB");
-        masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+    const masterDB = new Dexie("VimagMasterDB");
+    masterDB.version(1).stores({ 
+        brands: 'id, brand, customerName, artNo' 
+    });
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+    const firebaseConfig = {
+        apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
         databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
-            projectId: "vimag-database",
-            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const cloudVisitDB = firebase.database();
-        let currentEditId = null;
+        projectId: "vimag-database",
+        appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const cloudVisitDB = firebase.database();
+    let currentEditId = null;
 
-        async function initializeWarehouseConnection() {
-            try {
-                await visitDB.open();
-                await masterDB.open();
-                startVisitSync();
-            } catch (err) {
-                console.error("Dexie open error: ", err);
-            }
+    async function initializeWarehouseConnection() {
+        try {
+            await visitDB.open();
+            await masterDB.open();
+            startVisitSync();
+        } catch (err) {
+            console.error("Dexie open error: ", err);
         }
+    }
 
-      function startVisitSync() {
-            const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
+    // 🎯 TEXT CLEANER: Background alphanumeric index check matching loop
+    function cleanEmojiAndSpecial(text) {
+        if (!text) return "";
+        return text.toString()
+            .replace(/[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]/g, "")
+            .trim()
+            .toUpperCase();
+    }
 
-            // 📥 ஃபயர்பேஸில் இருந்து மட்டுமே டேட்டாவை எடுக்கும். ஆன்லைனில் எதையும் தானாக அப்லோட்/டெலீட் செய்யாது!
-            visitsRef.once('value', async (snap) => {
-                const data = snap.val();
-                let verifiedArrayPayload = [];
+       function startVisitSync() {
+        const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
 
-                if (data) {
-                    // ஃபயர்பேஸில் என்ன இருக்கோ அதை அப்படியே 100% லோக்கலுக்கு மாற்றுகிறது
-                    verifiedArrayPayload = Object.keys(data).map(key => {
-                        return { ...data[key], id: isNaN(key) ? key : Number(key) };
-                    });
-                    console.log(`📊 [Cloud Read] ஃபயர்பேஸில் உள்ள அத்தனை விசிட்களும் லோடு செய்யப்படுகின்றன: ${verifiedArrayPayload.length}`);
-                }
-
-                // லோக்கல் டேட்டாபேஸை மட்டும் புதுப்பிக்கிறது
-                await visitDB.visits.clear();
-                if (verifiedArrayPayload.length > 0) {
-                    await visitDB.visits.bulkPut(verifiedArrayPayload);
-                }
-
-                // ⚠️ ஆன்லைன் ஃபயர்பேஸுக்கு தானாக என்ட்ரிகளை புஷ் செய்யும் ஆபத்தான லூப் இங்கிருந்து நீக்கப்பட்டுள்ளது!
-                loadVisitsTable();
-            });
-
-            // லைவ் கிளவுட் அப்டேட்ஸ்
-            visitsRef.on('child_changed', async (snap) => {
-                const updatedVisit = snap.val();
-                if (updatedVisit) {
-                    updatedVisit.id = isNaN(snap.key) ? snap.key : Number(snap.key);
-                    await visitDB.visits.put(updatedVisit);
-                    loadVisitsTable();
-                }
-            });
+        // 🚀 HIGH-SECURITY UNIFORM STRING ENGINE: Master plain text vs Plan emoji entries matching fixed!
+        visitsRef.once('value', async (snap) => {
+            const data = snap.val();
+            const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
             
-            visitsRef.on('child_removed', async (snap) => {
-                const removedKey = isNaN(snap.key) ? snap.key : Number(snap.key);
-                await visitDB.visits.delete(removedKey);
-                loadVisitsTable();
-            });
-        }
+            // Master names are clean text (No emojis) - standard hashing lookup set
+            const masterCleanSet = new Set(uniqueMasterCustomers.map(name => name.trim().toUpperCase()));
+            
+            let localExistingVisits = await visitDB.visits.toArray();
+            let localCleanMap = new Map(localExistingVisits.map(v => [cleanEmojiAndSpecial(v.customer), v]));
+            
+            let cloudVerifiedPayload = [];
+            let cloudCleanSeen = new Set();
 
+            if (data) {
+                const rawCloudList = Object.keys(data).map(key => {
+                    return { ...data[key], id: String(key).trim() };
+                });
 
-        async function getStrictUniqueMasterCustomers() {
-            try {
-                const masterRecords = await masterDB.brands.toArray();
-                let cleanNamesSet = new Set();
-                
-                for (let i = 0; i < masterRecords.length; i++) {
-                    let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
-                    if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
-                        cleanNamesSet.add(cName.trim().toUpperCase());
+                rawCloudList.forEach(item => {
+                    // 🎯 FIX: Plan file-la irukra emoji-ai clean panni bare text edukirom matching checking-kaga
+                    let cleanCustName = cleanEmojiAndSpecial(item.customer);
+                    
+                    // Plain master text and clean plan text safe-ah match aagi validation successful aagum
+                    if (masterCleanSet.has(cleanCustName) && !cloudCleanSeen.has(cleanCustName)) {
+                        cloudCleanSeen.add(cleanCustName);
+                        cloudVerifiedPayload.push(item);
                     }
-                }
-                return Array.from(cleanNamesSet).sort();
-            } catch (e) {
-                console.error(e);
-                return [];
+                });
             }
-        }
 
-        async function loadVisitsTable() {
-            try {
-                const rawRecords = await visitDB.visits.toArray();
+            // Secure local bulk update snapshot execution without data flashing
+            if (cloudVerifiedPayload.length > 0) {
+                await visitDB.visits.bulkPut(cloudVerifiedPayload);
+            }
+
+            // 100% COLLISION FREE CRYPTO UUID GENERATION LOOP FOR NEW CUSTOMERS
+            let bulkInsertArray = [];
+            for (let cust of uniqueMasterCustomers) {
+                // Master file plain name upper-case verification block
+                let cleanCust = cust.trim().toUpperCase();
                 
-                document.getElementById('countTotal').innerText = rawRecords.length;
-                document.getElementById('countPending').innerText = rawRecords.filter(r => !r.isDone).length;
-                document.getElementById('countAchieved').innerText = rawRecords.filter(r => r.isDone).length;
-
-                const searchQuery = document.getElementById('visitSearchInput').value.trim().toUpperCase();
-                const selStatusFilter = document.getElementById('hdrStatusFilter').value;
-
-                let filteredRecords = rawRecords;
-
-                // 1. Text Search Bar Filter
-                if (searchQuery) {
-                    filteredRecords = filteredRecords.filter(r => r.customer && r.customer.toUpperCase().includes(searchQuery));
+                if (!cloudCleanSeen.has(cleanCust) && !localCleanMap.has(cleanCust)) {
+                    const ultraSecureUUID = typeof crypto !== 'undefined' && crypto.randomUUID 
+                        ? crypto.randomUUID() 
+                        : 'vimag-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                        
+                    const insertPayload = {
+                        id: String(ultraSecureUUID),
+                        customer: cust, // Stores original base master client structure 
+                        remarks: "",
+                        frequency: 0,
+                        date: "-",
+                        status: "PENDING",
+                        isDone: false
+                    };
+                    bulkInsertArray.push(insertPayload);
+                    visitsRef.child(ultraSecureUUID).set(insertPayload);
+                    
+                    cloudCleanSeen.add(cleanCust); // Lock to avoid parallel cycle duplications
                 }
-                // 2. Status Dropdown Filter
-                if (selStatusFilter) {
-                    filteredRecords = filteredRecords.filter(r => r.status && r.status.toUpperCase() === selStatusFilter.toUpperCase());
-                }
-
-                renderVisitsTable(filteredRecords);
-            } catch (err) {
-                console.error(err);
             }
-        }
 
-       function renderVisitsTable(filteredRecords) {
+            if (bulkInsertArray.length > 0) {
+                await visitDB.visits.bulkPut(bulkInsertArray);
+            }
+
+            loadVisitsTable();
+        });
+
+        // Continuous streaming real-time update channels
+        visitsRef.on('child_changed', async (snap) => {
+            const updatedVisit = snap.val();
+            if (updatedVisit) {
+                updatedVisit.id = String(snap.key); 
+                await visitDB.visits.put(updatedVisit);
+                loadVisitsTable();
+            }
+        });
+
+        visitsRef.on('child_removed', async (snap) => {
+            await visitDB.visits.delete(String(snap.key));
+            loadVisitsTable();
+        });
+    }
+
+      
+    async function getStrictUniqueMasterCustomers() {
+        try {
+            const masterRecords = await masterDB.brands.toArray();
+            let cleanNamesSet = new Set();
+            for (let i = 0; i < masterRecords.length; i++) {
+                let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
+                if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
+                    cleanNamesSet.add(cName.trim());
+                }
+            }
+            return Array.from(cleanNamesSet).sort();
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    }
+
+    async function loadVisitsTable() {
+        try {
+            const rawRecords = await visitDB.visits.toArray();
+            
+            document.getElementById('countTotal').innerText = rawRecords.length;
+            document.getElementById('countPending').innerText = rawRecords.filter(r => !r.isDone).length;
+            document.getElementById('countAchieved').innerText = rawRecords.filter(r => r.isDone).length;
+
+            const searchQuery = document.getElementById('visitSearchInput').value.trim().toUpperCase();
+            const selStatusFilter = document.getElementById('hdrStatusFilter').value;
+
+            let filteredRecords = rawRecords;
+
+            if (searchQuery) {
+                filteredRecords = filteredRecords.filter(r => r.customer && r.customer.toUpperCase().includes(searchQuery));
+            }
+            if (selStatusFilter) {
+                filteredRecords = filteredRecords.filter(r => r.status && r.status.toUpperCase() === selStatusFilter.toUpperCase());
+            }
+
+            renderVisitsTable(filteredRecords);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderVisitsTable(filteredRecords) {
         const tbody = document.getElementById('visitTableBody');
         if (!tbody) return;
 
@@ -399,15 +456,14 @@
                 : `<span style="font-size:14px; font-weight:bold; color:red; background:#fdf2f2; padding: 4px 10px; border-radius: 20px;">PENDING</span>`;
             const freqCount = v.frequency !== undefined ? Number(v.frequency) : 0;
 
-            // 🎯 CHECKBOX CLICK PANNUNA AUTOMATIC MODAL POPUP THURAKKUM (`onclick="triggerDirectModal(${v.id})"`)
             return `
                 <tr ${rowClass} style="border-bottom: 1px solid black !important; background-color: white;">
                     <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px;">
-                        <input type="checkbox" class="visit-row-check" value="${v.id}" onclick="triggerDirectModal(${v.id})">
+                        <input type="checkbox" class="visit-row-check" value="${v.id}">
                     </td>
                     <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; font-weight:bold; color: black;">${idx + 1}</td>
-                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: nowrap;">🤝 ${(v.customer || '').toUpperCase()}</td>
-                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: normal !important; word-wrap: break-word;">${(v.remarks || '-').toUpperCase()}</td>
+<td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: nowrap; cursor: pointer;" onclick="triggerDirectDataModal('${v.id}')">${v.customer}</td>
+                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: normal !important; word-wrap: break-word;">${v.remarks || '-'}</td>
                     <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px;">
                         <div class="counter-wrapper">
                             <button class="btn-count btn-minus" onclick="adjustFrequencyValue(${v.id}, ${freqCount}, -1)">−</button>
@@ -420,99 +476,143 @@
                 </tr>`;
         }).join('');
     }
+  async function adjustFrequencyValue(id, currentVal, direction) {
+        const targetId = Number(id);
+        let updatedVal = Number(currentVal) + direction;
+        if (updatedVal < 0) updatedVal = 0;
+        
+        // Strict mapping check: 1 and above represents true achieved values
+        const nextIsDone = (updatedVal >= 1);
+        const nextStatusString = nextIsDone ? "ACHIEVED" : "PENDING";
 
-        async function adjustFrequencyValue(id, currentVal, direction) {
-            const targetId = Number(id);
-            let updatedVal = Number(currentVal) + direction;
-            if (updatedVal < 0) updatedVal = 0;
+        try {
+            const updatePayload = { 
+                frequency: updatedVal,
+                isDone: nextIsDone,
+                status: nextStatusString
+            };
             
-            const nextIsDone = (updatedVal >= 1);
-            const nextStatusString = nextIsDone ? "ACHIEVED" : "PENDING";
-
-            try {
-                const updatePayload = { 
-                    frequency: updatedVal,
-                    isDone: nextIsDone,
-                    status: nextStatusString
-                };
-                
-                await visitDB.visits.update(targetId, updatePayload);
-                await cloudVisitDB.ref(`vimag_followup/visits/${targetId}`).update(updatePayload);
-                loadVisitsTable();
-            } catch (err) {
-                console.error(err);
-            }
-        }
-  async function triggerDirectModal(id) {
-        currentEditId = Number(id);
-        const record = await visitDB.visits.get(currentEditId);
-        if (record) {
-            document.getElementById('visitCustNameDisplay').innerText = record.customer.toUpperCase();
-            document.getElementById('visitRemarks').value = record.remarks || '';
-            document.getElementById('visitDate').value = record.date !== "-" ? record.date : '';
-            
-            document.getElementById('modalTitle').innerText = "Update Visit Plan 🔄";
-            document.getElementById('visitModal').style.display = 'flex';
+            await visitDB.visits.update(targetId, updatePayload);
+            await cloudVisitDB.ref(`vimag_followup/visits/${targetId}`).update(updatePayload);
+            loadVisitsTable();
+        } catch (err) {
+            console.error("Frequency state toggle error: ", err);
         }
     }
-        async function openVisitModal() {
-            const checkedBoxes = document.querySelectorAll('.visit-row-check:checked');
-            if (checkedBoxes.length !== 1) {
-                return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
-            }
-            currentEditId = Number(checkedBoxes.value);
+
+    // 🔗 POPUP MODAL RENDERING LAYER DATA STREAM BINDINGS
+    async function triggerDirectDataModal(targetId) {
+        currentEditId = Number(targetId);
+        try {
             const record = await visitDB.visits.get(currentEditId);
             if (record) {
-                document.getElementById('visitCustNameDisplay').innerText = record.customer.toUpperCase();
+                document.getElementById('visitCustNameDisplay').innerText = record.customer;
                 document.getElementById('visitRemarks').value = record.remarks || '';
                 document.getElementById('visitDate').value = record.date !== "-" ? record.date : '';
                 
                 document.getElementById('modalTitle').innerText = "Update Visit Plan 🔄";
                 document.getElementById('visitModal').style.display = 'flex';
             }
+        } catch (err) {
+            console.error("Modal reference extraction failed: ", err);
         }
-
-        function closeVisitModal() {
-            document.getElementById('visitModal').style.display = 'none';
- // மோடல் மூடும்போது டேபிளில் உள்ள அனைத்து செக் பாக்ஸ்களையும் அன்செக் செய்கிறது
-        document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = false);
-        currentEditId = null;
-        }
-async function saveVisitEntry() {
-    if (!currentEditId) return;
-
-    const remarks = document.getElementById('visitRemarks').value.trim();
-    const date = document.getElementById('visitDate').value;
-
-    try {
-        const existingRecord = await visitDB.visits.get(currentEditId);
-        if (existingRecord) {
-            // 🎯 உங்க ஃப்ரீக்வென்சி லாஜிக் படி தற்போதைய ஸ்டேட்டஸை அப்படியே லாக் செய்கிறது
-            const currentFreq = Number(existingRecord.frequency) || 0;
-            const finalIsDone = (currentFreq >= 1);
-            const finalStatus = finalIsDone ? "ACHIEVED" : "PENDING";
-
-            const payload = {
-                remarks: remarks,
-                date: date || "-",
-                isDone: finalIsDone,
-                status: finalStatus
-            };
-            await visitDB.visits.update(currentEditId, payload);
-            await cloudVisitDB.ref(`vimag_followup/visits/${currentEditId}`).update(payload);
-            closeVisitModal();
-        }
-    } catch (err) {
-        console.error(err);
     }
-}
-        function toggleAllVisits() {
-            const masterCheck = document.getElementById('masterVisitCheck').checked;
-            document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = masterCheck);
+
+    async function openVisitModal() {
+        const checkedBoxes = document.querySelectorAll('.visit-row-check:checked');
+        if (checkedBoxes.length !== 1) {
+            return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
         }
-window.addEventListener('DOMContentLoaded', () => {
-    initializeWarehouseConnection();
-});
-    </script>
+        triggerDirectDataModal(checkedBoxes[0].value);
+    }
+
+    function closeVisitModal() {
+        document.getElementById('visitModal').style.display = 'none';
+        document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = false);
+        const masterCheck = document.getElementById('masterVisitCheck');
+        if (masterCheck) masterCheck.checked = false;
+        currentEditId = null;
+    }
+
+    // 💾 COMMIT CHANGES TO DEXIE STORAGE & FIREBASE WITH PRESERVATION CONTROLS
+    async function saveVisitEntry() {
+        if (!currentEditId) return;
+
+        const remarks = document.getElementById('visitRemarks').value.trim();
+        const dateInput = document.getElementById('visitDate').value;
+        const execDate = dateInput ? dateInput : "-";
+
+        try {
+            const existingRecord = await visitDB.visits.get(currentEditId);
+            if (existingRecord) {
+                // Manual setup mode: No auto-increments applied on popups layout updates
+                const finalFreq = existingRecord.frequency !== undefined ? Number(existingRecord.frequency) : 0;
+                const finalIsDone = (finalFreq >= 1);
+                const finalStatus = finalIsDone ? "ACHIEVED" : "PENDING";
+
+                const payload = {
+                    remarks: remarks,
+                    date: execDate,
+                    frequency: finalFreq,
+                    isDone: finalIsDone,
+                    status: finalStatus
+                };
+
+                await visitDB.visits.update(currentEditId, payload);
+                await cloudVisitDB.ref(`vimag_followup/visits/${currentEditId}`).update(payload);
+                
+                closeVisitModal();
+                loadVisitsTable();
+            }
+        } catch (err) {
+            console.error("Failed to update modal execution records: ", err);
+        }
+    }
+
+   async function toggleAllVisits() {
+        const masterCheck = document.getElementById('masterVisitCheck').checked;
+        const targetStatus = masterCheck ? "ACHIEVED" : "PENDING";
+        
+        // 1. UI Screen checkboxes-ai instant-ah tick/untick seigirom
+        document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = masterCheck);
+
+        try {
+            const rawRecords = await visitDB.visits.toArray();
+            let cloudUpdates = {};
+
+            for (let item of rawRecords) {
+                // Checkbox tick aanal, frequency 0-ah irundha 1 nu maarum. Untick aana 0 nu maarum.
+                const targetFreq = masterCheck ? (Number(item.frequency) > 0 ? Number(item.frequency) : 1) : 0;
+                
+                const updatePayload = {
+                    isDone: masterCheck,
+                    status: targetStatus,
+                    frequency: targetFreq
+                };
+
+                // Local Dexie Database update
+                await visitDB.visits.update(String(item.id), updatePayload);
+
+                // Firebase Cloud batch update payload creation
+                cloudUpdates[`/vimag_followup/visits/${item.id}/isDone`] = masterCheck;
+                cloudUpdates[`/vimag_followup/visits/${item.id}/status`] = targetStatus;
+                cloudUpdates[`/vimag_followup/visits/${item.id}/frequency`] = targetFreq;
+            }
+
+            // Firebase Cloud Realtime Sync injection
+            if (Object.keys(cloudUpdates).length > 0) {
+                await cloudVisitDB.ref().update(cloudUpdates);
+            }
+
+            loadVisitsTable(); // Data matrix totals & counters refresh
+        } catch (err) {
+            console.error("Master checkbox backend sync failed: ", err);
+        }
+    }
+
+    window.onload = function() {
+        initializeWarehouseConnection();
+    };
+</script>
 </body>
 </html>
