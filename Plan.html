@@ -305,22 +305,19 @@ const visitDB = new Dexie("VimagVisitPlanDB");
             .toUpperCase();
     }
 
-       function startVisitSync() {
+        function startVisitSync() {
         const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
 
-        // 🚀 HIGH-SECURITY UNIFORM STRING ENGINE: Master plain text vs Plan emoji entries matching fixed!
-        visitsRef.once('value', async (snap) => {
+        // 🚀 HIGH-SECURITY UNIFORM STRING ANTI-DUPLICATION RECONCILIATION ENGINE
+        visitsRef.on('value', async (snap) => {
             const data = snap.val();
             const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
             
-            // Master names are clean text (No emojis) - standard hashing lookup set
-            const masterCleanSet = new Set(uniqueMasterCustomers.map(name => name.trim().toUpperCase()));
-            
-            let localExistingVisits = await visitDB.visits.toArray();
-            let localCleanMap = new Map(localExistingVisits.map(v => [cleanEmojiAndSpecial(v.customer), v]));
+            // Core unique plaintext upper hashing lookup set bounds
+            const masterCleanSet = new Set(uniqueMasterCustomers.map(name => cleanEmojiAndSpecial(name)));
             
             let cloudVerifiedPayload = [];
-            let cloudCleanSeen = new Set();
+            let cloudCleanSeenTrack = new Set();
 
             if (data) {
                 const rawCloudList = Object.keys(data).map(key => {
@@ -328,36 +325,39 @@ const visitDB = new Dexie("VimagVisitPlanDB");
                 });
 
                 rawCloudList.forEach(item => {
-                    // 🎯 FIX: Plan file-la irukra emoji-ai clean panni bare text edukirom matching checking-kaga
                     let cleanCustName = cleanEmojiAndSpecial(item.customer);
                     
-                    // Plain master text and clean plan text safe-ah match aagi validation successful aagum
-                    if (masterCleanSet.has(cleanCustName) && !cloudCleanSeen.has(cleanCustName)) {
-                        cloudCleanSeen.add(cleanCustName);
+                    // 🎯 ANTI-DUPLICATE SHIELD: Master check loop and strict memory lookup hashing
+                    if (masterCleanSet.has(cleanCustName) && !cloudCleanSeenTrack.has(cleanCustName)) {
+                        cloudCleanSeenTrack.add(cleanCustName);
                         cloudVerifiedPayload.push(item);
+                    } else {
+                        // Cleans up any duplicate ghosts or redundant text mismatch variants from cloud node references
+                        visitsRef.child(item.id).remove();
                     }
                 });
             }
 
-            // Secure local bulk update snapshot execution without data flashing
+            // 🔥 TRUE DATA SYNC SHIELD: Refreshes base store cleanly to kill local duplications
+            await visitDB.visits.clear(); 
             if (cloudVerifiedPayload.length > 0) {
                 await visitDB.visits.bulkPut(cloudVerifiedPayload);
             }
 
-            // 100% COLLISION FREE CRYPTO UUID GENERATION LOOP FOR NEW CUSTOMERS
+            // 100% Collision-free UUID runtime initialization map loop
             let bulkInsertArray = [];
             for (let cust of uniqueMasterCustomers) {
-                // Master file plain name upper-case verification block
-                let cleanCust = cust.trim().toUpperCase();
+                let cleanCust = cleanEmojiAndSpecial(cust);
                 
-                if (!cloudCleanSeen.has(cleanCust) && !localCleanMap.has(cleanCust)) {
+                // If this customer plain format text isn't seen anywhere yet, inject once
+                if (!cloudCleanSeenTrack.has(cleanCust)) {
                     const ultraSecureUUID = typeof crypto !== 'undefined' && crypto.randomUUID 
                         ? crypto.randomUUID() 
                         : 'vimag-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
                         
                     const insertPayload = {
                         id: String(ultraSecureUUID),
-                        customer: cust, // Stores original base master client structure 
+                        customer: cust, 
                         remarks: "",
                         frequency: 0,
                         date: "-",
@@ -367,7 +367,8 @@ const visitDB = new Dexie("VimagVisitPlanDB");
                     bulkInsertArray.push(insertPayload);
                     visitsRef.child(ultraSecureUUID).set(insertPayload);
                     
-                    cloudCleanSeen.add(cleanCust); // Lock to avoid parallel cycle duplications
+                    // Instant tracking lock to block self-duplications on concurrent operations cycle loops
+                    cloudCleanSeenTrack.add(cleanCust);
                 }
             }
 
@@ -377,24 +378,8 @@ const visitDB = new Dexie("VimagVisitPlanDB");
 
             loadVisitsTable();
         });
-
-        // Continuous streaming real-time update channels
-        visitsRef.on('child_changed', async (snap) => {
-            const updatedVisit = snap.val();
-            if (updatedVisit) {
-                updatedVisit.id = String(snap.key); 
-                await visitDB.visits.put(updatedVisit);
-                loadVisitsTable();
-            }
-        });
-
-        visitsRef.on('child_removed', async (snap) => {
-            await visitDB.visits.delete(String(snap.key));
-            loadVisitsTable();
-        });
     }
 
-      
     async function getStrictUniqueMasterCustomers() {
         try {
             const masterRecords = await masterDB.brands.toArray();
@@ -435,6 +420,24 @@ const visitDB = new Dexie("VimagVisitPlanDB");
             renderVisitsTable(filteredRecords);
         } catch (err) {
             console.error(err);
+        }
+    }
+
+      
+    async function getStrictUniqueMasterCustomers() {
+        try {
+            const masterRecords = await masterDB.brands.toArray();
+            let cleanNamesSet = new Set();
+            for (let i = 0; i < masterRecords.length; i++) {
+                let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
+                if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
+                    cleanNamesSet.add(cName.trim());
+                }
+            }
+            return Array.from(cleanNamesSet).sort();
+        } catch (e) {
+            console.error(e);
+            return [];
         }
     }
 
