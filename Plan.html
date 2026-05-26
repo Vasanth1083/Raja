@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vimag - Customer Visit Planner</title>
+    <link rel="icon" href="Vimag.png" type="image/png">
+
+    <style>
+        * { box-sizing: border-box; transition: 0.3s; }
+        body {
+            font-family: 'Times New Roman', serif;
+            padding: 20px;
+            background-image: url('Background11.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; position: relative; }
+        .header-box {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #27ae60;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: serif;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-back { background: GREEN; color: white; text-decoration: none; }
+        .btn-print { background: RED; color: white; }
+        .search-box {
+            padding: 10px 15px;
+            border: 2px solid #27ae60;
+            border-radius: 8px;
+            font-family: 'Times New Roman';
+            font-size: 15px;
+            width: 250px;
+            outline: none;
+        }
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #27ae60;
+        }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 14px; text-align: left; border: 1px solid black; color: black; }
+        th { background: #2c3e50; color: white; text-transform: uppercase; font-size: 14px; }
+        tr { background: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #f1f2f6; }
+        .completed-row td { background-color: #dcfce7 !important; color: #14532d !important; }
+        .counter-wrapper { display: inline-flex; align-items: center; gap: 12px; justify-content: center; width: 100%; }
+        .btn-count {
+            background: transparent;
+            border: none;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+            padding: 0;
+            margin: 0;
+            outline: none;
+        }
+        .btn-count.btn-minus { color: #e74c3c; }
+        .btn-count.btn-minus:hover { transform: scale(1.3); color: #c0392b; }
+        .btn-count.btn-plus { color: #27ae60; }
+        .btn-count.btn-plus:hover { transform: scale(1.3); color: #218838; }
+        .count-display { font-weight: bold; font-size: 16px; min-width: 25px; text-align: center; color: black; }
+        table input[type="checkbox"] { accent-color: #27ae60; cursor: pointer; width: 16px; height: 16px; }
+        
+        /* 🎯 Header Dropdown Style Configuration */
+        .hdr-select {
+            background: #34495e;
+            color: white;
+            border: 1px solid #4f6f8f;
+            border-radius: 4px;
+            padding: 4px;
+            font-family: 'Times New Roman';
+            font-size: 13px;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+            margin-top: 5px;
+            display: block;
+            width: 100%;
+        }
+        .hdr-select option { background: white; color: black; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 400px;
+            border: 3px solid #27ae60;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: black;
+        }
+        .modal-content label { font-size: 13px; display: block; margin-top: 10px; font-weight: bold; }
+        .modal-content select, .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: 'Times New Roman';
+        }
+        
+        @media print {
+            .btn, .search-box, th:first-child, td:first-child, .btn-count { display: none !important; }
+            .hdr-select { display: none !important; } /* ✨ PRINT HIDE DROPDOWN */
+            div.print-hidden-block:has(.btn-back) { display: none !important; }
+            div.print-hidden-block:has(#countTotal) {
+                display: block !important;
+                position: absolute !important;
+                right: 15px !important;
+                top: 15px !important;
+                border: 1px solid black !important;
+                background: white !important;
+                box-shadow: none !important;
+            }
+            .header-box, .table-container {
+                border: 1px solid black !important;
+                box-shadow: none !important;
+                margin-bottom: 15px !important;
+            }
+            padding: 12px !important;
+            background: white !important;
+            .counter-wrapper { display: block !important; text-align: left !important; }
+            .count-display { color: black !important; }
+            tr { background: white !important; color: black !important; }
+            .completed-row td {
+                background-color: #dcfce7 !important;
+                color: #14532d !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            body { background: white !important; background-image: none !important; padding: 0; margin: 0; }
+            th, td { border: 1px solid black !important; padding: 8px !important; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <!-- 📋 CONSOLIDATED BRANDING HEADER -->
+        <div class="header-box">
+            <div style="position: absolute; left: 20px; top: 20px;" class="print-hidden-block">
+
+                <a href="Followup.html" class="btn btn-back">🏠HOME</a>
+            </div>
+            <!-- 📊 VISITS STATUS SUMMARY BOX -->
+            <div class="print-hidden-block" style="position: absolute; right: 20px; top: 20px; background: white; border: 2px solid #27ae60; border-radius: 10px; padding: 8px 15px; font-family: 'Times New Roman'; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; font-size: 13px; line-height: 1.4; min-width: 130px; z-index: 10;">
+                <div style="font-weight: bold; border-bottom: 1px solid #e2e8f0; font-size: 16px; padding-bottom: 4px; margin-bottom: 4px; color: PURPLE;">📊 Visits Status</div>
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <span style="color: BLACK; font-weight: bold;">TOTAL:</span> <span id="countTotal" style="font-weight: 900; color: #1e293b;">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <span style="color: #b91c1c; font-weight: bold;">PENDING:</span> <span id="countPending" style="font-weight: 900; color: #991b1b;">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <span style="color: #15803d; font-weight: bold;">ACHIEVED:</span> <span id="countAchieved" style="font-weight: 900; color: #166534;">0</span>
+                </div>
+            </div>
+            <img src="Logo.jpeg" style="width: 90px; height: auto; margin-bottom: 10px;" alt="Logo" onerror="this.style.display='none'">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="margin: 0; color: #27ae60; font-size: 28px; font-weight: 900; text-transform: uppercase;">Vimag Industrial Solutions</h1>
+                <h2 style="margin: 5px 0 0 0; color: #8e44ad; font-size: 25px; font-weight: bold;">📆 Field Visit Tracker</h2>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%;" class="print-hidden-block">
+
+                <button class="btn btn-print" onclick="window.print()">🖨️ PRINT</button>
+                <input type="text" id="visitSearchInput" class="search-box" placeholder="🔍 Search Customer Name..." oninput="loadVisitsTable()">
+            </div>
+        </div>
+
+        <!-- 📊 SOLID DATA MODULE BOX -->
+        <div class="table-container">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="masterVisitCheck" onclick="toggleAllVisits()"></th>
+                            <th style="width: 50px; text-align: center;">S.No</th>
+                            <th style="width: 280px;">📝 Customer Name</th>
+                            <th>Remarks / Notes</th>
+                            <th style="width: 140px; text-align: center;">Frequency</th>
+                            <th style="width: 150px;">Visit Date</th>
+                            <!-- 📊 Only Status Tracking Header has Dropdown Filter -->
+                            <th style="width: 200px; text-align: center; vertical-align: top;">
+                                Status Tracking
+                                <select id="hdrStatusFilter" class="hdr-select" onchange="loadVisitsTable()">
+                                    <option value="">-- ALL STATUS --</option>
+                                    <option value="PENDING">PENDING</option>
+                                    <option value="ACHIEVED">ACHIEVED</option>
+                                </select>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitTableBody">
+                        <tr><td colspan="7" style="text-align:center; padding:30px; font-weight:bold; color:orange;">Connecting Jet Speed Database Engine... ⚡</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📦 AUTOMATED SELECTION DATA MODAL WORKSPACE -->
+    <div id="visitModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle" style="color: #27ae60; text-align: center; margin-top:0;">Update Visit Plan 🔄</h2>
+            
+            <label>Customer Name:</label> 
+            <div id="visitCustNameDisplay" style="font-weight: bold; background: #eee; padding: 10px; border-radius: 6px; margin-top: 5px; font-size: 16px;">-</div>
+            
+            <label>Remarks / Notes:</label> 
+            <input type="text" id="visitRemarks" placeholder="Enter execution notes">
+            
+            <label>Visit Execution Date:</label> 
+            <input type="date" id="visitDate">
+            
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" style="background: #ccc; color: black;" onclick="closeVisitModal()">Discard</button>
+                <button class="btn btn-add" id="modalActionBtn" onclick="saveVisitEntry()">UPDATE PLAN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Infrastructure Script Integration Layers -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        const visitDB = new Dexie("VimagVisitPlanDB");
+        visitDB.version(2).stores({ visits: '++id,customer,remarks,frequency,date,status,isDone' });
+
+        const masterDB = new Dexie("VimagMasterDB");
+        masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+        databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
+            projectId: "vimag-database",
+            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const cloudVisitDB = firebase.database();
+        let currentEditId = null;
+
+        async function initializeWarehouseConnection() {
+            try {
+                await visitDB.open();
+                await masterDB.open();
+                startVisitSync();
+            } catch (err) {
+                console.error("Dexie open error: ", err);
+            }
+        }
+function startVisitSync() {
+    const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
+
+    // 🏆 FIRST TIME INITIAL LOAD ENGINE
+    visitsRef.once('value', async (snap) => {
+        const data = snap.val() || {};
+        const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
+        
+        let verifiedArrayPayload = [];
+        let matchedSeenNames = new Set();
+
+        // 1. Format raw cloud data mapping targets safely
+        const rawCloudList = Object.keys(data).map(key => {
+            return { ...data[key], id: isNaN(key) ? key : Number(key) };
+        });
+
+        // 2. Master list dynamic check loops
+        rawCloudList.forEach(item => {
+            let normCustName = (item.customer || "").toString().trim().toUpperCase();
+            
+            // 🛡️ SHIELD 1: Master list-la irukura active customer matum thaan table layout-la ulla ukaaruvaanga
+            if (uniqueMasterCustomers.includes(normCustName) && !matchedSeenNames.has(normCustName)) {
+                matchedSeenNames.add(normCustName);
+                verifiedArrayPayload.push(item);
+            } else {
+                // 🗑️ SHIELD 2: Master-la neenga customer name-ah thookuna, cloud-layum andha plan automatic-ah deep purge aayidum!
+                visitsRef.child(item.id).remove();
+            }
+        });
+
+        // 3. Update local Dexie tables instantly without background variable dropping overlaps
+        await visitDB.visits.clear();
+        if (verifiedArrayPayload.length > 0) {
+            await visitDB.visits.bulkPut(verifiedArrayPayload);
+        }
+
+        // 4. 🎯 ACCURACY FIX: New customer default value insert protocol
+        let bulkInsertArray = [];
+
+        for (let cust of uniqueMasterCustomers) {
+            // Indha customer name munnadiye cloud records-la illai na mattum thaan fresh baseline rows thurakkum
+            if (!matchedSeenNames.has(cust)) {
+                const generatedId = Date.now() + Math.floor(Math.random() * 10000);
+                const insertPayload = {
+                    id: generatedId,
+                    customer: cust,     // Name mattum fresh-ah asset master list-la irundhu varum
+                    remarks: "",         // Default empty profile configs
+                    frequency: 0,        // Default 0 frequency steps
+                    date: "-",
+                    status: "PENDING",
+                    isDone: false
+                };
+                bulkInsertArray.push(insertPayload);
+                visitsRef.child(generatedId).set(insertPayload);
+            }
+        }
+
+        if (bulkInsertArray.length > 0) {
+            await visitDB.visits.bulkPut(bulkInsertArray);
+        }
+
+        // Trigger safe table rendering interface lines
+        loadVisitsTable();
+    });
+
+    // 🚀 LIVE STREAM MODIFICATION WEBSOCKETS LISTENERS (Multi-device dynamic sync tracks)
+    visitsRef.on('child_changed', async (snap) => {
+        const updatedVisit = snap.val();
+        if (updatedVisit) {
+            updatedVisit.id = isNaN(snap.key) ? snap.key : Number(snap.key);
+            await visitDB.visits.put(updatedVisit);
+            loadVisitsTable();
+        }
+    });
+    
+    visitsRef.on('child_removed', async (snap) => {
+        const removedKey = isNaN(snap.key) ? snap.key : Number(snap.key);
+        await visitDB.visits.delete(removedKey);
+        loadVisitsTable();
+    });
+}
+
+     async function getStrictUniqueMasterCustomers() {
+            try {
+                // 1. Core master brands warehouse database array-ah fresh-ah pull panrom
+                const masterRecords = await masterDB.brands.toArray();
+                let cleanNamesSet = new Set();
+                
+                // 2. Loop run panni duplicate profiles matrum zombie tokens-ah thookuroam
+                for (let i = 0; i < masterRecords.length; i++) {
+                    let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
+                    
+                    // Core Rule: Empty-ah illama, id_lock matrum SYSTEM data-va bypass panni ulla edukuroam
+                    if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
+                        cleanNamesSet.add(cName.trim().toUpperCase()); // Strict CAPS synchronization formatting
+                    }
+                }
+                
+                // 3. Array Set formats layer-ah convert panni, perfect alphabetical sort lookups-la return panrom
+                return Array.from(cleanNamesSet).sort();
+            } catch (e) {
+                console.error("Master customer footprint aggregation failure context trace: ", e);
+                return [];
+            }
+        }
+
+         async function loadVisitsTable() {
+            try {
+                // 1. Local warehouse-la irundhu total rows entries fresh-ah pull panrom
+                const rawRecords = await visitDB.visits.toArray();
+                
+                // 2. Real-time visual panel summary logs counter calculations updates
+                document.getElementById('countTotal').innerText = rawRecords.length;
+                document.getElementById('countPending').innerText = rawRecords.filter(r => !r.isDone).length;
+                document.getElementById('countAchieved').innerText = rawRecords.filter(r => r.isDone).length;
+
+                const searchQuery = document.getElementById('visitSearchInput').value.trim().toUpperCase();
+                const selStatusFilter = document.getElementById('hdrStatusFilter').value;
+
+                let filteredRecords = rawRecords;
+
+                // 3. TEXT SEARCH BAR FILTER: User type panna customer name-ah filter panrom
+                if (searchQuery) {
+                    filteredRecords = filteredRecords.filter(r => r.customer && r.customer.toUpperCase().includes(searchQuery));
+                }
+                
+                // 4. STATUS DROPDOWN FILTER: PENDING / ACHIEVED matching check loops
+                if (selStatusFilter) {
+                    filteredRecords = filteredRecords.filter(r => r.status && r.status.toUpperCase() === selStatusFilter.toUpperCase());
+                }
+
+                // 5. Filter panna clean list-ah table render engine structure layer-ku thuroam
+                renderVisitsTable(filteredRecords);
+            } catch (err) {
+                console.error("Visits state logging data aggregator crashed: ", err);
+            }
+        }
+
+        function renderVisitsTable(filteredRecords) {
+        const tbody = document.getElementById('visitTableBody');
+        if (!tbody) return;
+
+        if (filteredRecords.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:red; font-weight:bold;">No visit configurations match evaluation scopes.</td></tr>`;
+            return;
+        }
+
+        // 📊 1. DYNAMIC AUTO-SORTING ACTIVATED: PENDING stays top, ACHIEVED drops cleanly to bottom
+        filteredRecords.sort((a, b) => (a.isDone === b.isDone) ? 0 : a.isDone ? 1 : -1);
+
+        // 2. Map structural row nodes data layouts onto grid tables cleanly
+        tbody.innerHTML = filteredRecords.map((v, idx) => {
+            const isDone = v.isDone || (v.status && v.status.toUpperCase() === "ACHIEVED");
+            const rowClass = isDone ? 'class="completed-row"' : '';
+            const metricStatusBadge = isDone 
+                ? `<span style="font-size:14px; font-weight:bold; color:#16a34a; background:#dcfce7; padding: 4px 10px; border-radius: 20px;">🏆 ACHIEVED</span>` 
+                : `<span style="font-size:14px; font-weight:bold; color:red; background:#fdf2f2; padding: 4px 10px; border-radius: 20px;">PENDING</span>`;
+            const freqCount = v.frequency !== undefined ? Number(v.frequency) : 0;
+
+            // 🛡️ SECURITY ESCAPING MAPS: Safe variables patterns matching
+            const safeName = (v.customer || '').replace(/'/g, "\\'");
+            const safeRemarks = (v.remarks || '-').replace(/'/g, "\\'");
+            const safeDate = (v.date || '-').replace(/'/g, "\\'");
+
+            // 🎯 FIXED ONCLICK: '${v.id}'-ஐ 'Single Quotes' உள்ளே அனுப்புவதால் ஸ்ட்ரிங் மிஸ்மேட்ச் எர்ரர் வராது!
+            return `
+                <tr ${rowClass} style="border-bottom: 1px solid black !important; background-color: white;">
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; vertical-align: middle;">
+                        <input type="checkbox" class="visit-row-check" value="${v.id}" onclick="triggerDirectModal('${v.id}'); event.stopPropagation();">
+                    </td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; font-weight:bold; color: black; vertical-align: middle;">${idx + 1}</td>
+                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: nowrap; vertical-align: middle;">${safeName.toUpperCase()}</td>
+                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: normal !important; word-wrap: break-word; vertical-align: middle;">${safeRemarks.toUpperCase()}</td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px; vertical-align: middle;">
+                        <div class="counter-wrapper">
+                            <button class="btn-count btn-minus" onclick="adjustFrequencyValue('${v.id}', ${freqCount}, -1); event.stopPropagation();">−</button>
+                            <span class="count-display" style="font-variant-numeric: tabular-nums; font-size: 15px; min-width: 25px; text-align: center; display: inline-block;">${freqCount}</span>
+                            <button class="btn-count btn-plus" onclick="adjustFrequencyValue('${v.id}', ${freqCount}, 1); event.stopPropagation();">+</button>
+                        </div>
+                    </td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 8px; color:navy; white-space: nowrap; vertical-align: middle;">${safeDate}</td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px; white-space: nowrap; vertical-align: middle;">${metricStatusBadge}</td>
+                </tr>`;
+        }).join('');
+    }
+
+         async function adjustFrequencyValue(id, currentVal, direction) {
+    // 🛡️ CRITICAL KEY SHIELD: ஐடி காலியாகவோ அல்லது NaN ஆகவோ இருந்தால் குவெரியை ரன் பண்ணாமல் தடுத்து நிறுத்தும்!
+    if (!id || id === "undefined" || id === "null") {
+        console.warn("⚠️ Invalid ID blocked from executing stepper IndexedDB query.");
+        return;
+    }
+
+    // 🛡️ DATA TYPE ENFORCEMENT: ஸ்ட்ரிங் ஐடியை கச்சிதமாக நம்பர் (Number) டேட்டா டைப்பாக மாற்றுகிறோம்
+    const targetId = isNaN(id) ? id : Number(id);
+    let updatedVal = Number(currentVal) + direction;
+    if (updatedVal < 0) updatedVal = 0;
+    
+    const nextIsDone = (updatedVal >= 1);
+    const nextStatusString = nextIsDone ? "ACHIEVED" : "PENDING";
+
+    try {
+        // Local warehouse store-ல இருந்து ஸ்பெசிபிக் ரெக்கார்டை எடுக்குறோம்
+        const currentRecord = await visitDB.visits.get(targetId);
+        
+        // 🛡️ ZOMBIE CRASH SHIELD: ரெக்கார்ட் டேட்டாபேஸ்ல இருந்தா மட்டும் தான் அப்டேட் நடக்கும்
+        if (currentRecord) {
+            const currentRemarks = currentRecord.remarks || "";
+            const currentDate = currentRecord.date || "-";
+
+            const updatePayload = { 
+                frequency: updatedVal,
+                isDone: nextIsDone,
+                status: nextStatusString,
+                remarks: currentRemarks,
+                date: currentDate
+            };
+            
+            await visitDB.visits.update(targetId, updatePayload);
+            await cloudVisitDB.ref(`vimag_followup/visits/${targetId}`).update(updatePayload);
+            loadVisitsTable();
+            console.log(`Frequency adjusted successfully for ID: [${targetId}] to ${updatedVal} ✅`);
+        } else {
+            console.warn(`Record entry missing inside offline database for stepper ID: ${targetId}`);
+        }
+    } catch (err) {
+        console.error("Stepper matrix update transaction pipeline failure: ", err);
+    }
+}
+ async function triggerDirectModal(id) {
+    try {
+        // 🛡️ CRITICAL KEY FIX: ஐடி காலியாகவோ அல்லது NaN ஆகவோ இருந்தால் தேடாமல் தடுத்து நிறுத்தும்!
+        if (!id || id === "undefined" || id === "null") {
+            console.warn("⚠️ Invalid ID blocked from executing Dexie .get() query.");
+            return;
+        }
+
+        // 🛡️ DATA TYPE ENFORCEMENT: String ஐடியை கச்சிதமாக IndexedDB-க்கு ஏற்ற Number ஆக மாற்றுகிறோம்
+        currentEditId = isNaN(id) ? id : Number(id);
+        
+        const record = await visitDB.visits.get(currentEditId);
+        
+        if (record) {
+            const custDisplay = document.getElementById('visitCustNameDisplay');
+            const remarksInput = document.getElementById('visitRemarks');
+            const dateInput = document.getElementById('visitDate');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContainer = document.getElementById('visitModal');
+
+            if (custDisplay) custDisplay.innerText = (record.customer || "UNKNOWN ENTITY").toString().toUpperCase();
+            if (remarksInput) remarksInput.value = record.remarks || '';
+            if (dateInput) dateInput.value = (record.date && record.date !== "-") ? record.date : '';
+            if (modalTitle) modalTitle.innerText = "Update Visit Plan 🔄";
+            
+            if (modalContainer) {
+                modalContainer.style.display = 'flex';
+                console.log(`Popup window opened safely for target ID: [${currentEditId}] ✅`);
+            }
+        } else {
+            console.warn(`Record missing for key identifier: ${currentEditId}`);
+        }
+    } catch (err) {
+        console.error("Direct checkbox click modal deployment core crash: ", err);
+    }
+}
+      async function openVisitModal() {
+    const checkedBoxes = document.querySelectorAll('.visit-row-check:checked');
+    if (checkedBoxes.length !== 1) {
+        return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
+    }
+    
+    try {
+        // ✅ NODE-LIST POINTER SAFE ARREARS EXTRACTION (Bypasses array notation crashes)
+        const activeInputNode = checkedBoxes[0];
+        if (!activeInputNode || !activeInputNode.value) return;
+
+        const targetRawId = activeInputNode.value;
+        currentEditId = isNaN(targetRawId) ? targetRawId : Number(targetRawId);
+        
+        // டைரக்ட் பாப்அப் இன்ஜினை இயக்குகிறோம்
+        await triggerDirectModal(currentEditId);
+    } catch (err) {
+        console.error("Toolbar action interface modal execution crashed: ", err);
+    }
+}
+
+     function closeVisitModal() {
+            const modal = document.getElementById('visitModal');
+            if (modal) {
+                // 1. Modal overlay view-ah instant-ah hide panrom
+                modal.style.display = 'none';
+            }
+
+            // 🛡️ ACCURACY RESET: மோடல் மூடும்போது டேபிளில் உள்ள அனைத்து செக் பாக்ஸ்களையும் அன்செக் செய்கிறது
+            document.querySelectorAll('.visit-row-check').forEach(cb => {
+                cb.checked = false;
+                
+                // UX Bonus: Check-ah thookumbodhu row selection color highlight-aiyum clean panrom
+                const row = cb.closest('tr');
+                if (row && !row.classList.contains('completed-row')) {
+                    row.style.backgroundColor = "white"; // White context-ku thirumba kondu varom
+                }
+            });
+
+            // 2. Safety Lock: Current edit execution pointer memory token-ah null panrom
+            currentEditId = null;
+            console.log("Visit plan overlay closed & active memory indicators reset safely. ✅");
+        }
+async function saveVisitEntry() {
+            if (!currentEditId) return;
+
+            const remarks = document.getElementById('visitRemarks').value.trim();
+            const date = document.getElementById('visitDate').value;
+
+            try {
+                // 1. Snapshot check to gather untouched operational metadata keys
+                const existingRecord = await visitDB.visits.get(currentEditId);
+                if (existingRecord) {
+                    
+                    // 🎯 UNTOUCHED COUNTER LOGIC: Keeps your frequency counts perfectly intact
+                    const currentFreq = Number(existingRecord.frequency) || 0;
+                    const finalIsDone = (currentFreq >= 1);
+                    const finalStatus = finalIsDone ? "ACHIEVED" : "PENDING";
+
+                    // ✅ ACCURATE FULL PAYLOAD: Includes customer identity to prevent dynamic database fragmentation
+                    const payload = {
+                        id: currentEditId,
+                        customer: existingRecord.customer, // Structural corporate identity preserved
+                        remarks: remarks,
+                        date: date || "-",
+                        frequency: currentFreq,
+                        isDone: finalIsDone,
+                        status: finalStatus,
+                        updatedAt: Date.now() // Delta validation marker
+                    };
+
+                    // 2. Commit safely to localized store structures and cloud references simultaneously
+                    await visitDB.visits.put(payload); // Overwrite using total payload to maintain object parity
+                    await cloudVisitDB.ref(`vimag_followup/visits/${currentEditId}`).set(payload);
+                    
+                    // 3. Close overlays frames cleanly
+                    closeVisitModal();
+                    
+                    // 🎯 NO-BLINK REFRESH FIX: Instant UI redraw pass to render manual field shifts straight away
+                    if (typeof loadVisitsTable === 'function') {
+                        await loadVisitsTable();
+                    }
+                    console.log(`Plan fields committed safely for node reference ID: [${currentEditId}] ✅`);
+                }
+            } catch (err) {
+                console.error("Manual record transaction submission failure: ", err);
+            }
+        }
+       function toggleAllVisits() {
+            const masterCheckEl = document.getElementById('masterVisitCheck');
+            if (!masterCheckEl) return;
+            
+            const masterCheck = masterCheckEl.checked;
+            
+            // 🛡️ ACCURACY BOUNDARY TRACK: Screen-la visible-ah theriyaara checkboxes-ah mattum select pannuvom
+            // Search criteria matching-ala hide aana row items-ah accidental selection-la irundhu idhu safe-ah thadukkum!
+            const visibleCheckboxes = document.querySelectorAll('#visitTableBody tr:not([style*="display: none"]) .visit-row-check');
+            
+            visibleCheckboxes.forEach(cb => {
+                cb.checked = masterCheck;
+                
+                // UX Bonus: Row background highlight configurations management
+                const row = cb.closest('tr');
+                if (row && !row.classList.contains('completed-row')) {
+                    row.style.backgroundColor = masterCheck ? "#f1f8ff" : "white"; // Safe layout reset triggers
+                }
+            });
+            console.log(`Bulk checking operation toggled cleanly across visible layout tracks.`);
+        }
+
+        // 🏗️ UNIFIED INITIAL BOOTSTRAP LIFECYCLE INITIALIZER
+        window.onload = function() {
+            console.log("Vimag Follow-up Tracker: Subsystem Operating Engine Active... 🚀");
+            localStorage.removeItem('isSyncing'); // Clear background execution lock parameters mapping traps
+            
+            if (typeof initializeWarehouseConnection === 'function') {
+                initializeWarehouseConnection();
+            } else {
+                console.warn("Database warehouse root boot connector method missing inside layout scope.");
+            }
+        };
+    </script>
+</body>
+</html>
