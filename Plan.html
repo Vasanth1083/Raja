@@ -265,183 +265,170 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-app-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.10/firebase-database-compat.js"></script>
     <script>
-    
-const visitDB = new Dexie("VimagVisitPlanDB");
-    visitDB.version(2).stores({ 
-        visits: 'id,customer,remarks,frequency,date,status,isDone' 
-    });
+        const visitDB = new Dexie("VimagVisitPlanDB");
+        visitDB.version(2).stores({ visits: '++id,customer,remarks,frequency,date,status,isDone' });
 
-    const masterDB = new Dexie("VimagMasterDB");
-    masterDB.version(1).stores({ 
-        brands: 'id, brand, customerName, artNo' 
-    });
+        const masterDB = new Dexie("VimagMasterDB");
+        masterDB.version(1).stores({ brands: 'id, brand, customerName, artNo' });
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC9Ny5zLH2TBQK9r469OXAMeQ6AbiScn8",
         databaseURL: "https://vimag-database-default-rtdb.firebaseio.com",
-        projectId: "vimag-database",
-        appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const cloudVisitDB = firebase.database();
-    let currentEditId = null;
+            projectId: "vimag-database",
+            appId: "1:9582238917:web:1f0af85f45123de2e4a4ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const cloudVisitDB = firebase.database();
+        let currentEditId = null;
 
-    async function initializeWarehouseConnection() {
-        try {
-            await visitDB.open();
-            await masterDB.open();
-            startVisitSync();
-        } catch (err) {
-            console.error("Dexie open error: ", err);
+        async function initializeWarehouseConnection() {
+            try {
+                await visitDB.open();
+                await masterDB.open();
+                startVisitSync();
+            } catch (err) {
+                console.error("Dexie open error: ", err);
+            }
         }
-    }
+function startVisitSync() {
+    const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
 
-    // 🎯 TEXT CLEANER: Background alphanumeric index check matching loop
-    function cleanEmojiAndSpecial(text) {
-        if (!text) return "";
-        return text.toString()
-            .replace(/[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]/g, "")
-            .trim()
-            .toUpperCase();
-    }
+    // 🏆 FIRST TIME INITIAL LOAD ENGINE
+    visitsRef.once('value', async (snap) => {
+        const data = snap.val() || {};
+        const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
+        
+        let verifiedArrayPayload = [];
+        let matchedSeenNames = new Set();
 
-        function startVisitSync() {
-        const visitsRef = cloudVisitDB.ref('vimag_followup/visits');
-
-        // 🚀 HIGH-SECURITY UNIFORM STRING ANTI-DUPLICATION RECONCILIATION ENGINE
-        visitsRef.on('value', async (snap) => {
-            const data = snap.val();
-            const uniqueMasterCustomers = await getStrictUniqueMasterCustomers();
-            
-            // Core unique plaintext upper hashing lookup set bounds
-            const masterCleanSet = new Set(uniqueMasterCustomers.map(name => cleanEmojiAndSpecial(name)));
-            
-            let cloudVerifiedPayload = [];
-            let cloudCleanSeenTrack = new Set();
-
-            if (data) {
-                const rawCloudList = Object.keys(data).map(key => {
-                    return { ...data[key], id: String(key).trim() };
-                });
-
-                rawCloudList.forEach(item => {
-                    let cleanCustName = cleanEmojiAndSpecial(item.customer);
-                    
-                    // 🎯 ANTI-DUPLICATE SHIELD: Master check loop and strict memory lookup hashing
-                    if (masterCleanSet.has(cleanCustName) && !cloudCleanSeenTrack.has(cleanCustName)) {
-                        cloudCleanSeenTrack.add(cleanCustName);
-                        cloudVerifiedPayload.push(item);
-                    } else {
-                        // Cleans up any duplicate ghosts or redundant text mismatch variants from cloud node references
-                        visitsRef.child(item.id).remove();
-                    }
-                });
-            }
-
-            // 🔥 TRUE DATA SYNC SHIELD: Refreshes base store cleanly to kill local duplications
-            await visitDB.visits.clear(); 
-            if (cloudVerifiedPayload.length > 0) {
-                await visitDB.visits.bulkPut(cloudVerifiedPayload);
-            }
-
-            // 100% Collision-free UUID runtime initialization map loop
-            let bulkInsertArray = [];
-            for (let cust of uniqueMasterCustomers) {
-                let cleanCust = cleanEmojiAndSpecial(cust);
-                
-                // If this customer plain format text isn't seen anywhere yet, inject once
-                if (!cloudCleanSeenTrack.has(cleanCust)) {
-                    const ultraSecureUUID = typeof crypto !== 'undefined' && crypto.randomUUID 
-                        ? crypto.randomUUID() 
-                        : 'vimag-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-                        
-                    const insertPayload = {
-                        id: String(ultraSecureUUID),
-                        customer: cust, 
-                        remarks: "",
-                        frequency: 0,
-                        date: "-",
-                        status: "PENDING",
-                        isDone: false
-                    };
-                    bulkInsertArray.push(insertPayload);
-                    visitsRef.child(ultraSecureUUID).set(insertPayload);
-                    
-                    // Instant tracking lock to block self-duplications on concurrent operations cycle loops
-                    cloudCleanSeenTrack.add(cleanCust);
-                }
-            }
-
-            if (bulkInsertArray.length > 0) {
-                await visitDB.visits.bulkPut(bulkInsertArray);
-            }
-
-            loadVisitsTable();
+        // 1. Format raw cloud data mapping targets safely
+        const rawCloudList = Object.keys(data).map(key => {
+            return { ...data[key], id: isNaN(key) ? key : Number(key) };
         });
-    }
 
-    async function getStrictUniqueMasterCustomers() {
-        try {
-            const masterRecords = await masterDB.brands.toArray();
-            let cleanNamesSet = new Set();
-            for (let i = 0; i < masterRecords.length; i++) {
-                let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
-                if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
-                    cleanNamesSet.add(cName.trim());
-                }
-            }
-            return Array.from(cleanNamesSet).sort();
-        } catch (e) {
-            console.error(e);
-            return [];
-        }
-    }
-
-    async function loadVisitsTable() {
-        try {
-            const rawRecords = await visitDB.visits.toArray();
+        // 2. Master list dynamic check loops
+        rawCloudList.forEach(item => {
+            let normCustName = (item.customer || "").toString().trim().toUpperCase();
             
-            document.getElementById('countTotal').innerText = rawRecords.length;
-            document.getElementById('countPending').innerText = rawRecords.filter(r => !r.isDone).length;
-            document.getElementById('countAchieved').innerText = rawRecords.filter(r => r.isDone).length;
-
-            const searchQuery = document.getElementById('visitSearchInput').value.trim().toUpperCase();
-            const selStatusFilter = document.getElementById('hdrStatusFilter').value;
-
-            let filteredRecords = rawRecords;
-
-            if (searchQuery) {
-                filteredRecords = filteredRecords.filter(r => r.customer && r.customer.toUpperCase().includes(searchQuery));
+            // 🛡️ SHIELD 1: Master list-la irukura active customer matum thaan table layout-la ulla ukaaruvaanga
+            if (uniqueMasterCustomers.includes(normCustName) && !matchedSeenNames.has(normCustName)) {
+                matchedSeenNames.add(normCustName);
+                verifiedArrayPayload.push(item);
+            } else {
+                // 🗑️ SHIELD 2: Master-la neenga customer name-ah thookuna, cloud-layum andha plan automatic-ah deep purge aayidum!
+                visitsRef.child(item.id).remove();
             }
-            if (selStatusFilter) {
-                filteredRecords = filteredRecords.filter(r => r.status && r.status.toUpperCase() === selStatusFilter.toUpperCase());
-            }
+        });
 
-            renderVisitsTable(filteredRecords);
-        } catch (err) {
-            console.error(err);
+        // 3. Update local Dexie tables instantly without background variable dropping overlaps
+        await visitDB.visits.clear();
+        if (verifiedArrayPayload.length > 0) {
+            await visitDB.visits.bulkPut(verifiedArrayPayload);
         }
-    }
 
-      
-    async function getStrictUniqueMasterCustomers() {
-        try {
-            const masterRecords = await masterDB.brands.toArray();
-            let cleanNamesSet = new Set();
-            for (let i = 0; i < masterRecords.length; i++) {
-                let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
-                if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
-                    cleanNamesSet.add(cName.trim());
+        // 4. 🎯 ACCURACY FIX: New customer default value insert protocol
+        let bulkInsertArray = [];
+
+        for (let cust of uniqueMasterCustomers) {
+            // Indha customer name munnadiye cloud records-la illai na mattum thaan fresh baseline rows thurakkum
+            if (!matchedSeenNames.has(cust)) {
+                const generatedId = Date.now() + Math.floor(Math.random() * 10000);
+                const insertPayload = {
+                    id: generatedId,
+                    customer: cust,     // Name mattum fresh-ah asset master list-la irundhu varum
+                    remarks: "",         // Default empty profile configs
+                    frequency: 0,        // Default 0 frequency steps
+                    date: "-",
+                    status: "PENDING",
+                    isDone: false
+                };
+                bulkInsertArray.push(insertPayload);
+                visitsRef.child(generatedId).set(insertPayload);
+            }
+        }
+
+        if (bulkInsertArray.length > 0) {
+            await visitDB.visits.bulkPut(bulkInsertArray);
+        }
+
+        // Trigger safe table rendering interface lines
+        loadVisitsTable();
+    });
+
+    // 🚀 LIVE STREAM MODIFICATION WEBSOCKETS LISTENERS (Multi-device dynamic sync tracks)
+    visitsRef.on('child_changed', async (snap) => {
+        const updatedVisit = snap.val();
+        if (updatedVisit) {
+            updatedVisit.id = isNaN(snap.key) ? snap.key : Number(snap.key);
+            await visitDB.visits.put(updatedVisit);
+            loadVisitsTable();
+        }
+    });
+    
+    visitsRef.on('child_removed', async (snap) => {
+        const removedKey = isNaN(snap.key) ? snap.key : Number(snap.key);
+        await visitDB.visits.delete(removedKey);
+        loadVisitsTable();
+    });
+}
+
+     async function getStrictUniqueMasterCustomers() {
+            try {
+                // 1. Core master brands warehouse database array-ah fresh-ah pull panrom
+                const masterRecords = await masterDB.brands.toArray();
+                let cleanNamesSet = new Set();
+                
+                // 2. Loop run panni duplicate profiles matrum zombie tokens-ah thookuroam
+                for (let i = 0; i < masterRecords.length; i++) {
+                    let cName = masterRecords[i].customerName || masterRecords[i].CustomerName || "";
+                    
+                    // Core Rule: Empty-ah illama, id_lock matrum SYSTEM data-va bypass panni ulla edukuroam
+                    if (cName.trim() !== "" && masterRecords[i].id !== "_id_lock" && masterRecords[i].artNo !== "SYSTEM") {
+                        cleanNamesSet.add(cName.trim().toUpperCase()); // Strict CAPS synchronization formatting
+                    }
                 }
+                
+                // 3. Array Set formats layer-ah convert panni, perfect alphabetical sort lookups-la return panrom
+                return Array.from(cleanNamesSet).sort();
+            } catch (e) {
+                console.error("Master customer footprint aggregation failure context trace: ", e);
+                return [];
             }
-            return Array.from(cleanNamesSet).sort();
-        } catch (e) {
-            console.error(e);
-            return [];
         }
-    }
 
-    function renderVisitsTable(filteredRecords) {
+         async function loadVisitsTable() {
+            try {
+                // 1. Local warehouse-la irundhu total rows entries fresh-ah pull panrom
+                const rawRecords = await visitDB.visits.toArray();
+                
+                // 2. Real-time visual panel summary logs counter calculations updates
+                document.getElementById('countTotal').innerText = rawRecords.length;
+                document.getElementById('countPending').innerText = rawRecords.filter(r => !r.isDone).length;
+                document.getElementById('countAchieved').innerText = rawRecords.filter(r => r.isDone).length;
+
+                const searchQuery = document.getElementById('visitSearchInput').value.trim().toUpperCase();
+                const selStatusFilter = document.getElementById('hdrStatusFilter').value;
+
+                let filteredRecords = rawRecords;
+
+                // 3. TEXT SEARCH BAR FILTER: User type panna customer name-ah filter panrom
+                if (searchQuery) {
+                    filteredRecords = filteredRecords.filter(r => r.customer && r.customer.toUpperCase().includes(searchQuery));
+                }
+                
+                // 4. STATUS DROPDOWN FILTER: PENDING / ACHIEVED matching check loops
+                if (selStatusFilter) {
+                    filteredRecords = filteredRecords.filter(r => r.status && r.status.toUpperCase() === selStatusFilter.toUpperCase());
+                }
+
+                // 5. Filter panna clean list-ah table render engine structure layer-ku thuroam
+                renderVisitsTable(filteredRecords);
+            } catch (err) {
+                console.error("Visits state logging data aggregator crashed: ", err);
+            }
+        }
+
+        function renderVisitsTable(filteredRecords) {
         const tbody = document.getElementById('visitTableBody');
         if (!tbody) return;
 
@@ -450,172 +437,245 @@ const visitDB = new Dexie("VimagVisitPlanDB");
             return;
         }
 
+        // 📊 1. DYNAMIC AUTO-SORTING ACTIVATED: PENDING stays top, ACHIEVED drops cleanly to bottom
         filteredRecords.sort((a, b) => (a.isDone === b.isDone) ? 0 : a.isDone ? 1 : -1);
 
+        // 2. Map structural row nodes data layouts onto grid tables cleanly
         tbody.innerHTML = filteredRecords.map((v, idx) => {
-            const rowClass = v.isDone ? 'class="completed-row"' : '';
-            const metricStatusBadge = v.isDone 
+            const isDone = v.isDone || (v.status && v.status.toUpperCase() === "ACHIEVED");
+            const rowClass = isDone ? 'class="completed-row"' : '';
+            const metricStatusBadge = isDone 
                 ? `<span style="font-size:14px; font-weight:bold; color:#16a34a; background:#dcfce7; padding: 4px 10px; border-radius: 20px;">🏆 ACHIEVED</span>` 
                 : `<span style="font-size:14px; font-weight:bold; color:red; background:#fdf2f2; padding: 4px 10px; border-radius: 20px;">PENDING</span>`;
             const freqCount = v.frequency !== undefined ? Number(v.frequency) : 0;
 
+            // 🛡️ SECURITY ESCAPING MAPS: Safe variables patterns matching
+            const safeName = (v.customer || '').replace(/'/g, "\\'");
+            const safeRemarks = (v.remarks || '-').replace(/'/g, "\\'");
+            const safeDate = (v.date || '-').replace(/'/g, "\\'");
+
+            // 🎯 FIXED ONCLICK: '${v.id}'-ஐ 'Single Quotes' உள்ளே அனுப்புவதால் ஸ்ட்ரிங் மிஸ்மேட்ச் எர்ரர் வராது!
             return `
                 <tr ${rowClass} style="border-bottom: 1px solid black !important; background-color: white;">
-                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px;">
-                        <input type="checkbox" class="visit-row-check" value="${v.id}">
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; vertical-align: middle;">
+                        <input type="checkbox" class="visit-row-check" value="${v.id}" onclick="triggerDirectModal('${v.id}'); event.stopPropagation();">
                     </td>
-                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; font-weight:bold; color: black;">${idx + 1}</td>
-<td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: nowrap; cursor: pointer;" onclick="triggerDirectDataModal('${v.id}')">${v.customer}</td>
-                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: normal !important; word-wrap: break-word;">${v.remarks || '-'}</td>
-                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px;">
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 4px; font-weight:bold; color: black; vertical-align: middle;">${idx + 1}</td>
+                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: nowrap; vertical-align: middle;">${safeName.toUpperCase()}</td>
+                    <td style="text-align: left !important; padding-left: 12px !important; border: 1px solid black !important; padding-top:10px; padding-bottom:10px; color: black; white-space: normal !important; word-wrap: break-word; vertical-align: middle;">${safeRemarks.toUpperCase()}</td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px; vertical-align: middle;">
                         <div class="counter-wrapper">
-                            <button class="btn-count btn-minus" onclick="adjustFrequencyValue(${v.id}, ${freqCount}, -1)">−</button>
+                            <button class="btn-count btn-minus" onclick="adjustFrequencyValue('${v.id}', ${freqCount}, -1); event.stopPropagation();">−</button>
                             <span class="count-display" style="font-variant-numeric: tabular-nums; font-size: 15px; min-width: 25px; text-align: center; display: inline-block;">${freqCount}</span>
-                            <button class="btn-count btn-plus" onclick="adjustFrequencyValue(${v.id}, ${freqCount}, 1)">+</button>
+                            <button class="btn-count btn-plus" onclick="adjustFrequencyValue('${v.id}', ${freqCount}, 1); event.stopPropagation();">+</button>
                         </div>
                     </td>
-                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 8px; color:navy; white-space: nowrap;">${v.date || '-'}</td>
-                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px; white-space: nowrap;">${metricStatusBadge}</td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 8px; color:navy; white-space: nowrap; vertical-align: middle;">${safeDate}</td>
+                    <td style="text-align:center; border: 1px solid black !important; padding: 10px 6px; white-space: nowrap; vertical-align: middle;">${metricStatusBadge}</td>
                 </tr>`;
         }).join('');
     }
-  async function adjustFrequencyValue(id, currentVal, direction) {
-        const targetId = Number(id);
-        let updatedVal = Number(currentVal) + direction;
-        if (updatedVal < 0) updatedVal = 0;
-        
-        // Strict mapping check: 1 and above represents true achieved values
-        const nextIsDone = (updatedVal >= 1);
-        const nextStatusString = nextIsDone ? "ACHIEVED" : "PENDING";
 
-        try {
+         async function adjustFrequencyValue(id, currentVal, direction) {
+    // 🛡️ CRITICAL KEY SHIELD: ஐடி காலியாகவோ அல்லது NaN ஆகவோ இருந்தால் குவெரியை ரன் பண்ணாமல் தடுத்து நிறுத்தும்!
+    if (!id || id === "undefined" || id === "null") {
+        console.warn("⚠️ Invalid ID blocked from executing stepper IndexedDB query.");
+        return;
+    }
+
+    // 🛡️ DATA TYPE ENFORCEMENT: ஸ்ட்ரிங் ஐடியை கச்சிதமாக நம்பர் (Number) டேட்டா டைப்பாக மாற்றுகிறோம்
+    const targetId = isNaN(id) ? id : Number(id);
+    let updatedVal = Number(currentVal) + direction;
+    if (updatedVal < 0) updatedVal = 0;
+    
+    const nextIsDone = (updatedVal >= 1);
+    const nextStatusString = nextIsDone ? "ACHIEVED" : "PENDING";
+
+    try {
+        // Local warehouse store-ல இருந்து ஸ்பெசிபிக் ரெக்கார்டை எடுக்குறோம்
+        const currentRecord = await visitDB.visits.get(targetId);
+        
+        // 🛡️ ZOMBIE CRASH SHIELD: ரெக்கார்ட் டேட்டாபேஸ்ல இருந்தா மட்டும் தான் அப்டேட் நடக்கும்
+        if (currentRecord) {
+            const currentRemarks = currentRecord.remarks || "";
+            const currentDate = currentRecord.date || "-";
+
             const updatePayload = { 
                 frequency: updatedVal,
                 isDone: nextIsDone,
-                status: nextStatusString
+                status: nextStatusString,
+                remarks: currentRemarks,
+                date: currentDate
             };
             
             await visitDB.visits.update(targetId, updatePayload);
             await cloudVisitDB.ref(`vimag_followup/visits/${targetId}`).update(updatePayload);
             loadVisitsTable();
-        } catch (err) {
-            console.error("Frequency state toggle error: ", err);
+            console.log(`Frequency adjusted successfully for ID: [${targetId}] to ${updatedVal} ✅`);
+        } else {
+            console.warn(`Record entry missing inside offline database for stepper ID: ${targetId}`);
         }
+    } catch (err) {
+        console.error("Stepper matrix update transaction pipeline failure: ", err);
     }
-
-    // 🔗 POPUP MODAL RENDERING LAYER DATA STREAM BINDINGS
-    async function triggerDirectDataModal(targetId) {
-        currentEditId = Number(targetId);
-        try {
-            const record = await visitDB.visits.get(currentEditId);
-            if (record) {
-                document.getElementById('visitCustNameDisplay').innerText = record.customer;
-                document.getElementById('visitRemarks').value = record.remarks || '';
-                document.getElementById('visitDate').value = record.date !== "-" ? record.date : '';
-                
-                document.getElementById('modalTitle').innerText = "Update Visit Plan 🔄";
-                document.getElementById('visitModal').style.display = 'flex';
-            }
-        } catch (err) {
-            console.error("Modal reference extraction failed: ", err);
+}
+ async function triggerDirectModal(id) {
+    try {
+        // 🛡️ CRITICAL KEY FIX: ஐடி காலியாகவோ அல்லது NaN ஆகவோ இருந்தால் தேடாமல் தடுத்து நிறுத்தும்!
+        if (!id || id === "undefined" || id === "null") {
+            console.warn("⚠️ Invalid ID blocked from executing Dexie .get() query.");
+            return;
         }
-    }
 
-    async function openVisitModal() {
-        const checkedBoxes = document.querySelectorAll('.visit-row-check:checked');
-        if (checkedBoxes.length !== 1) {
-            return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
-        }
-        triggerDirectDataModal(checkedBoxes[0].value);
-    }
-
-    function closeVisitModal() {
-        document.getElementById('visitModal').style.display = 'none';
-        document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = false);
-        const masterCheck = document.getElementById('masterVisitCheck');
-        if (masterCheck) masterCheck.checked = false;
-        currentEditId = null;
-    }
-
-    // 💾 COMMIT CHANGES TO DEXIE STORAGE & FIREBASE WITH PRESERVATION CONTROLS
-    async function saveVisitEntry() {
-        if (!currentEditId) return;
-
-        const remarks = document.getElementById('visitRemarks').value.trim();
-        const dateInput = document.getElementById('visitDate').value;
-        const execDate = dateInput ? dateInput : "-";
-
-        try {
-            const existingRecord = await visitDB.visits.get(currentEditId);
-            if (existingRecord) {
-                // Manual setup mode: No auto-increments applied on popups layout updates
-                const finalFreq = existingRecord.frequency !== undefined ? Number(existingRecord.frequency) : 0;
-                const finalIsDone = (finalFreq >= 1);
-                const finalStatus = finalIsDone ? "ACHIEVED" : "PENDING";
-
-                const payload = {
-                    remarks: remarks,
-                    date: execDate,
-                    frequency: finalFreq,
-                    isDone: finalIsDone,
-                    status: finalStatus
-                };
-
-                await visitDB.visits.update(currentEditId, payload);
-                await cloudVisitDB.ref(`vimag_followup/visits/${currentEditId}`).update(payload);
-                
-                closeVisitModal();
-                loadVisitsTable();
-            }
-        } catch (err) {
-            console.error("Failed to update modal execution records: ", err);
-        }
-    }
-
-   async function toggleAllVisits() {
-        const masterCheck = document.getElementById('masterVisitCheck').checked;
-        const targetStatus = masterCheck ? "ACHIEVED" : "PENDING";
+        // 🛡️ DATA TYPE ENFORCEMENT: String ஐடியை கச்சிதமாக IndexedDB-க்கு ஏற்ற Number ஆக மாற்றுகிறோம்
+        currentEditId = isNaN(id) ? id : Number(id);
         
-        // 1. UI Screen checkboxes-ai instant-ah tick/untick seigirom
-        document.querySelectorAll('.visit-row-check').forEach(cb => cb.checked = masterCheck);
+        const record = await visitDB.visits.get(currentEditId);
+        
+        if (record) {
+            const custDisplay = document.getElementById('visitCustNameDisplay');
+            const remarksInput = document.getElementById('visitRemarks');
+            const dateInput = document.getElementById('visitDate');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContainer = document.getElementById('visitModal');
 
-        try {
-            const rawRecords = await visitDB.visits.toArray();
-            let cloudUpdates = {};
-
-            for (let item of rawRecords) {
-                // Checkbox tick aanal, frequency 0-ah irundha 1 nu maarum. Untick aana 0 nu maarum.
-                const targetFreq = masterCheck ? (Number(item.frequency) > 0 ? Number(item.frequency) : 1) : 0;
-                
-                const updatePayload = {
-                    isDone: masterCheck,
-                    status: targetStatus,
-                    frequency: targetFreq
-                };
-
-                // Local Dexie Database update
-                await visitDB.visits.update(String(item.id), updatePayload);
-
-                // Firebase Cloud batch update payload creation
-                cloudUpdates[`/vimag_followup/visits/${item.id}/isDone`] = masterCheck;
-                cloudUpdates[`/vimag_followup/visits/${item.id}/status`] = targetStatus;
-                cloudUpdates[`/vimag_followup/visits/${item.id}/frequency`] = targetFreq;
+            if (custDisplay) custDisplay.innerText = (record.customer || "UNKNOWN ENTITY").toString().toUpperCase();
+            if (remarksInput) remarksInput.value = record.remarks || '';
+            if (dateInput) dateInput.value = (record.date && record.date !== "-") ? record.date : '';
+            if (modalTitle) modalTitle.innerText = "Update Visit Plan 🔄";
+            
+            if (modalContainer) {
+                modalContainer.style.display = 'flex';
+                console.log(`Popup window opened safely for target ID: [${currentEditId}] ✅`);
             }
-
-            // Firebase Cloud Realtime Sync injection
-            if (Object.keys(cloudUpdates).length > 0) {
-                await cloudVisitDB.ref().update(cloudUpdates);
-            }
-
-            loadVisitsTable(); // Data matrix totals & counters refresh
-        } catch (err) {
-            console.error("Master checkbox backend sync failed: ", err);
+        } else {
+            console.warn(`Record missing for key identifier: ${currentEditId}`);
         }
+    } catch (err) {
+        console.error("Direct checkbox click modal deployment core crash: ", err);
     }
+}
+      async function openVisitModal() {
+    const checkedBoxes = document.querySelectorAll('.visit-row-check:checked');
+    if (checkedBoxes.length !== 1) {
+        return alert("Modhala oru entry-ai checkbox-la select pannunga! ⚠️");
+    }
+    
+    try {
+        // ✅ NODE-LIST POINTER SAFE ARREARS EXTRACTION (Bypasses array notation crashes)
+        const activeInputNode = checkedBoxes[0];
+        if (!activeInputNode || !activeInputNode.value) return;
 
-    window.onload = function() {
-        initializeWarehouseConnection();
-    };
-</script>
+        const targetRawId = activeInputNode.value;
+        currentEditId = isNaN(targetRawId) ? targetRawId : Number(targetRawId);
+        
+        // டைரக்ட் பாப்அப் இன்ஜினை இயக்குகிறோம்
+        await triggerDirectModal(currentEditId);
+    } catch (err) {
+        console.error("Toolbar action interface modal execution crashed: ", err);
+    }
+}
+
+     function closeVisitModal() {
+            const modal = document.getElementById('visitModal');
+            if (modal) {
+                // 1. Modal overlay view-ah instant-ah hide panrom
+                modal.style.display = 'none';
+            }
+
+            // 🛡️ ACCURACY RESET: மோடல் மூடும்போது டேபிளில் உள்ள அனைத்து செக் பாக்ஸ்களையும் அன்செக் செய்கிறது
+            document.querySelectorAll('.visit-row-check').forEach(cb => {
+                cb.checked = false;
+                
+                // UX Bonus: Check-ah thookumbodhu row selection color highlight-aiyum clean panrom
+                const row = cb.closest('tr');
+                if (row && !row.classList.contains('completed-row')) {
+                    row.style.backgroundColor = "white"; // White context-ku thirumba kondu varom
+                }
+            });
+
+            // 2. Safety Lock: Current edit execution pointer memory token-ah null panrom
+            currentEditId = null;
+            console.log("Visit plan overlay closed & active memory indicators reset safely. ✅");
+        }
+async function saveVisitEntry() {
+            if (!currentEditId) return;
+
+            const remarks = document.getElementById('visitRemarks').value.trim();
+            const date = document.getElementById('visitDate').value;
+
+            try {
+                // 1. Snapshot check to gather untouched operational metadata keys
+                const existingRecord = await visitDB.visits.get(currentEditId);
+                if (existingRecord) {
+                    
+                    // 🎯 UNTOUCHED COUNTER LOGIC: Keeps your frequency counts perfectly intact
+                    const currentFreq = Number(existingRecord.frequency) || 0;
+                    const finalIsDone = (currentFreq >= 1);
+                    const finalStatus = finalIsDone ? "ACHIEVED" : "PENDING";
+
+                    // ✅ ACCURATE FULL PAYLOAD: Includes customer identity to prevent dynamic database fragmentation
+                    const payload = {
+                        id: currentEditId,
+                        customer: existingRecord.customer, // Structural corporate identity preserved
+                        remarks: remarks,
+                        date: date || "-",
+                        frequency: currentFreq,
+                        isDone: finalIsDone,
+                        status: finalStatus,
+                        updatedAt: Date.now() // Delta validation marker
+                    };
+
+                    // 2. Commit safely to localized store structures and cloud references simultaneously
+                    await visitDB.visits.put(payload); // Overwrite using total payload to maintain object parity
+                    await cloudVisitDB.ref(`vimag_followup/visits/${currentEditId}`).set(payload);
+                    
+                    // 3. Close overlays frames cleanly
+                    closeVisitModal();
+                    
+                    // 🎯 NO-BLINK REFRESH FIX: Instant UI redraw pass to render manual field shifts straight away
+                    if (typeof loadVisitsTable === 'function') {
+                        await loadVisitsTable();
+                    }
+                    console.log(`Plan fields committed safely for node reference ID: [${currentEditId}] ✅`);
+                }
+            } catch (err) {
+                console.error("Manual record transaction submission failure: ", err);
+            }
+        }
+       function toggleAllVisits() {
+            const masterCheckEl = document.getElementById('masterVisitCheck');
+            if (!masterCheckEl) return;
+            
+            const masterCheck = masterCheckEl.checked;
+            
+            // 🛡️ ACCURACY BOUNDARY TRACK: Screen-la visible-ah theriyaara checkboxes-ah mattum select pannuvom
+            // Search criteria matching-ala hide aana row items-ah accidental selection-la irundhu idhu safe-ah thadukkum!
+            const visibleCheckboxes = document.querySelectorAll('#visitTableBody tr:not([style*="display: none"]) .visit-row-check');
+            
+            visibleCheckboxes.forEach(cb => {
+                cb.checked = masterCheck;
+                
+                // UX Bonus: Row background highlight configurations management
+                const row = cb.closest('tr');
+                if (row && !row.classList.contains('completed-row')) {
+                    row.style.backgroundColor = masterCheck ? "#f1f8ff" : "white"; // Safe layout reset triggers
+                }
+            });
+            console.log(`Bulk checking operation toggled cleanly across visible layout tracks.`);
+        }
+
+        // 🏗️ UNIFIED INITIAL BOOTSTRAP LIFECYCLE INITIALIZER
+        window.onload = function() {
+            console.log("Vimag Follow-up Tracker: Subsystem Operating Engine Active... 🚀");
+            localStorage.removeItem('isSyncing'); // Clear background execution lock parameters mapping traps
+            
+            if (typeof initializeWarehouseConnection === 'function') {
+                initializeWarehouseConnection();
+            } else {
+                console.warn("Database warehouse root boot connector method missing inside layout scope.");
+            }
+        };
+    </script>
 </body>
 </html>
