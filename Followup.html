@@ -36,6 +36,12 @@
 
         .header-content { text-align: left; flex: 1; }
 
+@keyframes pulseLive {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+    50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.6); }
+    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
         /* 📊 Side Dashboard Style */
         .side-stats {
             background: #f1f8f4;
@@ -292,22 +298,40 @@
 
             <!-- 🛠️ ACTION BUTTONS -->
             <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center; width: 100%;">
-                <button class="btn btn-add" onclick="openDistModal()" style="padding: 10px 15px; background: #27ae60; color: white; border-radius: 10px;"> + Add Staff </button>
-  <button class="btn my-hover-btn target-btn" onclick="window.location.href='Sales Budget.html'" style="background: #e67e22; color: white;"> 🎯 TARGET </button>
+
+
+
+
+                <button class="btn btn-add" onclick="openDistModal()" style="padding: 10px 15px; background: GREEN; color: white; border-radius: 10px;"> + Add Staff </button>
+
+                         <!-- 🚀 1. THE GENUINE 11 BRANDS 'GO LIVE' DYNAMIC MENU -->
+
+<div class="my-dropdown-wrapper" style="position: relative; display: inline-block; z-index: 99999 !important;">
+    <button class="btn my-hover-btn" onclick="toggleGoLiveMenu(event)" style="background: linear-gradient(135deg, #b92b27, #1565c0) !important; color: white; border-radius: 10px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 8px; height: 8px; background: white; border-radius: 50%; animation: pulseLive 1.5s infinite;"></span> ⚡ GO LIVE
+    </button>
+    
+    <!-- 🎯 FIX: position absolute, z-index, and scroll properties optimized peer! -->
+    <div id="goLiveMenuPanel" style="display: none; position: absolute; top: 100%; left: 0; background: white; min-width: 260px; border: 2px solid #e74c3c; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 1000000 !important; max-height: 400px; overflow-y: auto; margin-top: 5px;">
+        <!-- Javascript triggers fresh input items from master database rows directly inside here -->
+    </div>
+</div>
+
+  <button class="btn my-hover-btn target-btn" onclick="window.location.href='Sales Budget.html'" style="background: linear-gradient(135deg, #f12711, #f5af19) !important; color: white;"> 🎯 TARGET </button>
 
 <!-- 👤 Staff Portfolio Dropdown Style Button -->
             <div class="my-dropdown-wrapper">
                 <select id="portfolioStaffSelect" onchange="if(this.value) openStaffPortfolio(this.value)" 
-                    style="padding: 11px 25px 11px 15px; background: #2c3e50; color: white; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; outline: none; appearance: none; -webkit-appearance: none; min-width: 180px; text-align: center;">
+                    style="padding: 11px 25px 11px 15px; background: linear-gradient(135deg, #ff007f, #ff758c) !important; color: white; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-family: 'Times New Roman'; outline: none; appearance: none; -webkit-appearance: none; min-width: 180px; text-align: center;">
                     <option value="" style="background: white; color: black;">👤 STAFF PORTFOLIO</option>
                 </select>
                 <span style="position: absolute; right: 10px; top: 13px; color: white; pointer-events: none; font-size: 10px;">▼</span>
             </div>
 
 <!-- 📅 VISIT PLAN BUTTON DIRECTS TO VISIT SHEET -->
-            <button class="btn my-hover-btn visit-btn" onclick="window.location.href='Plan.html'" style="background: #8e44ad; color: white;"> 🚗 VISIT PLAN </button>
+            <button class="btn my-hover-btn visit-btn" onclick="window.location.href='Plan.html'" style="background: linear-gradient(135deg, #7b1fa2, #e040fb) !important; color: white;"> 🚗 VISIT PLAN </button>
 
-                <button class="btn btn-del" onclick="deleteDistributors()" style="padding: 10px 15px; background: #e74c3c; color: white; border-radius: 10px;"> 🗑️ Delete Selected </button>
+                <button class="btn btn-del" onclick="deleteDistributors()" style="padding: 10px 15px; background: linear-gradient(135deg, #ff416c, #ff4b2b) !important; color: white; border-radius: 10px;"> 🗑️ Delete Selected </button>
             </div>
         </div>
 
@@ -367,6 +391,72 @@
         </div>
     </div>
 </div>
+
+
+ <div class="modal" id="crossEditModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 999999 !important; padding: 20px 10px; box-sizing: border-box;">
+        <div class="modal-content" style="background: white; padding: 25px; border-radius: 15px; width: 390px; border: 3px solid #e74c3c; box-shadow: 0 15px 35px rgba(0,0,0,0.3); max-height: 95vh; overflow-y: auto; position: relative;">
+            <h3 style="color: #e74c3c; text-align: center; margin: 0 0 15px 0; font-family: 'Times New Roman'; font-size: 20px; font-weight: bold; text-transform: uppercase;">✏️ EDIT BRAND LOG ENTRY</h3>
+            
+            <!-- சிஸ்டம் டிராக்கிங் ஐடிகள் -->
+            <input type="hidden" id="ceditRowId">
+            <input type="hidden" id="ceditBrand">
+            <input type="hidden" id="ceditCustomer">
+            <input type="hidden" id="ceditArtNo">
+            <input type="hidden" id="ceditProdName">
+
+            <!-- கஸ்டமர் விபரங்களை மட்டும் சும்மா படிக்கிறதுக்காக மேல காட்டும் peer -->
+            <div id="ceditCustContextDisplay" style="background: #fdfdf5; padding: 10px; border-radius: 8px; border: 1px solid #27ae60; font-family: serif; font-size: 13px; font-weight: bold; color: #2c3e50; text-align: center; margin-bottom: 15px;"></div>
+
+            <!-- 1️⃣ HANDLED BY (Staff Name Input) -->
+            <label style="font-size: 12px; display: block; margin-top: 10px; font-weight: bold; color: #2c3e50;">HANDLED BY (STAFF NAME):</label>
+            <input type="text" id="ceditHandledBy" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; font-weight: bold; text-transform: uppercase; box-sizing: border-box;">
+
+            <!-- 2️⃣ PRICE & CURRENCY -->
+            <div style="display: flex; gap: 10px; margin-top: 5px; width: 100%;">
+                <div style="flex: 2;">
+                    <label style="font-size: 12px; display: block; margin-top: 5px; font-weight: bold; color: #2c3e50;">PRICE:</label>
+                    <input type="number" id="ceditPrice" step="0.01" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; display: block; margin-top: 5px; font-weight: bold; color: #2c3e50;">CURRENCY:</label>
+                    <select id="ceditCurrency" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; font-weight: bold; box-sizing: border-box;">
+                        <option value="€">€</option><option value="$">$</option><option value="₹">₹</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 3️⃣ QTY/MO & 4️⃣ OCT QTY (Month Actual) -->
+            <div style="display: flex; gap: 10px; margin-top: 5px; width: 100%;">
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; display: block; margin-top: 5px; font-weight: bold; color: #2c3e50;">QTY/MO:</label>
+                    <input type="number" id="ceditQty" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; display: block; margin-top: 5px; font-weight: bold; color: #2c3e50;">OCT QTY:</label>
+                    <input type="number" id="ceditMonthQty" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; font-weight: bold; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <!-- 5️⃣ PIPELINE TRACKING STATUS (STATUS காலம் எடிட் லேயர் peer!) -->
+<label style="font-size: 12px; display: block; margin-top: 12px; font-weight: bold; color: #2c3e50;">STATUS:</label>
+<select id="ceditStatus" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; font-weight: bold; background: #fffaf0; outline: none;">
+    <option value="INQUIRY">📝 INQUIRY</option>
+    <option value="TRIAL COMPLETED">🧪 TRIAL COMPLETED</option>
+    <option value="TRIAL ORDER">📦 TRIAL ORDER</option>
+    <option value="REGULAR ORDER">✅ REGULAR ORDER</option>
+</select>
+            <!-- DISTRIBUTOR ASSIGNMENT (Background Update-க்காக மட்டும்) -->
+            <label style="font-size: 12px; display: block; margin-top: 10px; font-weight: bold; color: #2c3e50;">DISTRIBUTOR ASSIGNMENT:</label>
+            <input type="text" id="ceditDistributor" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; box-sizing: border-box; text-transform: uppercase;">
+
+            <div class="modal-actions" style="margin-top: 25px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; width: 100%;">
+                <button class="btn btn-add" onclick="saveCrossBrandModifiedLog()" style="background: GREEN; color: white; padding: 10px 18px; border-radius: 8px; font-weight: bold; border:none; cursor: pointer;">Update 🔄</button>
+                <button class="btn btn-del" onclick="deleteCrossBrandLogFromModal()" style="background: linear-gradient(135deg, #e74c3c, #c0392b) !important; color: white !important; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-family: serif; font-size: 12px; text-transform: uppercase;">🗑️ Delete</button>
+                <button class="btn" onclick="closeModal('crossEditModal')" style="background: #ddd; color: black; padding: 10px 18px; border-radius: 8px; font-weight: bold; border:none; cursor: pointer;">Cancel</button>
+
+            </div>
+        </div>
+    </div>
 <!-- PAGE 2: DETAILS -->
 <div id="detailsPage" style="display:none;">
     <div class="header-box" style="display: block;">
@@ -486,6 +576,7 @@
     let activeCustId = null;
 let editModeId = null; 
 let currentStatusData = [];
+let globalGoLivePipelineData = []; 
 async function loadCustomers() {
     // 🛡️ Data Fetch (Local Warehouse)
     const list = await localDB.customers.toArray();
@@ -635,6 +726,754 @@ function viewDetails(id, name) {
     loadLogs(); 
 }
 
+async function fetch11BrandsStatusForLiveFlow() {
+    const panel = document.getElementById('goLiveMenuPanel');
+    if (!panel) return;
+    
+    panel.innerHTML = `<div style="padding:15px; text-align:center; color:gray; font-weight:bold; font-size:12px; font-family:serif;">Syncing 11 Brands Cloud Status Tree... ⚡</div>`;
+
+    const allBrandsList = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+    let uniqueStatusMap = new Map(); // வெறும் தனித்துவமான Status வார்த்தைகளை மட்டும் டிராக்கிங் செய்யும்
+
+    try {
+        console.log("Go Live Engine: Sweeping directly for unique status values from cloud tree... ☁️📡");
+
+        const targetDb = typeof db !== 'undefined' ? db : cloudDB;
+        const snapshot = await targetDb.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        // 🌟 11 பிராண்டுகளின் கிளவுட் போல்டரையும் அலசுகிறோம் peer
+        allBrandsList.forEach(brandName => {
+            const matchedCloudBrandKey = Object.keys(brandsCloudData).find(
+                k => k.trim().toUpperCase() === brandName.trim().toUpperCase()
+            );
+
+            if (matchedCloudBrandKey && brandsCloudData[matchedCloudBrandKey]) {
+                const brandNode = brandsCloudData[matchedCloudBrandKey];
+                
+                Object.keys(brandNode).forEach(custName => {
+                    if (custName === "SYSTEM" || custName === "_id_lock" || custName === "_identity") return;
+                    
+                    const customerRecords = brandNode[custName];
+                    
+                    Object.keys(customerRecords).forEach(rowKey => {
+                        const rowItem = customerRecords[rowKey];
+                        if (!rowItem || rowItem.artNo === "SYSTEM" || rowKey === "_id_lock" || rowKey === "_contacts") return;
+
+                        // 🛡️ கஸ்டமரோட டேபிள் இன்புட்ல இருக்குற அசல் STATUS வார்த்தையை மட்டும் எடுக்கிறது
+                        let rawStatusInput = rowItem.status || rowItem.remarks || rowItem.inSTATUS || "";
+                        let statusColumnInput = rawStatusInput.toString().trim().toUpperCase();
+
+                        if (statusColumnInput !== "" && statusColumnInput !== "—") {
+                            // 🎯 இங்கதான் அசல் பேஸ் லாக் ஆகுது peer! வார்த்தை ஏற்கனவே லிஸ்ட்ல இருந்தா விட்டுடும், புதுசா இருந்தா மட்டும் சேர்க்கும்!
+                            if (!uniqueStatusMap.has(statusColumnInput)) {
+                                let emoji = "📝";
+                                if (statusColumnInput.includes("COMPLETED") || statusColumnInput.includes("TRIAL")) emoji = "🧪";
+                                if (statusColumnInput.includes("ORDER") || statusColumnInput.includes("OK")) emoji = "📦";
+                                if (statusColumnInput.includes("REGULAR") || statusColumnInput.includes("SUCCESS")) emoji = "✅";
+
+                                uniqueStatusMap.set(statusColumnInput, {
+                                    status: statusColumnInput,
+                                    label: `${emoji} ${statusColumnInput}`
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        // அகரவரிசைப்படி (Alphabetical Order) ஸ்டேட்டஸ் வார்த்தைகளை அடுக்கும்
+        const compiledStatusPipeline = Array.from(uniqueStatusMap.values());
+        compiledStatusPipeline.sort((a, b) => a.status.localeCompare(b.status));
+        
+        globalGoLivePipelineData = compiledStatusPipeline;
+        renderGoLivePipelineDropdown();
+    } catch (err) {
+        console.error("Critical crash during status directory tree parse:", err);
+        panel.innerHTML = `<div style="padding:12px; color:red; font-weight:bold; text-align:center;">Sync Error! 🚩</div>`;
+    }
+}
+// 🖥️ DROP-DOWN LIST PANEL RENDERER (டிராப்டவுன் மெனுவில் கஸ்டமர்களின் அசல் விபரங்களை இணைக்கும் எச்டிஎம்எல் மேப்பர்)
+function renderGoLivePipelineDropdown() {
+    const panel = document.getElementById('goLiveMenuPanel');
+    if (!panel) return;
+
+    if (!globalGoLivePipelineData || globalGoLivePipelineData.length === 0) {
+        panel.innerHTML = `<div style="padding:15px; text-align:center; color:gray; font-size:12px; font-weight:bold;">No Input Status Found in Cloud!</div>`;
+        return;
+    }
+
+    // 🎯 ANTI-CRASH LAYER: (item.status || '') என்று செக் செய்வதால் Undefined எரர் 100% நிரந்தரமாக நின்றுவிடும் peer!
+    panel.innerHTML = globalGoLivePipelineData.map(item => {
+        let cleanStatus = (item.status || "—").toString().trim().toUpperCase();
+        let displayLabel = item.label || `📝 ${cleanStatus}`;
+
+        return `
+            <a href="#" onclick="executeCrossBrandPipelineScan('${cleanStatus}', event)" 
+               style="display: block; padding: 12px 15px; color: #333; font-weight: bold; text-decoration: none; border-bottom: 1px solid #eee; font-family: 'Times New Roman'; font-size: 14px; transition: 0.2s; text-align:left;">
+               ${displayLabel}
+            </a>
+        `;
+    }).join('');
+}
+
+async function executeCrossBrandPipelineScan(selectedStatus, event) {
+    if (event) event.preventDefault();
+    document.getElementById('goLiveMenuPanel').style.display = 'none'; // டிராப்டவுனை மூடுகிறது
+
+    const homeMain = document.getElementById('mainHomeContent');
+    const tableArea = document.getElementById('statusTableArea');
+    const tbody = document.getElementById('statusTableBody');
+    const title = document.getElementById('statusTableTitle');
+
+  const staffDrop = document.getElementById('statusStaffFilter');
+    const brandDrop = document.getElementById('statusBrandFilter');
+    const distDrop = document.getElementById('statusDistributorFilter');
+
+    if(document.getElementById('statusCustomerFilter')) document.getElementById('statusCustomerFilter').value = "";
+
+    // 1. 🖼️ GLASSMORPHISM BLUR ACTIVATION LAYER
+    if (homeMain) {
+        homeMain.style.filter = "blur(20px) saturate(165%)";
+        homeMain.style.pointerEvents = "none";
+    }
+
+    // 2. 🎯 SCREEN VIEWPORT OVERLAY CENTERING ENGINE (சிகப்பு பார்டர் கோடு வராமல் கச்சிதமாக லாக் செய்கிறது)
+    if (tableArea) {
+        tableArea.style.setProperty('position', 'fixed', 'important');
+        tableArea.style.setProperty('top', '0', 'important');
+        tableArea.style.setProperty('left', '0', 'important');
+        tableArea.style.setProperty('width', '100%', 'important');
+        tableArea.style.setProperty('height', '100%', 'important');
+        tableArea.style.setProperty('display', 'block', 'important');
+        tableArea.style.setProperty('background', 'rgba(0,0,0,0.4)', 'important');
+        tableArea.style.setProperty('z-index', '200000', 'important');
+        tableArea.style.setProperty('padding', '25px 15px', 'important');
+        tableArea.style.setProperty('box-sizing', 'border-box', 'important');
+
+        setTimeout(() => {
+            const innerWhiteBox = tableArea.firstElementChild;
+            if (innerWhiteBox) {
+                innerWhiteBox.style.setProperty('margin', '0 auto', 'important');
+                innerWhiteBox.style.setProperty('max-width', '1400px', 'important');
+                innerWhiteBox.style.setProperty('width', '100%', 'important');
+                innerWhiteBox.style.setProperty('box-sizing', 'border-box', 'important');
+                innerWhiteBox.style.setProperty('border', 'none', 'important'); // சிகப்பு கோட்டை அடியோடு நீக்குகிறது
+                innerWhiteBox.style.setProperty('box-shadow', '0 20px 45px rgba(0,0,0,0.35)', 'important');
+            }
+        }, 50);
+    }
+    window.scrollTo(0, 0);
+
+    if (title) title.innerText = selectedStatus + " PIPELINE DATA REPORT";
+    
+    // 3. 🖼️ SCREENSHOT TABLE HEADER REPLICA MODIFICATION (பச்சை டேபிள் ஹெடருக்கான அசல் 13 காலம்கள்)
+    const tableContainer = tableArea.querySelector('table');
+    if (tableContainer) {
+        tableContainer.innerHTML = `
+            <thead>
+                <tr style="background: #27ae60; color: white; font-family: 'Times New Roman'; text-transform: uppercase; font-size: 13px; text-align: center;">
+                    <th style="padding:12px; border: 1px solid black; width: 45px;" class="print-hidden">🔘</th>
+                    <th style="padding:12px; border: 1px solid black; width: 45px;">S.No</th>             
+                    <th style="padding:12px; border: 1px solid black; width: 140px;">HANDLED BY</th>
+                    <th style="padding:12px; border: 1px solid black; text-align: left; padding-left:10px;">CUSTOMER NAME</th>
+                    <th style="padding:12px; border: 1px solid black;">BRAND</th>
+                    <th style="padding:12px; border: 1px solid black; width: 100px;">ART NO</th>
+                    <th style="padding:12px; border: 1px solid black; text-align: left; padding-left:10px;">PRODUCT NAME</th>
+                    <th style="padding:12px; border: 1px solid black;">PRICE</th>
+                    <th style="padding:12px; border: 1px solid black;">QTY/MO</th>
+                    <th style="padding:12px; border: 1px solid black;">OCT QTY</th>
+                    <th style="padding:12px; border: 1px solid black;">TOTAL VALUE</th>
+                    <th style="padding:12px; border: 1px solid black;">ACHIEVED VALUE</th>
+                    <th style="padding:12px; border: 1px solid black;">BALANCE</th>
+                    <th style="padding:12px; border: 1px solid black; text-align: left; padding-left:10px;">DISTRIBUTOR</th>
+<th style="padding:12px; border: 1px solid black; color: #fdfdf5;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody id="statusTableBody">
+    <tr><td colspan='15' style='text-align:center; padding:50px; font-weight:bold; color:black;'>Sweeping 11 Brands Cloud Architecture Matrix... ⚡</td></tr>
+
+            </tbody>
+        `;
+    }
+
+    const allBrandsList = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+    
+    try {
+        // Variable Conflict Escape Layer
+        const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        currentStatusData = [];
+        let uniqueTrackingSet = new Set(), serialCounter = 1;
+
+        // 📡 4. 11 BRANDS MASTER DIRECTORY CLOUD STREAM EXTRACTOR LOOP
+        allBrandsList.forEach(brandName => {
+            const matchedCloudBrandKey = Object.keys(brandsCloudData).find(
+                k => k.trim().toUpperCase() === brandName.trim().toUpperCase()
+            );
+
+            if (matchedCloudBrandKey && brandsCloudData[matchedCloudBrandKey]) {
+                const brandNode = brandsCloudData[matchedCloudBrandKey];
+                
+                Object.keys(brandNode).forEach(custName => {
+                    if (custName === "SYSTEM" || custName === "_id_lock" || custName === "_identity") return;
+                    
+                    const customerRecords = brandNode[custName];
+                    Object.keys(customerRecords).forEach((rowKey, idx) => {
+                        const rowItem = customerRecords[rowKey];
+                        if (!rowItem || rowItem.artNo === "SYSTEM" || rowKey === "_id_lock" || rowKey === "_contacts") return;
+
+                        let rawStatusInput = rowItem.inSTATUS || rowItem.status || rowItem.remarks || "—";
+
+
+  let currentStatus = rawStatusInput.toString().trim().toUpperCase();                        
+                        // Handles dual matching aliases dynamically (e.g. ENQUIRY / INQUIRY)
+                        let isStatusMatch = (currentStatus === selectedStatus.toUpperCase()) ||
+                                           (selectedStatus.toUpperCase() === "INQUIRY" && currentStatus === "ENQUIRY") ||
+                                           (selectedStatus.toUpperCase() === "ENQUIRY" && currentStatus === "INQUIRY") ||
+                                           (selectedStatus.toUpperCase() === "REGULAR ORDER" && currentStatus === "REGULAR") ||
+                                           (selectedStatus.toUpperCase() === "REGULAR" && currentStatus === "REGULAR ORDER");
+
+                        if (isStatusMatch) {
+                            let artNo = (rowItem.artNo || "—").toUpperCase();
+                            let uniqueTokenKey = `${matchedCloudBrandKey.toUpperCase()}_${custName.toUpperCase()}_${artNo}_${rowKey}`;
+                            
+                            if (!uniqueTrackingSet.has(uniqueTokenKey)) {
+                                uniqueTrackingSet.add(uniqueTokenKey);
+
+                                let staffName = (rowItem.handledBy || rowItem.handled_by || "—").trim().toUpperCase();
+                                let distributorName = (rowItem.distributor || rowItem.distName || "—").trim().toUpperCase();
+                                
+                                // Core dynamic numerical mapping calculations matching target green input layout specs
+                                let price = parseFloat(rowItem.price || rowItem.rate || 0);
+                                let qtyMo = parseInt(rowItem.qtyMo || rowItem.qty || rowItem.quantity || 0);
+                                let octQty = parseInt(rowItem.octQty || rowItem.oct_qty || rowItem.monthQty || 0);
+                                
+                                let totalValue = price * qtyMo;
+                                let achievedValue = price * octQty;
+                                let balance = qtyMo - octQty;
+                                let currency = rowItem.currency || "€";
+
+                                currentStatusData.push({
+                                    sNo: serialCounter++,
+                                    rowId: rowKey,
+                                    brandName: brandName,
+                                    customerName: custName.toUpperCase(),
+                                    staffName: staffName,
+                                    artNo: artNo,
+                                    productName: rowItem.productName || rowItem.name || rowItem.product || '—',
+                                    price: price,
+                                    qtyMo: qtyMo,
+                                    octQty: octQty,
+                                    totalValue: totalValue,
+                                    achievedValue: achievedValue,
+                                    balance: balance,
+                                    currency: currency,
+                                    distributor: distributorName,
+                                    rawStatus: currentStatus
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        // Alphabetical sorting layer on staff fields
+        currentStatusData.sort((a, b) => a.staffName.localeCompare(b.staffName));
+
+        // Re-populates clean data back onto the dynamic rows array
+        const finalTbody = document.getElementById('statusTableBody');
+        if (currentStatusData.length === 0) {
+
+ finalTbody.innerHTML = `<tr><td colspan='14' style='text-align:center; padding:40px; color:red; font-weight:bold;'>No Matching Pipeline Records Found in 11 Brands! 🔍</td></tr>`;
+            return;
+        }
+
+        // =========================================================================
+        // 🎯 1. DYNAMIC DROPDOWNS POPULATION (11 பிராண்டுகளின் அசல் மதிப்புகள் பாயும் லேயர்)
+        // =========================================================================
+        let staffSet = new Set();
+        let brandSet = new Set();
+        let distSet = new Set();
+
+        currentStatusData.forEach(r => {
+            if (r.staffName && r.staffName !== "—") staffSet.add(r.staffName.trim().toUpperCase());
+            if (r.brandName) brandSet.add(r.brandName.trim().toUpperCase());
+            if (r.distributor && r.distributor !== "—") distSet.add(r.distributor.trim().toUpperCase());
+        });
+
+        // A. Handled By Dropdown Filter Update
+        if (staffDrop) {
+            staffDrop.innerHTML = '<option value="ALL">HANDLED BY</option>';
+            [...staffSet].sort().forEach(name => {
+                let opt = document.createElement("option"); opt.value = name; opt.text = name; staffDrop.add(opt);
+            });
+        }
+
+        // B. All Brands Dropdown Filter Update
+        if (brandDrop) {
+            brandDrop.innerHTML = '<option value="ALL">BRAND</option>';
+            [...brandSet].sort().forEach(bName => {
+                let opt = document.createElement("option"); opt.value = bName; opt.text = bName; brandDrop.add(opt);
+            });
+        }
+
+        // C. Distributor Dropdown Filter Update
+        if (distDrop) {
+            distDrop.innerHTML = '<option value="ALL">DISTRIBUTOR</option>';
+            [...distSet].sort().forEach(dName => {
+                let opt = document.createElement("option"); opt.value = dName; opt.text = dName; distDrop.add(opt);
+            });
+        }
+
+        // =========================================================================
+        // 🎯 2. GRID RENDERING (உங்க பச்சை டேபிள் ஸ்கிரீன்ஷாட் வடிவமைப்பு replica peer!)
+        // =========================================================================
+        finalTbody.innerHTML = currentStatusData.map((r, i) => {
+            let isSuccess = (r.monthQty >= r.qtyMo);
+            let statusColor = isSuccess ? "#27ae60" : "#e74c3c";
+
+            // Safe Binary Tokens for string Spec context inputs validation maps
+            const safeNameToken = btoa(unescape(encodeURIComponent(r.productName || "")));
+            const safeDistToken = btoa(unescape(encodeURIComponent(r.distributor || "")));
+
+            return `
+                <tr style="text-align:center; background:white; font-family:'Times New Roman'; color:black; font-size:14px; border-bottom:1px solid #ddd;">
+                    <!-- 🔘 ரேடியோ பட்டன் லேயர் (S.No-க்கு முன்னாடி) -->
+                    <td style="border: 1px solid black; padding: 8px;" class="print-hidden">
+                        <input type="radio" name="crossPipelineRadioSelector" class="cross-row-popup-radio" 
+                               onclick="openCrossEditModalPopup('${r.rowId}', '${r.brandName}', '${r.customerName}', '${r.artNo}', '${safeNameToken}', ${r.price}, ${r.qtyMo}, ${r.octQty}, '${safeDistToken}', '${r.rawStatus}', '${r.currency}'); this.checked = false;" 
+                               style="cursor:pointer; width:17px; height:17px; accent-color: #e67e22;">
+                    </td>
+                    <td style="border: 1px solid black; padding: 12px; font-weight:bold;">${i + 1}</td>
+                    <td style="border: 1px solid black; font-weight:900; color:#c2185b; padding: 12px;">${r.staffName}</td>
+                    <td style="border: 1px solid black; text-align:left; font-weight:bold; color:#2c3e50; padding: 12px; padding-left:10px;">${r.customerName}</td>
+                    <td style="border: 1px solid black; padding: 12px; text-align:center;"><span class="excel-brand-badge">${r.brandName.toUpperCase()}</span></td>
+                    <td style="border: 1px solid black; font-weight:bold; color:#555; padding: 12px;">${r.artNo}</td>
+                    <td style="border: 1px solid black; text-align:left; padding: 12px; padding-left:10px;">${r.productName}</td>
+                    <td style="border: 1px solid black; font-weight:bold; color:#2980b9; padding: 12px;">${r.currency}${r.price.toFixed(2)}</td>
+                    <td style="border: 1px solid black; padding: 12px;">${r.qtyMo}</td>
+                    <td style="border: 1px solid black; font-weight:bold; color:#27ae60; padding: 12px;">${r.octQty}</td>
+                    <td style="border: 1px solid black; font-weight:bold; padding: 12px;">${r.currency}${r.totalValue.toFixed(2)}</td>
+                    <td style="border: 1px solid black; font-weight:bold; color:#16a34a; padding: 12px;">${r.currency}${r.achievedValue.toFixed(2)}</td>
+                    <td style="border: 1px solid black; font-weight:bold; color:red; padding: 12px;">${r.balance}</td>
+                    <td style="border: 1px solid black; font-weight:bold; text-align:left; padding: 12px; padding-left:10px;">${r.distributor}</td>
+                    <!-- 🎯 FIX: விடுபட்டுப்போன 15-வது STATUS காலம்கான அசல் கோடிங் லைன் இதோ அண்ணே! -->
+                    <td style="border: 1px solid black; padding: 12px; font-weight:bold; color:#e67e22; font-size:12px; min-width: 130px; text-transform: uppercase;">${r.rawStatus || selectedStatus || '—'}</td>
+                </tr>
+
+            
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error("Deep Cross Sync Mapping Error:", e);
+        if (tbody) tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:40px; color:red; font-weight:bold;'>Cloud Sweep Connection Error!</td></tr>";
+
+    }
+}
+
+
+
+// =========================================================================
+// 🎯 3. MULTI-DROPDOWN COMBINED FILTER LOGIC (13 Columns Filter Sync)
+// =========================================================================
+function executeCombinedPipelineFilter() {
+const selectedStaff = document.getElementById('statusStaffFilter').value;
+const selectedBrand = document.getElementById('statusBrandFilter').value;
+const selectedDistributor = document.getElementById('statusDistributorFilter').value;
+const searchCustomer = document.getElementById('statusCustomerFilter').value.replace(/\s+/g, '').trim().toUpperCase();
+
+let filteredRecords = currentStatusData;
+
+// A. Handled By Filter Match
+if (selectedStaff !== "ALL") {
+    filteredRecords = filteredRecords.filter(l => l.staffName.replace(/\s+/g, '').trim().toUpperCase() === selectedStaff.toUpperCase());
+}
+// B. Brand Filter Match
+if (selectedBrand !== "ALL") {
+    filteredRecords = filteredRecords.filter(l => l.brandName.toUpperCase() === selectedBrand.toUpperCase());
+}
+// C. Distributor Filter Match
+if (selectedDistributor !== "ALL") {
+    filteredRecords = filteredRecords.filter(l => l.distributor.toUpperCase() === selectedDistributor.toUpperCase());
+}
+// D. Text Input Customer Search Match
+if (searchCustomer !== "") {
+    filteredRecords = filteredRecords.filter(l => l.customerName.replace(/\s+/g, '').trim().toUpperCase().includes(searchCustomer));
+}
+
+// கிரிட் வியூவை மட்டும் ரீ-ரெண்டர் செய்கிறது peer
+const tbody = document.getElementById('statusTableBody');
+if (!tbody) return;
+
+if (filteredRecords.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:40px; color:red; font-weight:bold;">No Matching Filtered Records Found in Matrix Seeker!</td></tr>`;
+    return;
+}
+
+tbody.innerHTML = filteredRecords.map((r, idx) => {
+    let isSuccess = (r.monthQty >= r.qtyMo);
+    let statusColor = isSuccess ? "#27ae60" : "#e74c3c";
+    const safeNameToken = btoa(unescape(encodeURIComponent(r.productName || "")));
+    const safeDistToken = btoa(unescape(encodeURIComponent(r.distributor || "")));
+
+    return `
+        <tr style="background: white; text-align: center; font-family:'Times New Roman'; color: black; font-size: 14px; border-bottom: 1px solid #ddd;">
+            <td style="border: 1px solid black; padding: 8px;" class="print-hidden">
+                <input type="radio" name="crossPipelineRadioSelector" class="cross-row-popup-radio" onclick="openCrossEditModalPopup('${r.rowId}', '${r.brandName}', '${r.customerName}', '${r.artNo}', '${safeNameToken}', ${r.price}, ${r.qtyMo}, ${r.octQty}, '${safeDistToken}', '${r.rawStatus}', '${r.currency}'); this.checked = false;" style="cursor:pointer; width:17px; height:17px; accent-color: #e67e22;">
+            </td>
+            <td style="border: 1px solid black; padding: 12px; font-weight:bold;">${idx + 1}</td>
+            <td style="font-weight:900; color:#c2185b; border: 1px solid black; padding: 12px;">${r.staffName}</td>
+            <td style="text-align:left; padding-left:12px; border: 1px solid black; padding: 12px; font-weight:bold; color:#2c3e50;">${r.customerName}</td>
+            <td style="border: 1px solid black; padding: 12px; text-align:center;"><span class="excel-brand-badge">${r.brandName.toUpperCase()}</span></td>
+            <td style="font-weight:bold; color:#555; border: 1px solid black; padding: 12px;">${r.artNo}</td>
+            <td style="text-align:left; padding-left:12px; border: 1px solid black; padding: 12px;">${r.productName}</td>
+            <td style="border: 1px solid black; padding: 12px; font-weight: bold; color: #2980b9;">${r.currency}${r.price.toFixed(2)}</td>
+            <td style="border: 1px solid black; padding: 12px;">${r.qtyMo}</td>
+            <td style="font-weight:bold; color: #27ae60; border: 1px solid black; padding: 12px;">${r.octQty}</td>
+            <td style="font-weight:bold; border: 1px solid black; padding: 12px;">${r.currency}${r.totalValue.toFixed(2)}</td>
+            <td style="font-weight:bold; color:#16a34a; border: 1px solid black; padding: 12px;">${r.currency}${r.achievedValue.toFixed(2)}</td>
+            <td style="font-weight:bold; color:red; border: 1px solid black; padding: 12px;">${r.balance}</td>
+            <td style="color: black; font-weight: bold; border: 1px solid black; padding: 12px; text-align: left; padding-left: 10px;">${r.distributor}</td>
+        </tr>
+    `;
+}).join('');
+}
+
+function renderDynamicStatusCrossGrid(dataset) {
+    const tbody = document.getElementById('statusTableBody'); 
+    if (!tbody) return;
+
+    if (dataset.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:40px; color:red; font-weight:bold;'>No matching pipeline records found. 🔍</td></tr>"; 
+        return; 
+    }
+
+    tbody.innerHTML = dataset.map((r, idx) => {
+        let isSuccess = (r.octQty >= r.qtyMo);
+        
+        // ஸ்பெஷல் கேரக்டர் எரர் வராமல் தடுக்க டோக்கன் மார்க்
+        const safeNameToken = btoa(unescape(encodeURIComponent(r.productName || "")));
+        const safeDistToken = btoa(unescape(encodeURIComponent(r.distributor || "")));
+
+        return `
+            <tr style="background: white; text-align: center; font-family:'Times New Roman'; color: black; font-size: 14px; border-bottom: 1px solid #ddd;">
+                <td style="border: 1px solid black; padding: 8px;" class="print-hidden">
+                    <input type="radio" name="crossPipelineRadioSelector" class="cross-row-popup-radio" onclick="openCrossEditModalPopup('${r.rowId}', '${r.brandName}', '${r.customerName}', '${r.artNo}', '${safeNameToken}', ${r.price}, ${r.qtyMo}, ${r.octQty}, '${safeDistToken}', '${r.rawStatus}', '${r.currency}'); this.checked = false;" style="cursor:pointer; width:17px; height:17px; accent-color: #e67e22;">
+                </td>
+                <td style="border: 1px solid black; padding: 12px; font-weight:bold;">${idx + 1}</td>
+                <td style="font-weight:900; color:#c2185b; border: 1px solid black; padding: 12px;">${r.staffName}</td>
+                <td style="text-align:left; padding-left:12px; border: 1px solid black; padding: 12px; font-weight:bold; color:#2c3e50;">${r.customerName}</td>
+                <td style="border: 1px solid black; padding: 12px; text-align:center;"><span class="excel-brand-badge">${r.brandName.toUpperCase()}</span></td>
+                <td style="font-weight:bold; color:#555; border: 1px solid black; padding: 12px;">${r.artNo}</td>
+                <td style="text-align:left; padding-left:12px; border: 1px solid black; padding: 12px;">${r.productName}</td>
+                <td style="border: 1px solid black; padding: 12px; font-weight: bold; color: #2980b9;">${r.currency}${r.price.toFixed(2)}</td>
+                <td style="border: 1px solid black; padding: 12px;">${r.qtyMo}</td>
+                <td style="font-weight:bold; color: ${isSuccess ? '#27ae60' : '#e74c3c'}; border: 1px solid black; padding: 12px;">${isSuccess ? '🏆 ' : ''}${r.octQty}</td>
+                <td style="font-weight:bold; border: 1px solid black; padding: 12px;">${r.currency}${r.totalValue.toFixed(2)}</td>
+                <td style="font-weight:bold; border: 1px solid black; padding: 12px; color:#16a34a;">${r.currency}${r.achievedValue.toFixed(2)}</td>
+                <td style="font-weight:bold; border: 1px solid black; padding: 12px; color:red;">${r.balance}</td>
+                <td style="color: black; font-weight: bold; border: 1px solid black; padding: 12px; text-align: left; padding-left: 10px;">${r.distributor}</td>
+                <td style="padding: 10px; border: 1px solid black; text-align: center; min-width: 150px;">
+    <select onchange="updateStatusDirectFromGrid('${r.brandName}', '${r.customerName.replace(/'/g, "\\\\'")}', '${r.rowId}', this.value)" 
+            style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #27ae60; font-weight: bold; color: #2c3e50; background: #fdfdf5; cursor: pointer; outline: none;">
+        <option value="INQUIRY" ${r.rawStatus === "INQUIRY" || r.rawStatus === "ENQUIRY" ? "selected" : ""}>📝 INQUIRY</option>
+        <option value="TRIAL COMPLETED" ${r.rawStatus === "TRIAL COMPLETED" ? "selected" : ""}>🧪 TRIAL COMPLETED</option>
+        <option value="TRIAL ORDER" ${r.rawStatus === "TRIAL ORDER" ? "selected" : ""}>📦 TRIAL ORDER</option>
+        <option value="REGULAR ORDER" ${r.rawStatus === "REGULAR ORDER" ? "selected" : ""}>✅ REGULAR ORDER</option>
+    </select>
+</td>
+            </tr>`;
+    }).join('');
+}
+function openCrossEditModalPopup(rowId, brand, customer, artNo, encProdName, price, qty, monthQty, encDist, status, currency) {
+    console.log("Radio Action Interceptor Triggered for Row ID -> " + rowId);
+    
+    document.getElementById('ceditRowId').value = rowId;
+    document.getElementById('ceditBrand').value = brand.toString().trim().toUpperCase();
+    document.getElementById('ceditCustomer').value = customer.toString().trim().toUpperCase();
+    document.getElementById('ceditArtNo').value = artNo;
+    
+    // பேஸ்-64 டோக்கனை மனித மொழியாக மாற்றி இன்புட் பாக்ஸில் வைக்கிறது
+    try {
+        document.getElementById('ceditProdName').value = decodeURIComponent(escape(atob(encProdName)));
+    } catch(e) {
+        document.getElementById('ceditProdName').value = encProdName || "";
+    }
+    
+    try {
+        document.getElementById('ceditDistributor').value = decodeURIComponent(escape(atob(encDist)));
+    } catch(e) {
+        document.getElementById('ceditDistributor').value = encDist || "";
+    }
+    
+    // 5 எடிட்டிங் காலம்கள் லோடிங் லேயர்
+    const matchedRecordObj = currentStatusData.find(l => l.rowId === rowId);
+    const staffInitialName = matchedRecordObj ? matchedRecordObj.staffName : "STAFF";
+    document.getElementById('ceditHandledBy').value = staffInitialName.trim().toUpperCase();
+
+    document.getElementById('ceditPrice').value = price;
+    document.getElementById('ceditCurrency').value = currency || "€";
+    document.getElementById('ceditQty').value = qty;
+    document.getElementById('ceditMonthQty').value = monthQty;
+    document.getElementById('ceditStatus').value = status.trim().toUpperCase();
+
+    const displayLabelBox = document.getElementById('ceditCustContextDisplay');
+    if (displayLabelBox) {
+        displayLabelBox.innerText = `${customer.toUpperCase()} ➔ ${brand.toUpperCase()} (${artNo})`;
+    }
+
+    const modalElement = document.getElementById('crossEditModal');
+    if (modalElement) {
+        modalElement.style.setProperty('display', 'flex', 'important');
+    }
+}
+async function saveCrossBrandModifiedLog() {
+    const rowId = document.getElementById('ceditRowId').value.trim();
+    const brand = document.getElementById('ceditBrand').value.trim(); 
+    const customer = document.getElementById('ceditCustomer').value.trim(); 
+    const artNo = document.getElementById('ceditArtNo').value.trim().toUpperCase();
+    const prodName = document.getElementById('ceditProdName').value.trim();
+    
+    // நீங்க எடிட் செஞ்ச புதிய 5 அசல் காலம்களின் மதிப்புகள்
+    const staffName = document.getElementById('ceditHandledBy').value.trim().toUpperCase();
+    const price = parseFloat(document.getElementById('ceditPrice').value || 0);
+    const currency = document.getElementById('ceditCurrency').value;
+    const qtyMo = parseInt(document.getElementById('ceditQty').value || 0);
+    const octQty = parseInt(document.getElementById('ceditMonthQty').value || 0);
+    const status = document.getElementById('ceditStatus').value.trim().toUpperCase();
+    const distributor = document.getElementById('ceditDistributor').value.trim().toUpperCase();
+
+    if (!artNo || !prodName) return alert("Fields cannot be left blank! ⚠️");
+
+    // 2-Way Safe Auto-Bridge Config
+    const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+
+    try {
+        isSyncing = true;
+        console.log(`2-Way Sync Engine: Sweeping cross-case nodes for Row -> ${rowId}`);
+
+        // 🎯 A. கிளவுட் ஃபோல்டரான 'vimag/brands' உள்ளே கேஸ்-சென்சிட்டிவ் ஃபோல்டர்களைத் தேடுகிறது peer!
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        // 1. அசல் பிராண்ட் ஃபோல்டரைக் கண்டுபிடிக்கிறது (e.g. Voelkel / VOELKEL)
+        const matchedBrandKey = Object.keys(brandsCloudData).find(
+            k => k.trim().toUpperCase() === brand.toUpperCase()
+        ) || brand;
+
+        let matchedCustKey = customer;
+        let oldPayloadNode = {};
+
+        if (brandsCloudData[matchedBrandKey]) {
+            const brandNode = brandsCloudData[matchedBrandKey];
+            
+            // 2. அசல் கஸ்டமர் ஃபோல்டரைக் கண்டுபிடிக்கிறது
+            matchedCustKey = Object.keys(brandNode).find(
+                k => k.trim().toUpperCase() === customer.toUpperCase()
+            ) || customer;
+
+            if (brandNode[matchedCustKey] && brandNode[matchedCustKey][rowId]) {
+                oldPayloadNode = brandNode[matchedCustKey][rowId];
+            }
+        }
+
+        // 13 காலம்களையும் ஆட்டோ-கால்குலேட் செய்து கச்சிதமான கிளவுட் பேலோடாக மாற்றுகிறது peer
+        const brandItemUpdatePayload = {
+            ...oldPayloadNode,
+            id: rowId,
+            brand: matchedBrandKey,
+            customerName: matchedCustKey,
+            artNo: artNo,
+            name: prodName,
+            productName: prodName,
+            product: prodName,
+            price: price,
+            currency: currency,
+            qty: qtyMo,
+            qtyMo: qtyMo,
+            monthQty: octQty,
+            octQty: octQty,
+            totalValue: (price * qtyMo),
+            achievedValue: (price * octQty),
+            balance: (qtyMo - octQty),
+            distributor: distributor,
+            distName: distributor,
+            status: status,
+            remarks: status,
+            inSTATUS: status,
+            handledBy: staffName,
+            handled_by: staffName,
+            isDone: (status === "REGULAR ORDER" || status === "🏆 ACHIEVED" || status === "REGULAR")
+        };
+
+        // 🗃️ B. DEXIE LOCAL DB SYNC: லோக்கல் பிரவுசர் மெமரியிலும் பேக்கப் அப்டேட்
+        const vimagMasterDB = new Dexie("VimagMasterDB");
+        vimagMasterDB.version(1).stores({ brands: 'id, brand, customerName, artNo, _id, status, handledBy' });
+        await vimagMasterDB.brands.put(brandItemUpdatePayload);
+
+        // 🎯 C. PURE CLOUD OVERWRITE METHOD: அசல் கிளவுட் மெயின் பாத் 100% ஓவர்ரைட்
+        const finalCloudPath = `vimag/brands/${matchedBrandKey}/${matchedCustKey}/${rowId}`;
+        await activeCloudBridge.ref(finalCloudPath).set(brandItemUpdatePayload);
+        console.log(`Cloud Storage 2-Way Sync Success on Path: -> ${finalCloudPath}`);
+
+        // D. Cross-brand staff master directory overlay sync execution
+        const encCustId = btoa(encodeURIComponent(matchedCustKey)).replace(/=/g, "").replace(/\+/g, "").replace(/\//g, "");
+        const masterDirectoryPath = `vimag/master_contacts/${encCustId}/staff_directory/${rowId}`;
+        const checkMasterExist = await activeCloudBridge.ref(masterDirectoryPath).once('value');
+        if (checkMasterExist.exists()) {
+            await activeCloudBridge.ref(masterDirectoryPath).update({
+                department: distributor,
+                date: new Date().toLocaleDateString('en-GB')
+            });
+        }
+
+        isSyncing = false;
+        
+        // 🎯 FIX 1: வெறும் எடிட் மாடலை மட்டும் மூடுகிறது, பச்சை டேபிளை வியூவை மூடாது!
+        const modalElement = document.getElementById('crossEditModal');
+        if (modalElement) modalElement.style.setProperty('display', 'none', 'important');
+        
+        alert(`2-Way Sync Success! ${matchedBrandKey} Sheet Matrix Updated Cleanly! 🚀✅`);
+        
+        // 🎯 FIX 2: டைனமிக் பேஜ் லாக் - நீங்க TRIAL-ல இருந்தா TRIAL, REGULAR-ல இருந்தா REGULAR பக்கத்திலேயே ரிஃப்ரெஷ் பண்ணும் peer!
+        const currentTableTitleElement = document.getElementById('statusTableTitle');
+        let activeCurrentStatusText = "INQUIRY"; // Fallback Safe Word
+
+        if (currentTableTitleElement) {
+            let cleanExtractedText = currentTableTitleElement.innerText
+                .replace(" PIPELINE DATA REPORT", "")
+                .replace(" PIPELINE REPORT", "")
+                .replace(" PIPELINE", "")
+                .trim().toUpperCase();
+
+            if (cleanExtractedText === "ENQUIRY") {
+                activeCurrentStatusText = "INQUIRY";
+            } else {
+                activeCurrentStatusText = cleanExtractedText;
+            }
+        }
+        
+        executeCrossBrandPipelineScan(activeCurrentStatusText);
+
+    } catch (err) {
+        isSyncing = false;
+        console.error("Critical 2-way matrix update failure:", err);
+        alert("Operation execution catch loop failed runtime updates! 🚩");
+    }
+}
+// 🗑️ 4. CASCADE WIPE OUT CORE ROUTINE (11 பிராண்டுகள் நேரடி டெலீட்டர் பாத்!)
+async function deleteCrossBrandLogFromModal() {
+    const rowId = document.getElementById('ceditRowId').value.trim();
+    const brand = document.getElementById('ceditBrand').value.trim(); 
+    const customer = document.getElementById('ceditCustomer').value.trim(); 
+
+    if (!rowId) return alert("System Notification Error: Unique record tracking pointer missing! ⚠️");
+    if (!confirm(`Warning! Are you sure you want to permanently delete this product entry from ${brand} logs? OK-va peer?`)) return;
+
+    const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+
+    try {
+        isSyncing = true;
+        console.log(`Wipeout Cloud Routine: Searching cross-case nodes for ID -> ${rowId}`);
+
+        // 🎯 A. கிளவுட் ஃபோல்டரான 'vimag/brands' உள்ளே கேஸ்-சென்சிட்டிவ் போல்டர்களைத் தேடுகிறது peer!
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        const matchedBrandKey = Object.keys(brandsCloudData).find(
+            k => k.trim().toUpperCase() === brand.toUpperCase()
+        ) || brand;
+
+        if (brandsCloudData[matchedBrandKey]) {
+            const brandNode = brandsCloudData[matchedBrandKey];
+            const matchedCustKey = Object.keys(brandNode).find(
+                k => k.trim().toUpperCase() === customer.toUpperCase()
+            ) || customer;
+
+            // கிளவுட்டில் நேரடி அசல் மெயின் பாத் நீக்கம்!
+            const finalCloudPath = `vimag/brands/${matchedBrandKey}/${matchedCustKey}/${rowId}`;
+            await activeCloudBridge.ref(finalCloudPath).remove();
+            console.log(`Cloud Cascade Purge Success on Path: -> ${finalCloudPath}`);
+        }
+
+        // B. MASTER CONTACTS DIRECTORY PURGE
+        const encCustId = btoa(encodeURIComponent(customer)).replace(/=/g, "").replace(/\+/g, "").replace(/\//g, "");
+        const masterDirectoryPath = `vimag/master_contacts/${encCustId}/staff_directory/${rowId}`;
+        await activeCloudBridge.ref(masterDirectoryPath).remove();
+
+        // C. DEXIE LOCAL DB PURGE
+        const vimagMasterDB = new Dexie("VimagMasterDB");
+        vimagMasterDB.version(1).stores({ brands: 'id, brand, customerName, artNo, _id, status, handledBy' });
+        await vimagMasterDB.brands.delete(rowId);
+        console.log("Local Dexie Warehouse: Entry permanently purged.");
+
+        isSyncing = false; 
+        
+        // 🎯 FIX 1: டெலீட் பண்ணியதும் மாடல் பாப்-அப்பை மட்டும் மூடுகிறது peer (பச்சை டேபிளை மூடாது!)
+        const modalElement = document.getElementById('crossEditModal');
+        if (modalElement) modalElement.style.setProperty('display', 'none', 'important');
+
+        // 🎯 FIX 2: டைனமிக் பேஜ் லாக் - நீங்க இருந்த அதே பக்கத்திலேயே மீதி டேட்டாவை லோடு செய்யுது!
+        const currentTableTitleElement = document.getElementById('statusTableTitle');
+        let activeCurrentStatusText = "INQUIRY"; // Fallback Safe Word
+
+        if (currentTableTitleElement) {
+            let cleanExtractedText = currentTableTitleElement.innerText
+                .replace(" PIPELINE DATA REPORT", "")
+                .replace(" PIPELINE REPORT", "")
+                .replace(" PIPELINE", "")
+                .trim().toUpperCase();
+
+            if (cleanExtractedText === "ENQUIRY") {
+                activeCurrentStatusText = "INQUIRY";
+            } else {
+                activeCurrentStatusText = cleanExtractedText;
+            }
+        }
+
+        // 🚀 நீங்க இருந்த அதே பக்கத்துலேயே மீதி டேட்டாவை உடனே ஃபிரெஷ்ஷாக ரிஃப்ரெஷ் பண்ணி நிறுத்தும்!
+        executeCrossBrandPipelineScan(activeCurrentStatusText);
+        
+        alert(`Wipeout Success! Record completely purged from ${brand} Sheet Logs! 🗑️🎯`);
+
+    } catch (err) {
+        isSyncing = false;
+        console.error("Critical cascade wiping operation pipeline routine failure logged:", err);
+        alert("Delete Transaction Failed! Cloud sync rules error. 🚩");
+    }
+}
+function toggleGoLiveMenu(event) {
+    if (event) event.stopPropagation(); // கிளிக் ஈவென்ட் மத்த லேயர்களுக்கு பரவாமல் தடுக்குது peer
+    const panel = document.getElementById('goLiveMenuPanel');
+    if (panel) {
+        panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+    }
+}
+
+// =========================================================================
+// 🎛️ 2. WINDOW CLICK INTERCEPTOR (மெனு ஓப்பனா இருக்கும்போது வெளிய கிளிக் பண்ணா ஆட்டோ-குளோஸ் ஆகும்)
+// =========================================================================
+window.addEventListener('click', function(e) {
+    const panel = document.getElementById('goLiveMenuPanel');
+    // மெனு பாக்ஸிற்கு வெளியே எங்கு கிளிக் செய்தாலும் மெனுவை மூடிவிடும்
+    if (panel && !e.target.closest('.my-dropdown-wrapper')) {
+        panel.style.display = 'none';
+    }
+});
+function closeModal(id) {
+    console.log(`Modal Interceptor: Terminating viewport display overlay for ID -> ${id}`);
+    const modal = document.getElementById(id);
+    if (modal) {
+        // 🎯 FIX LAYER: !important display லாக் அடுக்கை அக்யூரட்டா ஓவர்ரைட் செய்து மாடலை மூடுகிறது peer!
+        modal.style.setProperty('display', 'none', 'important');
+    }
+}
 // --- Modals ---
 function openDistModal() { 
     document.getElementById('distModal').style.display = 'flex'; 
@@ -886,29 +1725,30 @@ async function filterByStatus(selectedStatus) {
 // 🚀 4. COMMON RENDER FUNCTION (Sharp lines, No dark boxes)
 function renderStatusReport(data) {
     const tbody = document.getElementById('statusTableBody');
+    if (!tbody) return;
 
     if (data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:60px; color:red;'>No Records Found!</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:60px; color:red; font-weight:bold; font-family:Times New Roman; font-size:16px;'>No Records Found!</td></tr>";
         return;
     }
- // 🔄 SORTING ENGINE: isDone false (Pending) mela varum, isDone true (Achieved) keezha pogum
+
+    // 🔄 SORTING ENGINE: Pending மேலே வரும், Achieved கீழே போகும்
     const sortedData = [...data].sort((a, b) => {
         const aDone = a.isDone === true || a.isDone === "true";
         const bDone = b.isDone === true || b.isDone === "true";
         return (aDone === bDone) ? 0 : aDone ? 1 : -1;
     });
-    tbody.innerHTML = data.map((r, i) => `
 
-
-        <tr style="border-bottom: 1px solid #eee; background: white;">
-            <td style="padding:15px; font-weight:bold; text-align:left; border: 1px solid black;">${i + 1}</td>
-            <td style="padding:15px; font-weight:900; color:#c2185b; border: 1px solid black;">${r.staffName.toUpperCase()}</td>
-            <td style="padding:15px; border: 1px font-weight:600;">${r.customerName || '-'}</td>
-            <td style="padding:15px; color:#2980b9; font-weight:bold; border: 1px solid black;">${r.brand.toUpperCase()}</td>
-            <td style="padding:15px; border: 1px solid black;">${r.product}</td>
-            <td style="padding:18px; font-size:14px; color:black; font-family: 'Times New Roman'; border: 1px solid black;">${r.remarks || '-'}</td>
+    // 🎯 FIX: உங்க அசல் 6 காலம்கள் மட்டும் கிரிட் ரோக்களாகத் திரையில் துல்லியமாகப் பாயும் peer!
+    tbody.innerHTML = sortedData.map((r, i) => `
+        <tr style="border-bottom: 1px solid #eee; background: white; text-align: left; font-family:'Times New Roman'; font-size: 15px; color: black;">
+            <td style="padding:15px; font-weight:bold; text-align:center; border: 1px solid #eee;">${i + 1}</td>
+            <td style="padding:15px; font-weight:900; color:#c2185b; text-align:center; border: 1px solid #eee;">${(r.staffName || "—").toUpperCase()}</td>
+            <td style="padding:15px; font-weight:600; border: 1px solid #eee;">${r.customerName || '—'}</td>
+            <td style="padding:15px; color:#2980b9; font-weight:bold; border: 1px solid #eee;">${(r.brand || '').toUpperCase()}</td>
+            <td style="padding:15px; border: 1px solid #eee;">${r.product || '—'}</td>
+            <td style="padding:15px; font-size:14px; color:#555; border: 1px solid #eee;">${r.remarks || '—'}</td>
         </tr>`).join('');
-
 }
 // 🏠 BACK TO HOME Logic
 function closeStatusTable() {
@@ -964,47 +1804,210 @@ async function loadStaffToPortfolioDropdown() {
     if (!dropdown) return;
 
     try {
-        // Master Warehouse (Dexie) DB-ilirundhu entries edukkom
-        // Note: Unga DB name 'VimagMasterDB' nu check pannikonga
-        const vimagDB = new Dexie("VimagMasterDB");
-        vimagDB.version(1).stores({ brands: 'id, brand, customerName, artNo, handledBy' });
-        
-        const allEntries = await vimagDB.brands.toArray();
-        
-        // 11 brands-ilum work panra staff names-ai unique-ah filter panrom
-        const uniqueStaff = [...new Set(allEntries
-            .filter(i => i.handledBy && i.handledBy !== "" && i.id !== "_id_lock")
-            .map(i => i.handledBy.trim().toUpperCase())
-        )].sort();
+        let uniqueStaffNamesSet = new Set(); 
+        const brandsMasterList = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
 
-        // Dropdown-la names flow aagum
-        uniqueStaff.forEach(name => {
+        console.log("Dropdown Engine: Fetching fresh names directly from live cloud architecture tree... ☁️📡");
+        
+        // 🎯 Variable Conflict Fix: 'db' அல்லது 'cloudDB' எது இருந்தாலும் ஆட்டோ-கனெக்ட் செய்யும் லேயர் peer
+        const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const allBrands = snapshot.val() || {};
+
+        // 🌟 11 பிராண்டுகளின் கிளவுட் போல்டரையும் வரிசையாக லூப் செய்கிறோம் peer!
+        brandsMasterList.forEach(brand => {
+            // பிராண்ட் பெயர்களின் கேஸை மேட்ச் செய்ய கன்வெர்ட் செய்கிறோம் (e.g. Voelkel / VOELKEL)
+            const matchedCloudBrandKey = Object.keys(allBrands).find(
+                k => k.trim().toUpperCase() === brand.trim().toUpperCase()
+            );
+
+            if (matchedCloudBrandKey && allBrands[matchedCloudBrandKey]) {
+                const brandNode = allBrands[matchedCloudBrandKey];
+                
+                Object.keys(brandNode).forEach(cust => {
+                    if (cust === "SYSTEM" || cust === "_id_lock" || cust === "_identity") return;
+                    
+                    const customerRecords = brandNode[cust];
+                    Object.keys(customerRecords).forEach(pKey => {
+                        const item = customerRecords[pKey];
+                        if (!item || item.artNo === "SYSTEM" || pKey === "_id_lock" || pKey === "_contacts") return;
+                        
+                        // 🎯 கஸ்டமரோட டேபிள் இன்புட்ல இருக்குற அசல் ஸ்டாஃப் பெயரை (handledBy) இழுக்கிறது peer!
+                        let rawStaffName = (item.handledBy || item.handled_by || "").toString().replace(/\s+/g, ' ').trim().toUpperCase();
+                        
+                        if (rawStaffName && rawStaffName !== "" && rawStaffName !== "—" && rawStaffName !== "UNKNOWN STAFF") {
+                            uniqueStaffNamesSet.add(rawStaffName);
+                        }
+                    });
+                });
+            }
+        });
+
+        const uniqueStaffSortedArray = Array.from(uniqueStaffNamesSet).sort();
+
+        // 🌟 🎯 CRITICAL ACCURACY FIX: பழைய பெயர்களை டிராப்டவுனை விட்டு முற்றிலும் துடைத்து காலி பண்ணுகிறது!
+        dropdown.options.length = 0; 
+        dropdown.innerHTML = ""; 
+
+        // ஃபிரெஷ்ஷாக டிஃபால்ட் ஆப்ஷனை மட்டும் முதலில் சேர்க்கிறது peer
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.innerText = "👤 STAFF PORTFOLIO";
+        defaultOpt.style.background = "white";
+        defaultOpt.style.color = "black";
+        dropdown.appendChild(defaultOpt);
+
+        // டூப்ளிகேட் இல்லாத அக்யூரட் பெயர்கள் அத்தனையும் (Ganesh, Sathish, Vasanth) வரிசையாக ஓடும் peer!
+        uniqueStaffSortedArray.forEach(name => {
             const opt = document.createElement('option');
             opt.value = name;
-            opt.innerText = name;
+            opt.innerText = `👤 ${name}`;
             opt.style.background = "white";
             opt.style.color = "black";
             dropdown.appendChild(opt);
         });
-        
-        console.log("Portfolio Dropdown: " + uniqueStaff.length + " staff loaded.");
+
+        dropdown.value = ""; 
+        console.log("Portfolio Dropdown Synced Successfully! Total staff mapped: " + uniqueStaffSortedArray.length);
     } catch (err) {
-        console.error("Staff flow error:", err);
+        console.error("Staff portfolio dropdown synchronization error:", err);
     }
 }
-
 // 2. Staff name click panna Portfolio.html-kku redirect panna
 function openStaffPortfolio(staffName) {
     if (!staffName) return;
-    // URL-la staff name-ah anupi Portfolio.html report-ah open panrom
     window.location.href = `Portfolio.html?name=${encodeURIComponent(staffName)}`;
 }
-// Start the app
+
+// =========================================================================
+// 🔄 CACHE-PROOF LIFECYCLE CONTROLLER (பேக் வரும்போது கேச்சை உடைக்கும் லேயர்)
+// =========================================================================
+window.addEventListener('pageshow', (event) => {
+    console.log("Lifecycle Signal Caught: Sweeping dropdown memory layers... ⚡");
+    
+    const dropdown = document.getElementById('portfolioStaffSelect');
+    if (dropdown) {
+        // பேக் வரும்போது தங்கியிருக்கும் பழைய குப்பைகளை முற்றிலும் காலி செய்கிறது
+        dropdown.options.length = 0; 
+        dropdown.innerHTML = ""; 
+        
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.innerText = "👤 STAFF PORTFOLIO";
+        defaultOpt.style.background = "white";
+        defaultOpt.style.color = "black";
+        dropdown.appendChild(defaultOpt);
+    }
+
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2) || true) {
+        setTimeout(() => { 
+            if (typeof loadStaffToPortfolioDropdown === 'function') loadStaffToPortfolioDropdown(); 
+            if (typeof fetch11BrandsStatusForLiveFlow === 'function') fetch11BrandsStatusForLiveFlow(); 
+        }, 350); // 350ms சேஃப் பஃபர் கேப் கொடுத்து லோடு செய்கிறது peer
+    }
+});
+
+// =========================================================================
+// 🚩 SYSTEM BOOTSTRAP STARTUP ENGINE LIFE-CYCLE CONFIGURATION
+// =========================================================================
 window.onload = function() {
- 
- loadStaffToPortfolioDropdown();    // கிளவுட் சிங்க்
-    startSync(); 
+    console.log("System Engine Bootstrap: Launching unified cloud pipelines... ☁️🚀");
+    
+    const dropdown = document.getElementById('portfolioStaffSelect');
+    if (dropdown) {
+        dropdown.options.length = 0;
+        dropdown.innerHTML = "";
+    }
+
+    if (typeof loadStaffToPortfolioDropdown === 'function') {
+        loadStaffToPortfolioDropdown();
+    }
+    
+    setTimeout(() => {
+        if (typeof fetch11BrandsStatusForLiveFlow === "function") {
+            fetch11BrandsStatusForLiveFlow(); 
+        }
+    }, 600);
+    
+    if (typeof startSync === 'function') {
+        startSync();
+    }
 };
+
+async function updateStatusDirectFromGrid(brand, customer, rowId, newStatusValue) {
+    if (!rowId || !newStatusValue) return;
+    
+    console.log(`Go Live Inline Syncer: Syncing status ➔ ${newStatusValue} for Row: ${rowId}`);
+    const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+
+    try {
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        const matchedBrandKey = Object.keys(brandsCloudData).find(
+            k => k.trim().toUpperCase() === brand.toUpperCase()
+        ) || brand;
+
+        let matchedCustKey = customer;
+        let oldPayloadNode = {};
+
+        if (brandsCloudData[matchedBrandKey]) {
+            const brandNode = brandsCloudData[matchedBrandKey];
+            matchedCustKey = Object.keys(brandNode).find(
+                k => k.trim().toUpperCase() === customer.toUpperCase()
+            ) || customer;
+
+            if (brandNode[matchedCustKey] && brandNode[matchedCustKey][rowId]) {
+                oldPayloadNode = brandNode[matchedCustKey][rowId];
+            }
+        }
+
+        // 🎯 CRITICAL UI MAPPING FIX: உங்க டேபிள் லூப் தேடுற 'rawStatus' குள்ளயும் புதிய வேல்யூவை லாக் செய்கிறது peer!
+        const brandItemUpdatePayload = {
+            ...oldPayloadNode,
+            id: rowId,
+            status: newStatusValue,
+            remarks: newStatusValue,
+            inSTATUS: newStatusValue,
+            rawStatus: newStatusValue, // 👈 இந்த வரியை இப்போ கச்சிதமா இணைச்சாச்சு peer!
+            isDone: (newStatusValue === "REGULAR ORDER" || newStatusValue === "🏆 ACHIEVED")
+        };
+
+        // 1️⃣ WAY 1: லோக்கல் பிரவுசர் மெமரி (Dexie) அப்டேட்
+        const vimagMasterDB = new Dexie("VimagMasterDB");
+        vimagMasterDB.version(1).stores({ brands: 'id, brand, customerName, artNo, _id, status, handledBy' });
+        await vimagMasterDB.brands.put(brandItemUpdatePayload);
+
+        // 2️⃣ WAY 2: மெயின் கிளவுட் டேபிளில் ஓவர்ரைட் (set) ஆகுது peer!
+        const finalCloudPath = `vimag/brands/${matchedBrandKey}/${matchedCustKey}/${rowId}`;
+        await activeCloudBridge.ref(finalCloudPath).set(brandItemUpdatePayload);
+
+        // 3️⃣ WAY 3: 'vimag/master_contacts' (Staff Portfolio வியூவிலும் உடனே மாறுது)
+        const encCustId = btoa(encodeURIComponent(matchedCustKey)).replace(/=/g, "").replace(/\+/g, "").replace(/\//g, "");
+        const masterDirectoryPath = `vimag/master_contacts/${encCustId}/staff_directory/${rowId}`;
+        await activeCloudBridge.ref(masterDirectoryPath).update({
+            status: newStatusValue,
+            remarks: newStatusValue,
+            date: new Date().toLocaleDateString('en-GB')
+        });
+
+        console.log("Go Live Inline Sync Complete! ✅");
+        
+        // 🚀 நீங்க TRIAL-ல இருந்தா TRIAL, REGULAR-ல இருந்தா REGULAR பக்கத்திலேயே ரிஃப்ரெஷ் பண்ணும்!
+        const statusTitleElement = document.getElementById('statusTableTitle');
+        let activeCurrentStatusText = "INQUIRY";
+        if (statusTitleElement) {
+            let cleanExtractedText = statusTitleElement.innerText.replace(" PIPELINE DATA REPORT", "").replace(" PIPELINE REPORT", "").replace(" PIPELINE", "").trim().toUpperCase();
+            activeCurrentStatusText = (cleanExtractedText === "ENQUIRY") ? "INQUIRY" : cleanExtractedText;
+        }
+        executeCrossBrandPipelineScan(activeCurrentStatusText);
+
+    } catch (err) {
+        console.error("Go Live Inline sync breakdown:", err);
+        alert("Transaction Failed! Cloud connection error. 🚩");
+    }
+}
+
 </script>
 </body>
 </html>
