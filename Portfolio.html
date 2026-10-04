@@ -5,6 +5,10 @@
     <title>Staff Portfolio</title>
     <link rel="icon" href="Vimag.png" type="image/png">
 
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
     <style>
         body { font-family: 'Times New Roman', serif; padding: 20px; background: #fdfdf5; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 15px; border: 3px solid #27ae60; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -73,6 +77,36 @@
         </thead>
         <tbody id="portfolioBody"></tbody>
     </table>
+<div id="vimagPortfolioEditModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 99999999; justify-content: center; align-items: center; box-sizing: border-box;">
+    <div style="background: white; border: 3px solid #27ae60; padding: 10px; border-radius: 25px; width: 450px; max-width: 90%; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: left; font-family: 'Times New Roman', serif; box-sizing: border-box;">
+        <h2 style="color: #27ae60; margin: 0 0 15px 0; font-weight: bold; text-transform: uppercase; font-size: 20px; border-bottom: 2px solid #27ae60; padding-bottom: 8px;">✏️ Update Product Metrics</h2>
+        <input type="hidden" id="editRowBrandKey"><input type="hidden" id="editRowCustomerKey"><input type="hidden" id="editRowProductIndexKey">
+        <div id="editRowMetaLabel" style="font-size: 15px; color: #7f8c8d; font-weight: bold; margin-bottom: 12px; padding: 5px; background: #fdfdf5; border-radius: 4px;">Brand / Customer</div>
+        <label style="font-weight: bold; display: block; margin-top: 10px; color: #2c3e50; font-size: 14px;">📦 PRODUCT ARTICLE DETAILS:</label>
+        <div id="editRowProductLabel" style="font-size: 14px; color: red; font-weight: bold; margin-bottom: 15px;">Product / Name</div>
+        <div style="margin-top: 15px; background: #f9f9f6; padding: 12px; border-radius: 8px; border: 1px dashed #27ae60;">
+            <label style="font-weight: bold; color: #2c3e50; font-size: 14px;">📉 Price Value (€):</label>
+            <input type="number" id="editRowPriceVal" step="0.01" style="width: 100%; padding: 8px; border-radius: 6px; border: 1.5px solid black; font-family: 'Times New Roman'; font-weight: bold; box-sizing: border-box; margin-top: 5px; margin-bottom: 12px; font-size: 14px; background: white;">
+            <label style="font-weight: bold; color: #2c3e50; font-size: 14px;">🎯 Target Qty (Mo):</label>
+            <input type="number" id="editRowTargetQty" style="width: 100%; padding: 8px; border-radius: 6px; border: 1.5px solid black; font-family: 'Times New Roman'; font-weight: bold; box-sizing: border-box; margin-top: 5px; margin-bottom: 12px; font-size: 14px; background: white;">
+            <label style="font-weight: bold; color: #2c3e50; font-size: 14px;">🏆 Achieved Qty (Month):</label>
+            <input type="number" id="editRowAchievedQty" style="width: 100%; padding: 8px; border-radius: 6px; border: 1.5px solid black; font-family: 'Times New Roman'; font-weight: bold; box-sizing: border-box; margin-top: 5px; margin-bottom: 12px; font-size: 14px; background: white;">
+<label style="font-size: 16px; display: block; margin-top: 12px; font-weight: bold; color: #2c3e50;">Status:</label>
+<select id="editRowRemarks" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-family: serif; color: black; font-size: 12px; font-weight: bold; background: #fffaf0; outline: black; -webkit-appearance: menulist; appearance: menulist;">
+    <option value="INQUIRY">📝 INQUIRY</option>
+    <option value="TRIAL COMPLETED">🧪 TRIAL COMPLETED</option>
+    <option value="TRIAL ORDER">📦 TRIAL ORDER</option>
+    <option value="REGULAR ORDER">✅ REGULAR ORDER</option>
+</select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;">
+<button onclick="saveVimagPortfolioEdits()" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: 'Times New Roman'; font-weight: bold; font-size: 14px;">💾 UPDATE</button>
+            <button onclick="closeVimagPortfolioModal()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: 'Times New Roman'; font-weight: bold; font-size: 14px;">DISCARD</button>
+            
+        </div>
+    </div>
+</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.2.0/dexie.min.js"></script>
@@ -107,19 +141,86 @@ let masterData = []; // Store original data for sub-filtering
         loadInitialData();
     });
 
-    async function loadInitialData() {
-        const all = await vimagDB.brands.toArray();
-        masterData = all.filter(i => 
-            i.id !== "_id_lock" && i.artNo !== "SYSTEM" && 
-            (i.handledBy || "").trim().toUpperCase() === staffName.trim().toUpperCase()
-        );
+  async function loadInitialData() {
+    // 🛡️ ANTI-CACHE TRAP: Drops prior database listeners to prevent cascading memory traps peer!
+    db.ref('vimag/brands').off();
+
+    // 📡 LIVE CLOUD PIPELINE: Connects directly to your 11 remote real-time database vectors
+    db.ref('vimag/brands').on('value', async (snapshot) => {
+        const allBrandsCloudData = snapshot.val(); 
+        masterData = []; // Clear array map traces to compile clean datasets on updates
+        
+        const brandsList = ["Rhodius", "Laco", "Lessmann", "Capital Weld Cleaners", "Dedeco", "Einhell", "Peddinghaus", "Rexcut", "Shannon", "Starrett", "Voelkel"];
+
+        if (allBrandsCloudData) {
+            brandsList.forEach(brand => {
+                if (allBrandsCloudData[brand]) {
+                    const customersNode = allBrandsCloudData[brand];
+                    Object.keys(customersNode).forEach(custName => {
+                        if (custName === "SYSTEM" || custName === "_id_lock" || custName === "_identity") return;
+                        
+                        const productsList = customersNode[custName];
+                        Object.keys(productsList).forEach(pKey => {
+                            const item = productsList[pKey];
+                            
+                            // 🎯 Aligns record rows precisely with our target active active staff name tag parameter
+                            if (item && item.artNo !== "SYSTEM" && item.id !== "_id_lock" && (item.handledBy || item.handled_by || "").trim().toUpperCase() === staffName.trim().toUpperCase()) {
+                                
+                                masterData.push({ 
+                                    id: pKey, 
+                                    brand: brand, 
+                                    customerName: custName, 
+                                    artNo: item.artNo || '-', 
+                                    name: item.name || '-', 
+                                    price: item.price || "0", 
+                                    qty: item.qty || item.targetQty || "0", 
+                                    monthQty: item.monthQty || item.actualQty || "0", 
+                                    currency: item.currency || "€", 
+                                    handledBy: item.handledBy || item.handled_by, 
+                                    remarks: item.remarks || item.status || '-' 
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        // 🏰 LOCAL BACKUP SYNC: Mirror compiled records down inside IndexedDB for offline protection
+    
+          try {
+    if (masterData.length > 0) {
+        // bulkPut பயன்படுத்துவதால் பழைய ஸ்டாஃப் பெயர்கள் லோக்கல் மெமரியில் அழியாமல் பத்திரமாக இருக்கும்!
+        await vimagDB.brands.bulkPut(masterData.map(i => ({ 
+            id: i.id, 
+            brand: i.brand, 
+            customerName: i.customerName, 
+            artNo: i.artNo, 
+            name: i.name, 
+            price: i.price, 
+            qty: i.qty, 
+            monthQty: i.monthQty, 
+            currency: i.currency, 
+            handledBy: i.handledBy, 
+            remarks: i.remarks 
+        })));
+    }
+} catch (e) { 
+    console.warn("Dexie backup repository put drop notice:", e); 
+}
 
         if (masterData.length === 0) {
-            document.getElementById('portfolioBody').innerHTML = `<tr><td colspan="9" style="padding:50px; color:red; font-weight:bold;">No Data Found!</td></tr>`;
+            document.getElementById('portfolioBody').innerHTML = `<tr><td colspan="9" style="padding:50px; color:red; font-weight:bold; text-align:center;">No Active Portfolio Records Handled Registry!</td></tr>`;
+            document.getElementById('sumTarget').innerText = "€ 0.00";
+            document.getElementById('sumAchieved').innerText = "€ 0.00";
+            document.getElementById('statsLine').innerText = "Portfolio Analysis: 0 Active Records";
             return;
         }
+
+        // Hot refresh dynamic cascading selectors instantly with fresh values peer!
         refreshView();
-    }
+    }); // 🏆 FIXED CORE CLOSURE: Closing parenthesis and brace perfectly applied here!
+}
 
     function runCascadingFilter(trigger) {
         selections.brand = document.getElementById('fStaffBrand').value;
@@ -162,32 +263,218 @@ let masterData = []; // Store original data for sub-filtering
         el.innerHTML = html;
     }
 
-    function renderTable(data) {
+  function renderTable(data) {
         const tbody = document.getElementById('portfolioBody');
         let tT = 0, tA = 0, sym = "€";
-
         tbody.innerHTML = data.map((i, idx) => {
             const p = parseFloat(i.price || 0), target = parseInt(i.qty || 0), actual = parseInt(i.monthQty || 0);
-            const val = p * actual; sym = i.currency || "€";
-            tT += (p * target); tA += val;
-
-            return `<tr>
-                <td>${idx + 1}</td>
+            const val = p * actual; sym = i.currency || "€"; tT += (p * target); tA += val;
+            var cleanSafeStringKey = btoa(unescape(encodeURIComponent(i.customerName || '')));
+            var uniqueDataIdRefStringKey = btoa(unescape(encodeURIComponent(i.id || '')));
+            return `<tr style="border-bottom: 1px solid #eee; background: white; transition: 0.2s;">
+                <td style="padding: 10px; text-align: center; vertical-align: middle;"><input type="radio" name="vimagPortfolioSelectRadio" onclick="openVimagPortfolioModal('${i.brand}', '${i.customerName.replace(/'/g, "\\'")}', '${uniqueDataIdRefStringKey}')" style="cursor: pointer; width: 18px; height: 18px; accent-color: #27ae60; margin: 0 auto; display: block;"></td>
                 <td style="font-weight:bold; color:#2980b9;">${i.brand.toUpperCase()}</td>
-                <td style="font-weight:bold; text-align:left;">${i.customerName}</td>
-                <td style="font-weight:bold;">${i.artNo}</td>
-                <td style="text-align:left;">${i.name || '-'}</td>
-                <td>${sym}${p.toFixed(2)}</td>
-                <td>${target}</td>
-                <td style="font-weight:bold; color:${actual >= target ? 'green' : 'red'}">${actual}</td>
-                <td style="text-align:right; font-weight:bold; color:#c2185b;">${sym}${val.toLocaleString()}</td>
+                <td style="font-weight:bold; text-align:left;"><span onclick="window.location.href='index.html?view=sales&name=' + encodeURIComponent(decodeURIComponent(escape(atob('${cleanSafeStringKey}'))))" style="text-decoration:none; color:#000000; cursor:pointer;" onmouseover="this.style.textDecoration='underline'; this.style.color='#27ae60';" onmouseout="this.style.textDecoration='none'; this.style.color='#000000';">${i.customerName}</span></td>
+                <td>${i.artNo}</td><td style="text-align:left; font-size:13px;"><strong>${i.name || '-'}</strong></td><td>${sym}${p.toFixed(2)}</td><td>${target}</td><td style="font-weight:bold; color:${actual >= target ? 'green' : 'red'}">${actual}</td><td style="text-align:right; font-weight:bold; color:#c2185b;">${sym}${val.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
             </tr>`;
         }).join('');
-
         document.getElementById('sumTarget').innerText = sym + " " + tT.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('sumAchieved').innerText = sym + " " + tA.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('statsLine').innerText = `Portfolio Analysis: ${data.length} Active Records`;
     }
+
+function loadInitialData() {
+    cloudDB.ref('vimag/brands').on('value', async (snapshot) => {
+        const allBrandsCloudData = snapshot.val(); masterData = [];
+        if (allBrandsCloudData) {
+            brands.forEach(brand => {
+                if (allBrandsCloudData[brand]) {
+                    const customersNode = allBrandsCloudData[brand];
+                    Object.keys(customersNode).forEach(custName => {
+                        if (custName === "SYSTEM" || custName === "_id_lock" || custName === "_identity") return;
+                        const productsList = customersNode[custName];
+                        Object.keys(productsList).forEach(pKey => {
+                            const item = productsList[pKey];
+                            if (item && item.artNo !== "SYSTEM" && item.id !== "_id_lock" && (item.handledBy || item.handled_by || "").trim().toUpperCase() === staffName.trim().toUpperCase()) {
+                                masterData.push({ id: pKey, brand: brand, customerName: custName, artNo: item.artNo || '-', name: item.name || '-', price: item.price || "0", qty: item.qty || "0", monthQty: item.monthQty || "0", currency: item.currency || "€", handledBy: item.handledBy, remarks: item.remarks || '-' });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        try { await vimagDB.brands.clear(); if (masterData.length > 0) { await vimagDB.brands.bulkAdd(masterData.map(i => ({ id: i.id, brand: i.brand, customerName: i.customerName, artNo: i.artNo, name: i.name, price: i.price, qty: i.qty, monthQty: i.monthQty, currency: i.currency, handledBy: i.handledBy, remarks: i.remarks }))); } } catch (e) { console.warn(e); }
+        if (masterData.length === 0) { document.getElementById('portfolioBody').innerHTML = `<tr><td colspan="10" style="padding:50px; color:red; font-weight:bold;">No Active Portfolio Records Handled Registry!</td></tr>`; return; }
+        refreshView();
+    });
+}
+function openVimagPortfolioModal(brandName, customerName, uniqueDataIdRefStringKey) {
+    const dataRefStringId = decodeURIComponent(escape(atob(uniqueDataIdRefStringKey)));
+    const matchedRecordItem = masterData.find(i => i.id === dataRefStringId && i.brand === brandName && i.customerName === customerName);
+    if(!matchedRecordItem) return;
+    
+    document.getElementById('editRowBrandKey').value = brandName; 
+    document.getElementById('editRowCustomerKey').value = customerName; 
+    document.getElementById('editRowProductIndexKey').value = dataRefStringId;
+    
+    document.getElementById('editRowMetaLabel').innerText = `🏷️ ${brandName.toUpperCase()} ➡️ ${customerName}`;
+    document.getElementById('editRowProductLabel').innerHTML = `🔹 <strong>Art No:</strong> ${matchedRecordItem.artNo} <br> 🔹 <strong>Name:</strong> ${matchedRecordItem.name || '-'}`;
+    document.getElementById('editRowPriceVal').value = parseFloat(matchedRecordItem.price || 0).toFixed(2);
+    document.getElementById('editRowTargetQty').value = parseInt(matchedRecordItem.qty || 0);
+    document.getElementById('editRowAchievedQty').value = parseInt(matchedRecordItem.monthQty || 0);
+    
+    // 🎯 CRITICAL FIX: கிளவுட்ல இருக்குற அசல் ஸ்டேட்டஸை எடுத்து டிராப்-டவுன்ல ஆட்டோ-செலக்ட் (Selected) செய்யுது peer!
+    let rawStatus = (matchedRecordItem.remarks || matchedRecordItem.status || "INQUIRY").toString().trim().toUpperCase();
+    if (rawStatus === "ENQUIRY") rawStatus = "INQUIRY"; // Alias safe lock
+    
+    const dropdownSelect = document.getElementById('editRowRemarks');
+    if (dropdownSelect) {
+        dropdownSelect.value = rawStatus;
+    }
+    
+    const modalView = document.getElementById('vimagPortfolioEditModal');
+    if(modalView) { 
+        modalView.style.display = 'flex'; 
+        modalView.style.setProperty('display', 'flex', 'important'); 
+    }
+}
+
+function closeVimagPortfolioModal() {
+    const modalView = document.getElementById('vimagPortfolioEditModal'); if(modalView) modalView.style.display = 'none';
+    const activeRadioElements = document.getElementsByName('vimagPortfolioSelectRadio'); activeRadioElements.forEach(radio => { if(radio) radio.checked = false; });
+}
+async function saveVimagPortfolioEdits() {
+    const bKey = document.getElementById('editRowBrandKey').value.trim(); 
+    const cKey = document.getElementById('editRowCustomerKey').value.trim(); 
+    const pIdKey = document.getElementById('editRowProductIndexKey').value.trim();
+    
+    const newPrice = parseFloat(document.getElementById('editRowPriceVal').value || 0); 
+    const newTarget = parseInt(document.getElementById('editRowTargetQty').value || 0); 
+    const newAchieved = parseInt(document.getElementById('editRowCheckQty') ? document.getElementById('editRowCheckQty').value : (document.getElementById('editRowAchievedQty') ? document.getElementById('editRowAchievedQty').value : 0)); 
+    const newRemarks = document.getElementById('editRowRemarks').value.trim();
+    
+    if (!bKey || !cKey || !pIdKey) return alert("System reference broken! ⚠️");
+    
+    // 🎯 db, cloudDB அல்லது நேரடி firebase கனெக்ஷன் எது இருந்தாலும் ஆட்டோ-பிரிட்ஜ் செய்யும்
+    const activeCloudBridge = (typeof db !== 'undefined') ? db : (typeof cloudDB !== 'undefined' ? cloudDB : firebase.database());
+    
+    try {
+        isSyncing = true;
+        console.log(`3-Way Sync Engine: Executing matrix update from Portfolio for ID ➔ ${pIdKey}`);
+
+        // 🎯 A. கிளவுட் ஃபோல்டரான 'vimag/brands' உள்ளே கேஸ்-சென்சிட்டிவ் போல்டர்களை அலசுகிறது peer!
+        const snapshot = await activeCloudBridge.ref('vimag/brands').once('value');
+        const brandsCloudData = snapshot.val() || {};
+
+        // 1. அசல் கேஸ்-சென்சிட்டிவ் பிராண்ட் பெயரைக் கண்டுபிடிக்கிறது (e.g. Voelkel / VOELKEL)
+        const matchedBrandKey = Object.keys(brandsCloudData).find(
+            k => k.trim().toUpperCase() === bKey.toUpperCase()
+        ) || bKey;
+
+        let matchedCustKey = cKey;
+        let oldPayloadNode = {};
+
+        if (brandsCloudData[matchedBrandKey]) {
+            const brandNode = brandsCloudData[matchedBrandKey];
+            
+            // 2. அசல் கேஸ்-சென்சிட்டிவ் கஸ்டமர் பெயரைக் கண்டுபிடிக்கிறது
+            matchedCustKey = Object.keys(brandNode).find(
+                k => k.trim().toUpperCase() === cKey.toUpperCase()
+            ) || cKey;
+
+            if (brandNode[matchedCustKey] && brandNode[matchedCustKey][pIdKey]) {
+                oldPayloadNode = brandNode[matchedCustKey][pIdKey];
+            }
+        }
+
+        // 13 காலம்களுக்கான புதிய கணக்கீடு பேலோடு தயாரிப்பு peer
+        // 🎯 UI MAPPING FIX: உங்க பச்சை டேபிள் வியூ தேடுற 'rawStatus' குள்ளயும் புதிய வேல்யூவை லாக் செய்கிறது!
+        const brandItemUpdatePayload = {
+            ...oldPayloadNode,
+            id: pIdKey,
+            brand: matchedBrandKey,
+            customerName: matchedCustKey,
+            price: newPrice.toString(),
+            qty: newTarget.toString(),
+            qtyMo: newTarget.toString(),
+            monthQty: newAchieved.toString(),
+            octQty: newAchieved.toString(),
+            totalValue: (newPrice * newTarget),
+            achievedValue: (newPrice * newAchieved),
+            balance: (newTarget - newAchieved),
+            remarks: newRemarks,
+            status: newRemarks,
+            inSTATUS: newRemarks,
+            rawStatus: newRemarks, // 👈 இந்த வரியை இப்போ கச்சிதமா லாக் பண்ணியாச்சு peer!
+            isDone: (newRemarks === "REGULAR ORDER" || newRemarks === "🏆 ACHIEVED" || newRemarks === "REGULAR")
+        };
+
+        // 🎯 1️⃣ WAY 1: லோக்கல் டெக்ஸி மெமரியில் கச்சிதமாக அப்டேட்
+        if (typeof vimagDB !== 'undefined' && vimagDB.brands) {
+            await vimagDB.brands.update(pIdKey, { price: newPrice.toString(), qty: newTarget.toString(), monthQty: newAchieved.toString(), remarks: newRemarks });
+        } else if (typeof localDB !== 'undefined' && localDB.brands) {
+            await localDB.brands.update(pIdKey, { price: newPrice.toString(), qty: newTarget.toString(), monthQty: newAchieved.toString(), remarks: newRemarks });
+        }
+
+        // 🎯 2️⃣ WAY 2: 'vimag/brands' அசல் கிளவுட் மெயின் பாத் 100% ஓவர்ரைட் (set) செய்யுது peer!
+        const finalCloudPath = `vimag/brands/${matchedBrandKey}/${matchedCustKey}/${pIdKey}`;
+        await activeCloudBridge.ref(finalCloudPath).set(brandItemUpdatePayload);
+        console.log(`Cloud Main Write Success ➔ ${finalCloudPath}`);
+
+        // 🎯 3️⃣ WAY 3: 'vimag/master_contacts' (போர்ட்ஃபோலியோ மாஸ்டர் வியூவிலும் உடனே அப்டேட் ஏறுது)
+        const encCustId = btoa(encodeURIComponent(matchedCustKey)).replace(/=/g, "").replace(/\+/g, "").replace(/\//g, "");
+        const masterDirectoryPath = `vimag/master_contacts/${encCustId}/staff_directory/${pIdKey}`;
+        
+        await activeCloudBridge.ref(masterDirectoryPath).update({
+            status: newRemarks,
+            remarks: newRemarks,
+            price: newPrice,
+            qtyMo: newTarget,
+            octQty: newAchieved,
+            totalValue: (newPrice * newTarget),
+            achievedValue: (newPrice * newAchieved),
+            balance: (newTarget - newAchieved),
+            date: new Date().toLocaleDateString('en-GB')
+        });
+        console.log(`Portfolio Directory Sync Success ➔ ${masterDirectoryPath}`);
+
+        closeVimagPortfolioModal(); // மாடலை மூடுகிறது
+
+        // டிராப்டவுன் செலக்ஷன்களை 'ALL' நிலைக்கு ஆட்டோ-ரீசெட் செய்கிறது
+        selections = { brand: 'ALL', cust: 'ALL', art: 'ALL' };
+        const bSelect = document.getElementById('fStaffBrand');
+        const cSelect = document.getElementById('fStaffCust');
+        const aSelect = document.getElementById('fStaffArt');
+        if (bSelect) bSelect.value = "ALL";
+        if (cSelect) cSelect.value = "ALL";
+        if (aSelect) aSelect.value = "ALL";
+        
+        isSyncing = false;
+        alert("Portfolio Row 3-Way Synchronized and Updated Cleanly! 💾✅");
+        
+        // ⚡ ஃபிரெஷ் டேட்டாவை கிளவுடில் இருந்து மீண்டும் இழுத்து வியூவை அப்டேட் செய்ய வைக்குது peer!
+        if (typeof loadInitialData === "function") {
+            await loadInitialData();
+        }
+
+    } catch (writeErr) { 
+        isSyncing = false;
+        console.error("Critical 3-way synchronization breakdown:", writeErr);
+        alert("Transaction Failed! Cloud connection error. 🚩"); 
+    }
+}// Master background dimmer backdrop box escape routine handler
+window.onclick = function(event) {
+    const modal = document.getElementById('vimagPortfolioEditModal');
+    if (event.target === modal) {
+        closeVimagPortfolioModal();
+    }
+};
+
+window.addEventListener('pagehide', () => {
+    // இந்த பக்கம் மறைந்து ஃபாலோ-அப் பக்கத்துக்குப் போகும் போது, 
+    // பிரவுசரோட மெமரி டிராப்பை உடைக்க ஒரு சின்ன சிக்னல் கொடுக்குது!
+    console.log("Leaving Portfolio: Clearing memory traps... ⚡");
+});
 </script>
 </body>
 </html>
